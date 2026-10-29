@@ -123,7 +123,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static String mensagemPadrao(HttpStatusCode status) {
         return switch (status.value()) {
-            case 404 -> "Não encontrado";
+            case 404 -> "Não encontrado.";
             case 405 -> "Método não permitido.";
             case 406 -> "Formato de resposta não aceito.";
             case 415 -> "Tipo de conteúdo não suportado. Use application/json.";

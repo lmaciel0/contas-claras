@@ -6,7 +6,7 @@ package dev.lmaciel.contasclaras.comum;
 public class NaoEncontradoException extends RuntimeException {
 
     public NaoEncontradoException() {
-        super("Não encontrado");
+        super("Não encontrado.");
     }
 
     public NaoEncontradoException(String mensagem) {

@@ -13,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -25,6 +26,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.WebUtils;
 
+import dev.lmaciel.contasclaras.comum.NaoAutenticadoException;
+import dev.lmaciel.contasclaras.usuario.UsuarioRepository;
 import jakarta.servlet.http.Cookie;
 
 /**
@@ -34,7 +37,7 @@ import jakarta.servlet.http.Cookie;
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfig {
 
-    private static final String CORPO_NAO_AUTENTICADO = "{\"erro\":\"Não autenticado.\"}";
+    private static final String CORPO_NAO_AUTENTICADO = "{\"erro\":\"" + NaoAutenticadoException.MENSAGEM + "\"}";
 
     @Bean
     SecurityFilterChain filtros(HttpSecurity http, JwtDecoder jwtDecoder) {
@@ -61,7 +64,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String segredo, Clock clock) {
+    JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String segredo, Clock clock, UsuarioRepository usuarios) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(TokenService.chave(segredo))
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
@@ -69,7 +72,8 @@ public class SecurityConfig {
         JwtTimestampValidator validadorDeTempo = new JwtTimestampValidator();
         validadorDeTempo.setClock(clock);
         validadorDeTempo.setAllowEmptyExpiryClaim(false);
-        decoder.setJwtValidator(validadorDeTempo);
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                validadorDeTempo, new SessaoVersaoValidator(usuarios)));
         return decoder;
     }
 

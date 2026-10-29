@@ -29,6 +29,9 @@ public class Usuario {
     @Column(name = "google_sub", unique = true)
     private String googleSub;
 
+    @Column(name = "sessao_versao", nullable = false)
+    private int sessaoVersao;
+
     @Column(name = "criado_em", insertable = false, updatable = false)
     private Instant criadoEm;
 
@@ -68,6 +71,18 @@ public class Usuario {
 
     public void setGoogleSub(String googleSub) {
         this.googleSub = googleSub;
+    }
+
+    public int getSessaoVersao() {
+        return sessaoVersao;
+    }
+
+    /**
+     * Invalida todos os cookies de sessão já emitidos para este usuário. Chamar quando a senha mudar
+     * ou quando uma conta Google for vinculada; quem chama emite um token novo para o aparelho atual.
+     */
+    public void invalidarSessoes() {
+        sessaoVersao++;
     }
 
     public boolean temSenha() {

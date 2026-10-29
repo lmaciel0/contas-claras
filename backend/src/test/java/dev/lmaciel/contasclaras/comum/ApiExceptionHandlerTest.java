@@ -1,5 +1,6 @@
 package dev.lmaciel.contasclaras.comum;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.qos.logback.classic.Level;
+import dev.lmaciel.contasclaras.CapturaLog;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.Validation;
@@ -78,7 +81,7 @@ class ApiExceptionHandlerTest {
     void nao_encontrado_vira_404() throws Exception {
         mvc.perform(get("/sonda/nao-encontrado"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.erro").value("Não encontrado"));
+                .andExpect(jsonPath("$.erro").value("Não encontrado."));
     }
 
     @Test
@@ -118,10 +121,16 @@ class ApiExceptionHandlerTest {
 
     @Test
     void excecao_nao_tratada_vira_500_sem_vazar_detalhes() throws Exception {
-        mvc.perform(get("/sonda/erro"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.erro").value("Erro interno."))
-                .andExpect(content().string(not(containsString("detalhe interno"))));
+        try (CapturaLog log = CapturaLog.de(ApiExceptionHandler.class)) {
+            mvc.perform(get("/sonda/erro"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.erro").value("Erro interno."))
+                    .andExpect(content().string(not(containsString("detalhe interno"))));
+
+            assertThat(log.eventos()).hasSize(1);
+            assertThat(log.eventos().get(0).getLevel()).isEqualTo(Level.ERROR);
+            assertThat(log.eventos().get(0).getThrowableProxy().getMessage()).contains("detalhe interno");
+        }
     }
 
     @Test
@@ -133,8 +142,12 @@ class ApiExceptionHandlerTest {
 
     @Test
     void metodo_nao_suportado_continua_405_com_corpo_erro() throws Exception {
-        mvc.perform(delete("/sonda/erro"))
-                .andExpect(status().isMethodNotAllowed())
-                .andExpect(jsonPath("$.erro").isNotEmpty());
+        try (CapturaLog log = CapturaLog.de("org.springframework.web.servlet.PageNotFound")) {
+            mvc.perform(delete("/sonda/erro"))
+                    .andExpect(status().isMethodNotAllowed())
+                    .andExpect(jsonPath("$.erro").isNotEmpty());
+
+            assertThat(log.eventos()).hasSize(1);
+        }
     }
 }

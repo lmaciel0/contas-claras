@@ -41,12 +41,21 @@ public class AuthService {
         this.hashFalso = encoder.encode("senha-descartada-sem-uso");
     }
 
+    /**
+     * E-mail fora da lista e e-mail já cadastrado recebem exatamente a mesma recusa, e o BCrypt roda antes
+     * de qualquer decisão, para que nem a resposta nem o tempo revelem quais e-mails têm conta.
+     */
     @Transactional
     public Usuario cadastrar(String nome, String email, String senha) {
-        if (!emailsLiberados.permite(email)) {
-            throw new ProibidoException("Cadastro não permitido para este e-mail.");
+        String hash = hashDaSenha(senha);
+        if (!emailsLiberados.permite(email) || usuarios.existsByEmail(Emails.normalizar(email))) {
+            throw cadastroRecusado();
         }
-        return criarUsuario(nome, email, hashDaSenha(senha), null);
+        try {
+            return criarUsuario(nome, email, hash, null);
+        } catch (ConflitoException e) {
+            throw cadastroRecusado();
+        }
     }
 
     /**
@@ -73,7 +82,8 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public Usuario autenticar(String email, String senha) {
-        if (limite.bloqueado(email)) {
+        // A tentativa é reservada antes do BCrypt: uma rajada paralela não passa de 5 verificações.
+        if (!limite.reservarTentativa(email)) {
             throw new MuitasTentativasException();
         }
         Usuario usuario = usuarios.findByEmail(Emails.normalizar(email)).orElse(null);
@@ -81,7 +91,6 @@ public class AuthService {
         String hash = comSenha ? usuario.getSenhaHash() : hashFalso;
         boolean senhaConfere = cabeNoBcrypt(senha) && encoder.matches(senha, hash);
         if (!comSenha || !senhaConfere) {
-            limite.registrarFalha(email);
             throw new NaoAutenticadoException(CREDENCIAIS_INVALIDAS);
         }
         limite.registrarSucesso(email);
@@ -90,12 +99,26 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public Usuario buscar(long id) {
-        return usuarios.findById(id).orElseThrow(() -> new NaoAutenticadoException("Não autenticado."));
+        return usuarios.findById(id).orElseThrow(NaoAutenticadoException::new);
     }
 
+    /**
+     * Define ou troca a senha e invalida as sessões antigas; quem chama deve emitir um token novo com a
+     * versão devolvida. Quem já tem senha precisa informar a senha atual; contas só com Google não.
+     */
     @Transactional
-    public void definirSenha(long id, String senha) {
-        buscar(id).setSenhaHash(hashDaSenha(senha));
+    public Usuario definirSenha(long id, String senhaAtual, String senhaNova) {
+        Usuario usuario = buscar(id);
+        if (usuario.temSenha() && !senhaAtualConfere(usuario, senhaAtual)) {
+            throw new RequisicaoInvalidaException("Senha atual incorreta.");
+        }
+        usuario.setSenhaHash(hashDaSenha(senhaNova));
+        usuario.invalidarSessoes();
+        return usuario;
+    }
+
+    private boolean senhaAtualConfere(Usuario usuario, String senhaAtual) {
+        return senhaAtual != null && cabeNoBcrypt(senhaAtual) && encoder.matches(senhaAtual, usuario.getSenhaHash());
     }
 
     private String hashDaSenha(String senha) {
@@ -107,6 +130,10 @@ public class AuthService {
 
     private static boolean cabeNoBcrypt(String senha) {
         return senha.getBytes(StandardCharsets.UTF_8).length <= MAX_BYTES_BCRYPT;
+    }
+
+    private static ProibidoException cadastroRecusado() {
+        return new ProibidoException("Não foi possível criar a conta com este e-mail.");
     }
 
     private static ConflitoException emailJaCadastrado() {

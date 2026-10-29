@@ -15,8 +15,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.spec.SecretKeySpec;
 
@@ -80,14 +86,20 @@ class AuthControllerTest extends IntegracaoTest {
 
     /** Monta o JWT como o contrato define (HS256, sub = id), sem depender do TokenService. */
     private static String jwt(String segredo, long usuarioId, Instant expiraEm) {
+        return jwt(segredo, String.valueOf(usuarioId), 0, expiraEm);
+    }
+
+    private static String jwt(String segredo, String sub, Integer versao, Instant expiraEm) {
         var chave = new SecretKeySpec(segredo.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         var encoder = NimbusJwtEncoder.withSecretKey(chave).build();
         var claims = JwtClaimsSet.builder()
-                .subject(String.valueOf(usuarioId))
+                .subject(sub)
                 .issuedAt(expiraEm.minusSeconds(7200))
-                .expiresAt(expiraEm)
-                .build();
-        return encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
+                .expiresAt(expiraEm);
+        if (versao != null) {
+            claims.claim("ver", versao);
+        }
+        return encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims.build()))
                 .getTokenValue();
     }
 
@@ -152,7 +164,7 @@ class AuthControllerTest extends IntegracaoTest {
     void cadastro_com_email_nao_liberado_retorna_403() throws Exception {
         cadastrar("Intruso", "intruso@exemplo.com", SENHA)
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.erro").value("Cadastro não permitido para este e-mail."));
+                .andExpect(jsonPath("$.erro").value("Não foi possível criar a conta com este e-mail."));
 
         assertThat(jdbc.queryForObject("select count(*) from usuario", Long.class)).isZero();
     }
@@ -167,12 +179,12 @@ class AuthControllerTest extends IntegracaoTest {
     }
 
     @Test
-    void cadastro_repetido_retorna_409() throws Exception {
+    void cadastro_repetido_retorna_a_mesma_resposta_do_nao_liberado() throws Exception {
         cadastrar("Dono Teste", "dono@exemplo.com", SENHA).andExpect(status().isCreated());
 
         cadastrar("Dono Teste", "DONO@exemplo.com", SENHA)
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.erro").value("E-mail já cadastrado."));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.erro").value("Não foi possível criar a conta com este e-mail."));
     }
 
     @Test
@@ -452,10 +464,15 @@ class AuthControllerTest extends IntegracaoTest {
         long id = inserirUsuarioSemSenha("outra@exemplo.com");
         Cookie cookie = new Cookie("cc_session", jwt(JWT_SECRET_TESTE, id, AGORA.plusSeconds(3600)));
 
-        mvc.perform(put("/api/auth/senha").cookie(cookie).contentType(MediaType.APPLICATION_JSON)
+        MvcResult resposta = mvc.perform(put("/api/auth/senha").cookie(cookie)
+                .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"senha\":\"nova-senha-123\"}"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent())
+                .andReturn();
 
+        mvc.perform(get("/api/auth/me").cookie(cookieDe(resposta)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.temSenha").value(true));
         login("outra@exemplo.com", "nova-senha-123")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.temSenha").value(true));
@@ -478,9 +495,124 @@ class AuthControllerTest extends IntegracaoTest {
         Cookie cookie = cookieDeUsuarioNovo("dono@exemplo.com");
 
         mvc.perform(put("/api/auth/senha").cookie(cookie).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"senha\":\"" + "é".repeat(60) + "\"}"))
+                .content("{\"senhaAtual\":\"" + SENHA + "\",\"senha\":\"" + "é".repeat(60) + "\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value("A senha deve ter entre 8 e 72 caracteres."));
+    }
+
+    @Test
+    void trocar_a_senha_invalida_o_cookie_antigo_e_o_novo_cookie_funciona() throws Exception {
+        Cookie antigo = cookieDeUsuarioNovo("dono@exemplo.com");
+
+        MvcResult resposta = mvc.perform(put("/api/auth/senha").cookie(antigo)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"senhaAtual\":\"" + SENHA + "\",\"senha\":\"nova-senha-123\"}"))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, allOf(
+                        containsString("cc_session="),
+                        containsString("HttpOnly"),
+                        containsString("SameSite=Strict"),
+                        containsString("Max-Age=2592000"))))
+                .andReturn();
+        Cookie novo = cookieDe(resposta);
+
+        mvc.perform(get("/api/auth/me").cookie(antigo))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.erro").value("Não autenticado."));
+        mvc.perform(get("/api/auth/me").cookie(novo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("dono@exemplo.com"));
+        login("dono@exemplo.com", "nova-senha-123").andExpect(status().isOk());
+        login("dono@exemplo.com", SENHA).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void definir_senha_com_senha_atual_errada_retorna_400_e_nao_troca() throws Exception {
+        Cookie cookie = cookieDeUsuarioNovo("dono@exemplo.com");
+
+        mvc.perform(put("/api/auth/senha").cookie(cookie).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"senhaAtual\":\"senha-errada-9\",\"senha\":\"nova-senha-123\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+                .andExpect(jsonPath("$.erro").value("Senha atual incorreta."));
+
+        login("dono@exemplo.com", SENHA).andExpect(status().isOk());
+        mvc.perform(get("/api/auth/me").cookie(cookie)).andExpect(status().isOk());
+    }
+
+    @Test
+    void definir_senha_sem_informar_a_senha_atual_retorna_400_quando_o_usuario_tem_senha() throws Exception {
+        Cookie cookie = cookieDeUsuarioNovo("dono@exemplo.com");
+
+        mvc.perform(put("/api/auth/senha").cookie(cookie).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"senha\":\"nova-senha-123\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Senha atual incorreta."));
+
+        login("dono@exemplo.com", SENHA).andExpect(status().isOk());
+    }
+
+    @Test
+    void token_com_versao_de_sessao_diferente_da_atual_retorna_401() throws Exception {
+        long id = inserirUsuarioSemSenha("semsenha@exemplo.com");
+        Cookie cookie = new Cookie("cc_session", jwt(JWT_SECRET_TESTE, String.valueOf(id), 1, AGORA.plusSeconds(3600)));
+
+        mvc.perform(get("/api/auth/me").cookie(cookie))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.erro").value("Não autenticado."));
+    }
+
+    @Test
+    void token_sem_claim_de_versao_retorna_401() throws Exception {
+        long id = inserirUsuarioSemSenha("semsenha@exemplo.com");
+        Cookie cookie = new Cookie("cc_session", jwt(JWT_SECRET_TESTE, String.valueOf(id), null, AGORA.plusSeconds(3600)));
+
+        mvc.perform(get("/api/auth/me").cookie(cookie))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.erro").value("Não autenticado."));
+    }
+
+    @Test
+    void token_valido_com_sub_nao_numerico_retorna_401_e_nao_500() throws Exception {
+        Cookie cookie = new Cookie("cc_session", jwt(JWT_SECRET_TESTE, "nao-e-numero", 0, AGORA.plusSeconds(3600)));
+
+        mvc.perform(get("/api/auth/me").cookie(cookie))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.erro").value("Não autenticado."));
+    }
+
+    @Test
+    void rajada_concorrente_de_logins_errados_deixa_passar_no_maximo_5() throws Exception {
+        inserirUsuarioComSenha("rajada@exemplo.com", SENHA);
+        int tentativas = 12;
+        ExecutorService pool = Executors.newFixedThreadPool(tentativas);
+        CountDownLatch largada = new CountDownLatch(1);
+        try {
+            List<Future<Integer>> respostas = new ArrayList<>();
+            for (int i = 0; i < tentativas; i++) {
+                String senhaErrada = "senha-errada-" + i;
+                respostas.add(pool.submit(() -> {
+                    largada.await();
+                    return login("rajada@exemplo.com", senhaErrada).andReturn().getResponse().getStatus();
+                }));
+            }
+            largada.countDown();
+            int verificadas = 0;
+            int bloqueadas = 0;
+            for (Future<Integer> resposta : respostas) {
+                int codigo = resposta.get(30, TimeUnit.SECONDS);
+                if (codigo == 429) {
+                    bloqueadas++;
+                } else {
+                    assertThat(codigo).isEqualTo(401);
+                    verificadas++;
+                }
+            }
+            assertThat(verificadas).isLessThanOrEqualTo(5);
+            assertThat(bloqueadas).isEqualTo(tentativas - verificadas);
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     @Test

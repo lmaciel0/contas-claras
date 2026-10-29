@@ -17,14 +17,18 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.stereotype.Service;
 
+import dev.lmaciel.contasclaras.usuario.Usuario;
+
 /**
- * Emite o JWT da sessão (HS256, claim {@code sub} = id do usuário, 30 dias). A validação é feita
+ * Emite o JWT da sessão (HS256, {@code sub} = id do usuário, {@code ver} = versão da sessão, 30 dias). A validação é feita
  * pelo resource server com a mesma chave (ver {@link SecurityConfig}).
  */
 @Service
 public class TokenService {
 
     public static final Duration VALIDADE = Duration.ofDays(30);
+    /** Claim com a versão da sessão do usuário no momento da emissão. */
+    static final String CLAIM_VERSAO = "ver";
 
     private static final int MIN_BYTES_SEGREDO = 32;
 
@@ -36,10 +40,15 @@ public class TokenService {
         this.clock = clock;
     }
 
-    public String emitir(long usuarioId) {
+    public String emitir(Usuario usuario) {
+        return emitir(usuario.getId(), usuario.getSessaoVersao());
+    }
+
+    public String emitir(long usuarioId, int sessaoVersao) {
         Instant agora = clock.instant();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(String.valueOf(usuarioId))
+                .claim(CLAIM_VERSAO, sessaoVersao)
                 .issuedAt(agora)
                 .expiresAt(agora.plus(VALIDADE))
                 .build();
