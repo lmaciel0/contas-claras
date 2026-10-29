@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: contas-claras
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+server:
+  forward-headers-strategy: framework
