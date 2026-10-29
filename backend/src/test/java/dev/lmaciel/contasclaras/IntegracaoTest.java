@@ -5,6 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
@@ -14,7 +15,16 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Import(RelogioFixoConfig.class)
+@TestPropertySource(properties = {
+        "app.jwt.secret=" + IntegracaoTest.JWT_SECRET_TESTE,
+        "app.allowed-emails=" + IntegracaoTest.EMAILS_LIBERADOS_TESTE
+})
 public abstract class IntegracaoTest {
+
+    /** Segredo obviamente falso, só para os testes (HS256 exige pelo menos 32 bytes). */
+    protected static final String JWT_SECRET_TESTE = "segredo-falso-so-para-testes-0123456789";
+
+    protected static final String EMAILS_LIBERADOS_TESTE = "dono@exemplo.com,outra@exemplo.com";
 
     /**
      * Um único container para toda a JVM de testes. O contexto do Spring é reaproveitado

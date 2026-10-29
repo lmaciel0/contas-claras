@@ -10,5 +10,14 @@ spring:
       ddl-auto: validate
     open-in-view: false
 
+app:
+  jwt:
+    # Segredo HS256, no mínimo 32 bytes. Sempre vem do ambiente; não há valor padrão de propósito.
+    secret: ${JWT_SECRET}
+  # E-mails que podem criar conta, separados por vírgula.
+  allowed-emails: ${ALLOWED_EMAILS:}
+  cookie:
+    secure: true
+
 server:
   forward-headers-strategy: framework
