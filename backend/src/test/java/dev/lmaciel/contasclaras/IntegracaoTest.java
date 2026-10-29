@@ -17,7 +17,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Import(RelogioFixoConfig.class)
 @TestPropertySource(properties = {
         "app.jwt.secret=" + IntegracaoTest.JWT_SECRET_TESTE,
-        "app.allowed-emails=" + IntegracaoTest.EMAILS_LIBERADOS_TESTE
+        "app.allowed-emails=" + IntegracaoTest.EMAILS_LIBERADOS_TESTE,
+        "app.google.client-id=" + IntegracaoTest.GOOGLE_CLIENT_ID_TESTE
 })
 public abstract class IntegracaoTest {
 
@@ -25,6 +26,9 @@ public abstract class IntegracaoTest {
     protected static final String JWT_SECRET_TESTE = "segredo-falso-so-para-testes-0123456789";
 
     protected static final String EMAILS_LIBERADOS_TESTE = "dono@exemplo.com,outra@exemplo.com";
+
+    /** Client ID obviamente falso: os testes nunca falam com o Google. */
+    protected static final String GOOGLE_CLIENT_ID_TESTE = "client-id-falso.apps.exemplo.com";
 
     /**
      * Um único container para toda a JVM de testes. O contexto do Spring é reaproveitado

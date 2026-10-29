@@ -16,6 +16,9 @@ app:
     secret: ${JWT_SECRET}
   # E-mails que podem criar conta, separados por vírgula.
   allowed-emails: ${ALLOWED_EMAILS:}
+  google:
+    # Client ID OAuth do Google (audience do ID token). Vazio desliga o login com Google.
+    client-id: ${GOOGLE_CLIENT_ID:}
   cookie:
     secure: true
 

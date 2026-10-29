@@ -6,7 +6,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import dev.lmaciel.contasclaras.auth.GoogleTokenVerifier.IdentidadeGoogle;
 import dev.lmaciel.contasclaras.categoria.CategoriasPadrao;
 import dev.lmaciel.contasclaras.comum.ConflitoException;
 import dev.lmaciel.contasclaras.comum.MuitasTentativasException;
@@ -20,6 +22,9 @@ import dev.lmaciel.contasclaras.usuario.UsuarioRepository;
 public class AuthService {
 
     static final String CREDENCIAIS_INVALIDAS = "E-mail ou senha inválidos.";
+    static final String LOGIN_GOOGLE_INVALIDO = "Login Google inválido.";
+    /** Tamanho da coluna {@code usuario.nome}. */
+    private static final int MAX_NOME = 120;
     /** O BCrypt só considera os 72 primeiros bytes e o encoder recusa senhas maiores que isso. */
     private static final int MAX_BYTES_BCRYPT = 72;
 
@@ -28,16 +33,18 @@ public class AuthService {
     private final EmailsLiberados emailsLiberados;
     private final CategoriasPadrao categoriasPadrao;
     private final LimiteTentativasLogin limite;
+    private final GoogleTokenVerifier googleVerificador;
     /** Hash de uma senha descartada: gasta o mesmo tempo de BCrypt quando o e-mail não existe. */
     private final String hashFalso;
 
     public AuthService(UsuarioRepository usuarios, PasswordEncoder encoder, EmailsLiberados emailsLiberados,
-            CategoriasPadrao categoriasPadrao, LimiteTentativasLogin limite) {
+            CategoriasPadrao categoriasPadrao, LimiteTentativasLogin limite, GoogleTokenVerifier googleVerificador) {
         this.usuarios = usuarios;
         this.encoder = encoder;
         this.emailsLiberados = emailsLiberados;
         this.categoriasPadrao = categoriasPadrao;
         this.limite = limite;
+        this.googleVerificador = googleVerificador;
         this.hashFalso = encoder.encode("senha-descartada-sem-uso");
     }
 
@@ -95,6 +102,53 @@ public class AuthService {
         }
         limite.registrarSucesso(email);
         return usuario;
+    }
+
+    /**
+     * Confere o ID token no Google. Fica fora de transação de propósito: é uma chamada de rede numa
+     * rota pública e não deve segurar uma conexão do banco enquanto espera.
+     */
+    public IdentidadeGoogle verificarGoogle(String credential) {
+        IdentidadeGoogle identidade = googleVerificador.verificar(credential).orElse(null);
+        if (identidade == null || !identidade.emailVerificado() || !StringUtils.hasText(identidade.sub())
+                || !StringUtils.hasText(identidade.email())) {
+            throw new NaoAutenticadoException(LOGIN_GOOGLE_INVALIDO);
+        }
+        return identidade;
+    }
+
+    /**
+     * Entra com uma identidade Google já verificada, nesta ordem: conta com o mesmo {@code google_sub};
+     * conta com o mesmo e-mail (vincula o Google, apaga a senha e derruba as outras sessões); e-mail
+     * liberado (cria a conta, sem senha); senão recusa.
+     */
+    @Transactional
+    public Usuario entrarComGoogle(IdentidadeGoogle identidade) {
+        Usuario porSub = usuarios.findByGoogleSub(identidade.sub()).orElse(null);
+        if (porSub != null) {
+            return porSub;
+        }
+        String email = Emails.normalizar(identidade.email());
+        Usuario porEmail = usuarios.findByEmail(email).orElse(null);
+        if (porEmail != null) {
+            porEmail.setGoogleSub(identidade.sub());
+            porEmail.setSenhaHash(null);
+            porEmail.invalidarSessoes();
+            return porEmail;
+        }
+        if (!emailsLiberados.permite(email)) {
+            throw cadastroRecusado();
+        }
+        return criarUsuario(nomeDaConta(identidade.nome(), email), email, null, identidade.sub());
+    }
+
+    /** O Google pode não mandar nome, ou mandar um maior que a coluna: nunca falha por isso. */
+    private static String nomeDaConta(String nomeGoogle, String email) {
+        String nome = StringUtils.hasText(nomeGoogle) ? nomeGoogle.trim() : email;
+        if (nome.codePointCount(0, nome.length()) > MAX_NOME) {
+            nome = nome.substring(0, nome.offsetByCodePoints(0, MAX_NOME));
+        }
+        return nome;
     }
 
     @Transactional(readOnly = true)

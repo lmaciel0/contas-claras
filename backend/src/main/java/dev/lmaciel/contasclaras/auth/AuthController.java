@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.lmaciel.contasclaras.auth.dto.CadastroRequest;
 import dev.lmaciel.contasclaras.auth.dto.DefinirSenhaRequest;
+import dev.lmaciel.contasclaras.auth.dto.GoogleLoginRequest;
 import dev.lmaciel.contasclaras.auth.dto.LoginRequest;
 import dev.lmaciel.contasclaras.auth.dto.UsuarioResponse;
 import dev.lmaciel.contasclaras.usuario.Usuario;
@@ -43,6 +44,12 @@ public class AuthController {
     @PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<UsuarioResponse> login(@Valid @RequestBody LoginRequest req) {
         Usuario usuario = auth.autenticar(req.email(), req.senha());
+        return comSessao(HttpStatus.OK, usuario);
+    }
+
+    @PostMapping(path = "/google", consumes = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<UsuarioResponse> google(@Valid @RequestBody GoogleLoginRequest req) {
+        Usuario usuario = auth.entrarComGoogle(auth.verificarGoogle(req.credential()));
         return comSessao(HttpStatus.OK, usuario);
     }
 
