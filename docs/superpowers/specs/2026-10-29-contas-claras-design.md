@@ -132,8 +132,8 @@ Regras:
 - **Troca única**: a importação só roda numa conta sem nenhum lançamento; se houver algum, recusa com mensagem clara. Antes de importar, apaga as categorias padrão vazias da conta para não duplicar. *Decisão minha.*
 
 Testes:
-- Testes automatizados usam uma planilha **fictícia** em `src/test/resources`, construída com a mesma estrutura (blocos, `(NN)`, verde/preto/vermelho, nomes repetidos, alias de categoria, anotação abaixo de TOTAIS, aba não-ano).
-- **Critério de aceite com a planilha real** (passo manual, na máquina do dono): as somas importadas por ano batem com as linhas TOTAL de cada aba, com diferença ≤ R$ 0,01. Os valores esperados estão em `.local/conferencia-importacao.md`.
+- Testes automatizados usam uma planilha **fictícia**, gerada por código de teste (Apache POI) com a mesma estrutura: blocos, `(NN)`, verde/preto/vermelho, nomes repetidos, alias de categoria, anotação abaixo de TOTAIS e aba não-ano.
+- **Critério de aceite com a planilha real** (passo manual, na máquina do dono): as somas importadas por ano batem com as linhas TOTAL de cada aba, com diferença ≤ R$ 0,05. Arredondar célula a célula para centavos já gera até R$ 0,03 de diferença num ano. Os valores esperados estão em `.local/conferencia-importacao.md`.
 
 ## 9. Arquitetura e stack (decidido)
 
