@@ -119,8 +119,9 @@ public class AuthService {
 
     /**
      * Entra com uma identidade Google já verificada, nesta ordem: conta com o mesmo {@code google_sub};
-     * conta com o mesmo e-mail (vincula o Google, apaga a senha e derruba as outras sessões); e-mail
-     * liberado (cria a conta, sem senha); senão recusa.
+     * conta com o mesmo e-mail e sem Google ainda (vincula, apaga a senha e derruba as outras sessões;
+     * se já tem outro Google, recusa sem mudar nada); e-mail liberado (cria a conta, sem senha);
+     * senão recusa.
      */
     @Transactional
     public Usuario entrarComGoogle(IdentidadeGoogle identidade) {
@@ -131,6 +132,11 @@ public class AuthService {
         String email = Emails.normalizar(identidade.email());
         Usuario porEmail = usuarios.findByEmail(email).orElse(null);
         if (porEmail != null) {
+            // Conta já ligada a outro Google com este e-mail (ex.: e-mail corporativo reaproveitado):
+            // não troca o vínculo, senão quem herdou o e-mail tomaria a conta.
+            if (porEmail.getGoogleSub() != null) {
+                throw new NaoAutenticadoException(LOGIN_GOOGLE_INVALIDO);
+            }
             porEmail.setGoogleSub(identidade.sub());
             porEmail.setSenhaHash(null);
             porEmail.invalidarSessoes();

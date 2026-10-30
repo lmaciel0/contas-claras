@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -232,6 +233,30 @@ class GoogleLoginTest extends IntegracaoTest {
         mvc.perform(get("/api/auth/me").cookie(cookieNovo))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.temSenha").value(false));
+    }
+
+    @Test
+    void google_nao_sobrescreve_google_sub_de_conta_ja_vinculada_a_outro_google() throws Exception {
+        // conta com senha e já vinculada ao Google "sub-A" (ex.: depois definiu uma senha)
+        jdbc.update("insert into usuario (nome, email, senha_hash, google_sub) values (?, ?, ?, ?)",
+                "Dono Teste", "dono@exemplo.com", new BCryptPasswordEncoder().encode(SENHA), "sub-A");
+        Cookie cookie = cookieDe(loginPorSenha("dono@exemplo.com", SENHA).andExpect(status().isOk()).andReturn());
+        String hashAntes = jdbc.queryForObject("select senha_hash from usuario", String.class);
+        int versaoAntes = jdbc.queryForObject("select sessao_versao from usuario", Integer.class);
+
+        // outra conta Google (sub-B) com o mesmo e-mail, por exemplo um e-mail corporativo reaproveitado
+        tokenValido("sub-B", "dono@exemplo.com", true);
+        google(TOKEN)
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+                .andExpect(jsonPath("$.erro").value(LOGIN_INVALIDO));
+
+        assertThat(jdbc.queryForObject("select google_sub from usuario", String.class)).isEqualTo("sub-A");
+        assertThat(jdbc.queryForObject("select senha_hash from usuario", String.class)).isEqualTo(hashAntes);
+        assertThat(jdbc.queryForObject("select sessao_versao from usuario", Integer.class)).isEqualTo(versaoAntes);
+        assertThat(contarUsuarios()).isEqualTo(1);
+        mvc.perform(get("/api/auth/me").cookie(cookie)).andExpect(status().isOk());
+        loginPorSenha("dono@exemplo.com", SENHA).andExpect(status().isOk());
     }
 
     @Test
