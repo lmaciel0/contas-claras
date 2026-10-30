@@ -7,6 +7,7 @@ import { LoginPage } from './auth/LoginPage'
 import { RotaProtegida } from './auth/RotaProtegida'
 import { useAuth } from './auth/useAuth'
 import { AppShell } from './layout/AppShell'
+import { InicioPage } from './paginas/inicio/InicioPage'
 
 function EmBreve({ titulo }: { titulo: string }): ReactNode {
   return (
@@ -46,7 +47,7 @@ function MolduraDoUsuario() {
 
 /**
  * Rotas do app (dentro de `AuthProvider`). Login e cadastro são públicos; o resto exige sessão
- * (`RotaProtegida`). As telas de dados entram nas tarefas seguintes (Início na 12, Lançamentos na 13, ...).
+ * (`RotaProtegida`). As demais telas de dados entram nas tarefas seguintes (Lançamentos na 13, ...).
  */
 export function App() {
   return (
@@ -55,7 +56,7 @@ export function App() {
       <Route path="/cadastro" element={<CadastroPage />} />
       <Route element={<RotaProtegida />}>
         <Route element={<MolduraDoUsuario />}>
-          <Route path="/" element={<EmBreve titulo="Início" />} />
+          <Route path="/" element={<InicioPage />} />
           <Route path="/lancamentos" element={<EmBreve titulo="Lançamentos" />} />
           <Route path="/lancamentos/novo" element={<EmBreve titulo="Novo lançamento" />} />
           <Route path="/lancamentos/:id" element={<EmBreve titulo="Lançamento" />} />

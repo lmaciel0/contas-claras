@@ -92,3 +92,45 @@ export interface SalvarLancamentoRequest {
   vencimento?: string | null
   repetirAte?: MesAnoRequest | null
 }
+
+// Resumo (tela Início)
+export interface TotaisMes {
+  receitas: string
+  despesas: string
+  sobra: string
+}
+export interface CategoriaTotal {
+  categoriaId: number
+  nome: string
+  total: string
+  /** Fração de 0 a 1 com 4 casas (`"0.4815"` = 48,15%). */
+  percentual: string
+}
+export interface ProximaConta {
+  lancamentoId: number
+  itemNome: string
+  categoriaNome: string
+  valor: string
+  /** Data ISO `yyyy-MM-dd`. */
+  vencimento: string
+  atrasada: boolean
+}
+/** Um mês da série do ano; os campos "previstas" são a parte ainda não paga do total do mesmo lado. */
+export interface PontoSerie {
+  mes: number
+  receitas: string
+  receitasPrevistas: string
+  despesas: string
+  despesasPrevistas: string
+}
+export interface ResumoResponse {
+  receitas: string
+  despesas: string
+  sobra: string
+  sobraAno: string
+  /** `null` quando o mês anterior não tem nenhum lançamento. */
+  anterior: TotaisMes | null
+  categorias: CategoriaTotal[]
+  proximas: ProximaConta[]
+  serieAno: PontoSerie[]
+}

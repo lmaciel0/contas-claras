@@ -9,6 +9,7 @@ import type {
   ItemResponse,
   LancamentoResponse,
   LoginRequest,
+  ResumoResponse,
   SalvarLancamentoRequest,
   StatusLancamento,
   UsuarioResponse,
@@ -17,7 +18,7 @@ import type {
 const json = (corpo: unknown): RequestInit => ({ body: JSON.stringify(corpo) })
 const consulta = (ano: number, mes: number) => `ano=${ano}&mes=${mes}`
 
-// Telas seguintes acrescentam seus tipos (resumo, cartões, relatório) junto com as páginas.
+// Telas seguintes acrescentam seus tipos (cartões, relatório) junto com as páginas.
 export const endpoints = {
   auth: {
     me: () => api<UsuarioResponse>('/api/auth/me'),
@@ -49,5 +50,6 @@ export const endpoints = {
       api<LancamentoResponse>(`/api/lancamentos/${id}/status`, { method: 'PATCH', ...json({ status }) }),
     excluir: (id: number) => api<void>(`/api/lancamentos/${id}`, { method: 'DELETE' }),
   },
+  resumo: (ano: number, mes: number) => api<ResumoResponse>(`/api/resumo?${consulta(ano, mes)}`),
   saude: () => api<{ status: string }>('/api/health'),
 }
