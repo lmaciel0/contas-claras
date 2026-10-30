@@ -1,11 +1,14 @@
 package dev.lmaciel.contasclaras.lancamento;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import dev.lmaciel.contasclaras.categoria.TipoCategoria;
 
 public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
 
@@ -32,6 +35,39 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
             select l from Lancamento l
             where l.item.id = :itemId and (l.ano * 12 + l.mes - 1) between :de and :ate""")
     List<Lancamento> findDoItemNoPeriodo(@Param("itemId") long itemId, @Param("de") int de, @Param("ate") int ate);
+
+    /**
+     * Totais do ano do usuário agrupados por mês, tipo da categoria e status. Só existe linha para o que
+     * tem lançamento: mês sem linha é mês sem lançamentos.
+     */
+    @Query("""
+            select new dev.lmaciel.contasclaras.lancamento.TotalMensal(l.mes, c.tipo, l.status, sum(l.valor))
+            from Lancamento l join l.item i join i.categoria c
+            where c.usuario.id = :usuarioId and l.ano = :ano
+            group by l.mes, c.tipo, l.status""")
+    List<TotalMensal> totaisDoAno(@Param("usuarioId") long usuarioId, @Param("ano") int ano);
+
+    /** Totais por categoria do tipo informado no mês, do maior para o menor (empate: ordem da categoria). */
+    @Query("""
+            select new dev.lmaciel.contasclaras.lancamento.TotalCategoria(c.id, c.nome, sum(l.valor))
+            from Lancamento l join l.item i join i.categoria c
+            where c.usuario.id = :usuarioId and c.tipo = :tipo and l.ano = :ano and l.mes = :mes
+            group by c.id, c.nome, c.ordem
+            order by sum(l.valor) desc, c.ordem""")
+    List<TotalCategoria> totaisPorCategoria(@Param("usuarioId") long usuarioId, @Param("tipo") TipoCategoria tipo,
+            @Param("ano") int ano, @Param("mes") int mes);
+
+    /**
+     * Lançamentos do status e tipo informados, com vencimento até a data limite (inclusive), do mais antigo
+     * para o mais novo. Sem vencimento não entra. Não filtra por mês: o que ficou para trás continua aparecendo.
+     */
+    @Query("""
+            select l from Lancamento l join fetch l.item i join fetch i.categoria c
+            where c.usuario.id = :usuarioId and c.tipo = :tipo and l.status = :status
+              and l.vencimento is not null and l.vencimento <= :ate
+            order by l.vencimento, l.id""")
+    List<Lancamento> findComVencimentoAte(@Param("usuarioId") long usuarioId, @Param("tipo") TipoCategoria tipo,
+            @Param("status") StatusLancamento status, @Param("ate") LocalDate ate);
 
     boolean existsByItemCategoriaId(long categoriaId);
 }
