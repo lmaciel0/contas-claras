@@ -69,6 +69,38 @@ describe('AppShell no celular (390 px)', () => {
   })
 })
 
+describe('ponto de troca entre celular e computador (1280 px)', () => {
+  it.each([768, 1024, 1279])('em %i px usa a navbar inferior e o topo compacto', (largura) => {
+    definirLargura(largura)
+    renderizar()
+
+    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Abas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '+ Lançar' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeInTheDocument()
+  })
+
+  it.each([1280, 1440])('em %i px usa as abas do topo', (largura) => {
+    definirLargura(largura)
+    renderizar()
+
+    expect(screen.getByRole('navigation', { name: 'Abas' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '+ Lançar' })).toBeInTheDocument()
+  })
+
+  it('troca de layout ao redimensionar a janela', () => {
+    definirLargura(1279)
+    renderizar()
+    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
+
+    act(() => definirLargura(1280))
+
+    expect(screen.getByRole('navigation', { name: 'Abas' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
+  })
+})
+
 describe('AppShell no computador (1280 px)', () => {
   it('mostra as abas do topo com Categorias e esconde a navbar inferior', () => {
     definirLargura(1280)

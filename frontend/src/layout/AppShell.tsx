@@ -33,7 +33,7 @@ function Logo() {
 const ROTAS_SEM_MES = ['/relatorios', '/categorias']
 
 /**
- * Moldura das telas logadas: abas no topo em ≥ 768 px, navbar inferior fixa abaixo disso. O seletor de mês só aparece
+ * Moldura das telas logadas: abas no topo em ≥ 1280 px, navbar inferior fixa abaixo disso. O seletor de mês só aparece
  * onde o mês importa (nas rotas de `ROTAS_SEM_MES` ele some).
  */
 export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
