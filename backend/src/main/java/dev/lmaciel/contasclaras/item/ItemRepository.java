@@ -13,6 +13,13 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("select i from Item i join fetch i.categoria c where c.usuario.id = :usuarioId")
     List<Item> findDoUsuario(@Param("usuarioId") long usuarioId);
 
+    /** Cartões não arquivados do usuário, em ordem de nome. */
+    @Query("""
+            select i from Item i join i.categoria c
+            where c.usuario.id = :usuarioId and i.cartao = true and i.arquivado = false
+            order by i.nome, i.id""")
+    List<Item> findCartoesAtivos(@Param("usuarioId") long usuarioId);
+
     List<Item> findByCategoriaId(long categoriaId);
 
     boolean existsByCategoriaIdAndNome(long categoriaId, String nome);

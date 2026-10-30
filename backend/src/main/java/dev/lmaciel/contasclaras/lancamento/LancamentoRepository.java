@@ -69,5 +69,21 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
     List<Lancamento> findComVencimentoEntre(@Param("usuarioId") long usuarioId, @Param("tipo") TipoCategoria tipo,
             @Param("status") StatusLancamento status, @Param("de") LocalDate de, @Param("ate") LocalDate ate);
 
+    /** Lançamentos do ano do usuário, com item e categoria numa consulta só, por categoria, item e mês. */
+    @Query("""
+            select l from Lancamento l join fetch l.item i join fetch i.categoria c
+            where c.usuario.id = :usuarioId and l.ano = :ano
+            order by c.ordem, c.id, i.nome, i.id, l.mes""")
+    List<Lancamento> findDoAno(@Param("usuarioId") long usuarioId, @Param("ano") int ano);
+
+    /** Valor do mês de cada cartão não arquivado do usuário; cartão sem lançamento no mês não tem linha. */
+    @Query("""
+            select new dev.lmaciel.contasclaras.lancamento.FaturaItem(i.id, l.valor)
+            from Lancamento l join l.item i join i.categoria c
+            where c.usuario.id = :usuarioId and i.cartao = true and i.arquivado = false
+              and l.ano = :ano and l.mes = :mes""")
+    List<FaturaItem> faturasDosCartoesNoMes(@Param("usuarioId") long usuarioId, @Param("ano") int ano,
+            @Param("mes") int mes);
+
     boolean existsByItemCategoriaId(long categoriaId);
 }
