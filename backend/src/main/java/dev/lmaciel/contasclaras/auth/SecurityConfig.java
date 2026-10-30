@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -39,7 +40,9 @@ public class SecurityConfig {
 
     private static final String CORPO_NAO_AUTENTICADO = "{\"erro\":\"" + NaoAutenticadoException.MENSAGEM + "\"}";
 
+    // Só com servidor web: o comando de importação (profile "importar") roda sem web e não tem HttpSecurity.
     @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     SecurityFilterChain filtros(HttpSecurity http, JwtDecoder jwtDecoder) {
         RequestMatcher publicas = rotasPublicas();
         AuthenticationEntryPoint naoAutenticado = naoAutenticado();

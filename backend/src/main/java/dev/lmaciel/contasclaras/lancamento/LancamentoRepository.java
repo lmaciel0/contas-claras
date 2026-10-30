@@ -86,4 +86,6 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
             @Param("mes") int mes);
 
     boolean existsByItemCategoriaId(long categoriaId);
+
+    boolean existsByItemCategoriaUsuarioId(long usuarioId);
 }
