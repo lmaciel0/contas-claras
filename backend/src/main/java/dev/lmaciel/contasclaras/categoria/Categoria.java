@@ -64,4 +64,12 @@ public class Categoria {
     public int getOrdem() {
         return ordem;
     }
+
+    public void renomear(String nome) {
+        this.nome = nome;
+    }
+
+    public void moverPara(int ordem) {
+        this.ordem = ordem;
+    }
 }

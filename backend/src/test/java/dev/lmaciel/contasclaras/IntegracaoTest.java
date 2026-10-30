@@ -1,13 +1,21 @@
 package dev.lmaciel.contasclaras;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+
+import jakarta.servlet.http.Cookie;
 
 /**
  * Base dos testes de integração: Postgres real (Testcontainers) e relógio fixo.
@@ -44,4 +52,16 @@ public abstract class IntegracaoTest {
 
     @Autowired
     protected MockMvc mvc;
+
+    /** Cadastra o e-mail (precisa estar na lista liberada) e devolve o cookie {@code cc_session} da sessão. */
+    protected Cookie cadastrarEEntrar(String email) throws Exception {
+        String setCookie = mvc.perform(post("/api/auth/cadastro")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"nome":"Usuario Teste","email":"%s","senha":"senha-segura-1"}""".formatted(email)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getHeader(HttpHeaders.SET_COOKIE);
+        assertThat(setCookie).startsWith("cc_session=");
+        return new Cookie("cc_session", setCookie.substring("cc_session=".length(), setCookie.indexOf(';')));
+    }
 }
