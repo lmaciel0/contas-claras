@@ -35,6 +35,18 @@ describe('lerValor', () => {
     expect(lerValor('10,999')).toBeNull()
   })
 
+  it('ponto seguido de 3 dígitos é milhar em pt-BR', () => {
+    expect(lerValor('10.999')).toBe('10999.00')
+    expect(lerValor('1.234')).toBe('1234.00')
+  })
+
+  it('zero à esquerda não vira milhar: 0.500 e 0.001 são recusados e 0.50 vale 0,50', () => {
+    expect(lerValor('0.500')).toBeNull()
+    expect(lerValor('0.001')).toBeNull()
+    expect(lerValor('0.50')).toBe('0.50')
+    expect(lerValor('0,50')).toBe('0.50')
+  })
+
   it('recusa zero, negativo e vazio', () => {
     expect(lerValor('0')).toBeNull()
     expect(lerValor('0,00')).toBeNull()

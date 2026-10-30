@@ -6,7 +6,8 @@ export function formatarMoeda(valor: string | number): string {
 }
 
 // Aceita "1.234,56", "1234,56", "251,3", "10", "10.50"; recusa mais de 2 casas.
-const COM_MILHAR_E_VIRGULA = /^\d{1,3}(\.\d{3})*(,\d{1,2})?$/
+// O primeiro grupo do milhar não começa com 0: "0.500" não é 500, cai na regra do ponto decimal e é recusado.
+const COM_MILHAR_E_VIRGULA = /^[1-9]\d{0,2}(\.\d{3})*(,\d{1,2})?$/
 const SO_DIGITOS_COM_VIRGULA = /^\d+(,\d{1,2})?$/
 const SO_DIGITOS_COM_PONTO = /^\d+(\.\d{1,2})?$/
 
