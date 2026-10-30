@@ -10,7 +10,8 @@ services:
       POSTGRES_USER: contas
       POSTGRES_PASSWORD: contas
     ports:
-      - "5432:5432"
+      # Só em localhost: o banco local tem senha fraca e não deve ficar exposto na rede.
+      - "127.0.0.1:5432:5432"
     volumes:
       - contas-claras-dados:/var/lib/postgresql/data
     healthcheck:

@@ -21,8 +21,9 @@ COPY --from=build --chown=app:app /build/target/app.jar app.jar
 USER app
 
 # Container pequeno e de partida rápida (serverless): heap proporcional à memória do container,
-# GC serial (sem threads extras) e só o compilador C1 (começa a rodar mais cedo, pico menor).
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:+UseSerialGC -XX:TieredStopAtLevel=1"
+# GC serial (sem threads extras) e só o compilador C1 (começa a rodar mais cedo, pico menor). 65% deixa folga
+# para metaspace, threads e buffers fora do heap; sem memória, a JVM sai e a plataforma sobe outra instância.
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=65 -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:+ExitOnOutOfMemoryError"
 
 # A porta real vem de $PORT (server.port=${PORT:8080} no application.yml); 8080 é o padrão.
 EXPOSE 8080
