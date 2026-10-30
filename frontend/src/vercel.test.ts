@@ -1,13 +1,41 @@
 import { describe, expect, it } from 'vitest'
-import vercel from '../vercel.json'
 
 interface Regra {
   source: string
   headers: { key: string; value: string }[]
 }
 
-const regras = vercel.headers as Regra[]
+interface Rewrite {
+  source: string
+  destination: string | { service: string }
+}
+
+interface Servico {
+  root: string
+  framework?: string
+  runtime?: string
+  entrypoint?: string
+  rewrites?: Rewrite[]
+}
+
+interface ConfigVercel {
+  regions: string[]
+  services: Record<string, Servico>
+  rewrites: Rewrite[]
+  headers: Regra[]
+}
+
+// O vercel.json fica na raiz do repo (projeto único com Services). Lido por glob, e não por import,
+// para o `tsc -b` do build do serviço `web` (que parte de frontend/) não depender de um arquivo fora dele.
+const arquivos = import.meta.glob<ConfigVercel>('../../vercel.json', {
+  eager: true,
+  import: 'default',
+})
+const vercel = Object.values(arquivos)[0] as ConfigVercel
+
+const regras = vercel.headers
 const regraGlobal = regras.find((regra) => regra.source === '/(.*)')
+const regraApi = regras.find((regra) => regra.source === '/api/(.*)')
 
 function cabecalho(nome: string): string | undefined {
   return regraGlobal?.headers.find((h) => h.key.toLowerCase() === nome.toLowerCase())?.value
@@ -29,6 +57,10 @@ function diretivas(): Map<string, string> {
 }
 
 describe('vercel.json: headers de segurança', () => {
+  it('le_o_vercel_json_da_raiz_do_repo', () => {
+    expect(Object.keys(arquivos)).toHaveLength(1)
+  })
+
   it('tem_regra_global_para_todas_as_rotas', () => {
     expect(regraGlobal).toBeDefined()
   })
@@ -59,10 +91,52 @@ describe('vercel.json: headers de segurança', () => {
     expect(cabecalho('X-Frame-Options')).toBe('DENY')
   })
 
-  it('mantem_o_header_de_cache_do_rewrite_da_api_e_os_rewrites', () => {
-    const api = regras.find((regra) => regra.source === '/api/:path*')
+  it('api_nunca_e_cacheada_no_cdn', () => {
+    expect(regraApi?.headers).toEqual([{ key: 'Cache-Control', value: 'no-store' }])
+  })
+})
 
-    expect(api?.headers).toEqual([{ key: 'x-vercel-enable-rewrite-caching', value: '0' }])
-    expect(vercel.rewrites.map((r) => r.source)).toEqual(['/api/(.*)', '/(.*)'])
+describe('vercel.json: projeto com Vercel Services', () => {
+  it('web_e_o_front_estatico_em_frontend', () => {
+    expect(vercel.services['web']).toMatchObject({ root: 'frontend/', framework: 'vite' })
+  })
+
+  it('web_tem_fallback_de_spa_para_o_index', () => {
+    expect(vercel.services['web']?.rewrites).toEqual([{ source: '/(.*)', destination: '/index.html' }])
+  })
+
+  it('api_e_o_container_do_backend', () => {
+    expect(vercel.services['api']).toEqual({
+      root: 'backend/',
+      runtime: 'container',
+      entrypoint: 'Dockerfile',
+    })
+  })
+
+  it('roteia_api_para_o_servico_api_e_o_resto_para_o_web_nessa_ordem', () => {
+    expect(vercel.rewrites).toEqual([
+      { source: '/api/(.*)', destination: { service: 'api' } },
+      { source: '/(.*)', destination: { service: 'web' } },
+    ])
+  })
+
+  it('roda_na_regiao_de_sao_paulo', () => {
+    expect(vercel.regions).toEqual(['gru1'])
+  })
+
+  it('nao_usa_chaves_proibidas_no_modo_services', () => {
+    const topo = Object.keys(vercel)
+
+    for (const chave of ['functions', 'installCommand', 'buildCommand', 'devCommand', 'outputDirectory', 'framework']) {
+      expect(topo).not.toContain(chave)
+    }
+  })
+
+  it('nao_referencia_mais_o_render', () => {
+    expect(JSON.stringify(vercel)).not.toContain('onrender.com')
+  })
+
+  it('nao_sobrou_vercel_json_dentro_de_frontend', () => {
+    expect(Object.keys(import.meta.glob('../vercel.json'))).toEqual([])
   })
 })

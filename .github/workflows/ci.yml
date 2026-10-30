@@ -28,3 +28,30 @@ jobs:
       # O Docker já vem no runner ubuntu: os testes de integração sobem o Postgres via Testcontainers.
       - name: Build e testes
         run: cd backend && ./mvnw -q verify
+
+  frontend:
+    name: Frontend (Node 22)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testes
+        run: npm test -- --run
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
