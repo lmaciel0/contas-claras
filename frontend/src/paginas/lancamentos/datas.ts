@@ -44,3 +44,16 @@ export function lerChaveMes(chave: string): MesAno | null {
   const partes = /^(\d{4})-(\d{2})$/.exec(chave)
   return partes === null ? null : { ano: Number(partes[1]), mes: Number(partes[2]) }
 }
+
+/** Lê o "dia de vencimento" digitado: vazio vale `null`; fora de 1 a 31 ou não inteiro devolve `undefined`. */
+export function lerDia(texto: string): number | null | undefined {
+  const limpo = texto.trim()
+  if (limpo === '') {
+    return null
+  }
+  if (!/^\d{1,2}$/.test(limpo)) {
+    return undefined
+  }
+  const dia = Number(limpo)
+  return dia >= 1 && dia <= 31 ? dia : undefined
+}

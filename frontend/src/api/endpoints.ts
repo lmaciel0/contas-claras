@@ -1,6 +1,7 @@
 import { api } from './cliente'
 import type {
   CadastroRequest,
+  CartoesResponse,
   CategoriaRequest,
   CategoriaResponse,
   DefinirSenhaRequest,
@@ -18,7 +19,7 @@ import type {
 const json = (corpo: unknown): RequestInit => ({ body: JSON.stringify(corpo) })
 const consulta = (ano: number, mes: number) => `ano=${ano}&mes=${mes}`
 
-// Telas seguintes acrescentam seus tipos (cartões, relatório) junto com as páginas.
+// Telas seguintes acrescentam seus tipos (relatório) junto com as páginas.
 export const endpoints = {
   auth: {
     me: () => api<UsuarioResponse>('/api/auth/me'),
@@ -41,6 +42,9 @@ export const endpoints = {
       api<ItemResponse>(`/api/categorias/${categoriaId}/itens`, { method: 'POST', ...json(req) }),
     atualizar: (id: number, req: ItemRequest) =>
       api<ItemResponse>(`/api/itens/${id}`, { method: 'PUT', ...json(req) }),
+  },
+  cartoes: {
+    listar: (ano: number, mes: number) => api<CartoesResponse>(`/api/cartoes?${consulta(ano, mes)}`),
   },
   lancamentos: {
     listar: (ano: number, mes: number) => api<LancamentoResponse[]>(`/api/lancamentos?${consulta(ano, mes)}`),

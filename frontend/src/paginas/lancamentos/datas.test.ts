@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isoParaBr, mesesEntre, vencimentoPadrao } from './datas'
+import { isoParaBr, lerDia, mesesEntre, vencimentoPadrao } from './datas'
 
 describe('vencimentoPadrao', () => {
   it('usa_o_dia_do_item_quando_cabe_no_mes', () => {
@@ -39,5 +39,25 @@ describe('mesesEntre', () => {
       { ano: 2025, mes: 12 },
       { ano: 2026, mes: 1 },
     ])
+  })
+})
+
+describe('lerDia', () => {
+  it('vazio_vale_null', () => {
+    expect(lerDia('')).toBeNull()
+    expect(lerDia('  ')).toBeNull()
+  })
+
+  it('aceita_de_1_a_31', () => {
+    expect(lerDia('1')).toBe(1)
+    expect(lerDia(' 15 ')).toBe(15)
+    expect(lerDia('31')).toBe(31)
+  })
+
+  it('recusa_fora_da_faixa_ou_nao_inteiro', () => {
+    expect(lerDia('0')).toBeUndefined()
+    expect(lerDia('32')).toBeUndefined()
+    expect(lerDia('1,5')).toBeUndefined()
+    expect(lerDia('abc')).toBeUndefined()
   })
 })

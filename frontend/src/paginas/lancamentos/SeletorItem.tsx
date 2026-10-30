@@ -5,6 +5,7 @@ import type { CategoriaResponse, ItemResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { CampoTexto, classeBotaoPrimario, MensagemDeErro } from '../../auth/CampoTexto'
 import { CampoSelect } from './Campos'
+import { lerDia } from './datas'
 
 interface Props {
   categoriaId: number | null
@@ -13,19 +14,6 @@ interface Props {
   /** Trava a escolha (edição: trocar o item criaria outro lançamento, não moveria este). */
   desabilitado?: boolean
   aoEscolher: (item: ItemResponse | null) => void
-}
-
-/** Lê o "dia de vencimento" digitado: vazio vale `null`; fora de 1 a 31 ou não inteiro devolve `undefined`. */
-function lerDia(texto: string): number | null | undefined {
-  const limpo = texto.trim()
-  if (limpo === '') {
-    return null
-  }
-  if (!/^\d{1,2}$/.test(limpo)) {
-    return undefined
-  }
-  const dia = Number(limpo)
-  return dia >= 1 && dia <= 31 ? dia : undefined
 }
 
 /**

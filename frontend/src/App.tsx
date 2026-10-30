@@ -7,6 +7,8 @@ import { LoginPage } from './auth/LoginPage'
 import { RotaProtegida } from './auth/RotaProtegida'
 import { useAuth } from './auth/useAuth'
 import { AppShell } from './layout/AppShell'
+import { CartoesPage } from './paginas/cartoes/CartoesPage'
+import { CategoriasPage } from './paginas/categorias/CategoriasPage'
 import { InicioPage } from './paginas/inicio/InicioPage'
 import { LancamentoForm } from './paginas/lancamentos/LancamentoForm'
 import { LancamentosPage } from './paginas/lancamentos/LancamentosPage'
@@ -49,7 +51,7 @@ function MolduraDoUsuario() {
 
 /**
  * Rotas do app (dentro de `AuthProvider`). Login e cadastro são públicos; o resto exige sessão
- * (`RotaProtegida`). O formulário de lançamento é rota filha da lista. As demais telas entram nas tarefas seguintes.
+ * (`RotaProtegida`). O formulário de lançamento é rota filha da lista. O relatório entra na tarefa seguinte.
  */
 export function App() {
   return (
@@ -63,8 +65,8 @@ export function App() {
             <Route path="novo" element={<LancamentoForm />} />
             <Route path=":id" element={<LancamentoForm />} />
           </Route>
-          <Route path="/cartoes" element={<EmBreve titulo="Cartões" />} />
-          <Route path="/categorias" element={<EmBreve titulo="Categorias" />} />
+          <Route path="/cartoes" element={<CartoesPage />} />
+          <Route path="/categorias" element={<CategoriasPage />} />
           <Route path="/relatorios" element={<EmBreve titulo="Relatórios" />} />
           <Route path="/conta/senha" element={<DefinirSenhaPage />} />
         </Route>

@@ -64,6 +64,25 @@ export interface ItemRequest {
   arquivado?: boolean
 }
 
+// Cartões (fatura do mês contra o limite)
+export interface CartaoResponse {
+  itemId: number
+  nome: string
+  diaVencimento: number | null
+  fatura: string
+  limite: string | null
+  /** Fração com 4 casas (`"0.7300"` = 73%); `null` sem limite. Pode passar de 1. */
+  uso: string | null
+  faixa: FaixaUso
+}
+export interface CartoesResponse {
+  totalFaturas: string
+  limiteTotal: string
+  /** `null` quando nenhum cartão tem limite. */
+  usoGeral: string | null
+  cartoes: CartaoResponse[]
+}
+
 // Lançamentos
 export interface LancamentoResponse {
   id: number
