@@ -153,3 +153,39 @@ export interface ResumoResponse {
   proximas: ProximaConta[]
   serieAno: PontoSerie[]
 }
+
+// Relatório anual (tela Relatórios)
+/** Um lançamento do mês na tabela; o mês sem lançamento chega como `null` na lista. */
+export interface CelulaRelatorio {
+  valor: string
+  status: StatusLancamento
+}
+export interface ItemRelatorio {
+  itemId: number
+  nome: string
+  /** Sempre 12 posições (janeiro a dezembro); `null` onde o item não tem lançamento. */
+  meses: (CelulaRelatorio | null)[]
+  total: string
+}
+export interface CategoriaRelatorio {
+  categoriaId: number
+  nome: string
+  tipo: TipoCategoria
+  /** Só itens com ao menos um lançamento no ano. */
+  itens: ItemRelatorio[]
+  /** 12 subtotais (janeiro a dezembro). */
+  totaisMes: string[]
+  total: string
+}
+export interface RelatorioAnualResponse {
+  ano: number
+  /** Receitas primeiro, depois por ordem; categoria sem lançamento no ano não vem. */
+  categorias: CategoriaRelatorio[]
+  /** Cada lista tem 12 valores (janeiro a dezembro). */
+  receitasMes: string[]
+  despesasMes: string[]
+  diferencaMes: string[]
+  receitasAno: string
+  despesasAno: string
+  diferencaAno: string
+}

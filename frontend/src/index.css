@@ -40,4 +40,12 @@ body {
   .valor {
     font-variant-numeric: tabular-nums;
   }
+
+  /* Relatório anual: lançamento já pago (verde) e diferença de caixa negativa (vermelho). */
+  .celula-paga {
+    color: var(--cor-positivo);
+  }
+  .diferenca-negativa {
+    color: var(--cor-negativo);
+  }
 }

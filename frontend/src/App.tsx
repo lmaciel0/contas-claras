@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import type { ReactNode } from 'react'
 import { Route, Routes } from 'react-router'
 import { CadastroPage } from './auth/CadastroPage'
 import { DefinirSenhaPage } from './auth/DefinirSenhaPage'
@@ -12,15 +11,7 @@ import { CategoriasPage } from './paginas/categorias/CategoriasPage'
 import { InicioPage } from './paginas/inicio/InicioPage'
 import { LancamentoForm } from './paginas/lancamentos/LancamentoForm'
 import { LancamentosPage } from './paginas/lancamentos/LancamentosPage'
-
-function EmBreve({ titulo }: { titulo: string }): ReactNode {
-  return (
-    <section className="card">
-      <h1 className="m-0 text-xl font-bold">{titulo}</h1>
-      <p className="mt-2 mb-0 text-sm text-[var(--cor-mutado)]">Em construção.</p>
-    </section>
-  )
-}
+import { RelatoriosPage } from './paginas/relatorios/RelatoriosPage'
 
 /** Moldura das telas logadas, alimentada pela sessão. Se o logout falhar, a pessoa continua logada e é avisada. */
 function MolduraDoUsuario() {
@@ -51,7 +42,7 @@ function MolduraDoUsuario() {
 
 /**
  * Rotas do app (dentro de `AuthProvider`). Login e cadastro são públicos; o resto exige sessão
- * (`RotaProtegida`). O formulário de lançamento é rota filha da lista. O relatório entra na tarefa seguinte.
+ * (`RotaProtegida`). O formulário de lançamento é rota filha da lista.
  */
 export function App() {
   return (
@@ -67,7 +58,7 @@ export function App() {
           </Route>
           <Route path="/cartoes" element={<CartoesPage />} />
           <Route path="/categorias" element={<CategoriasPage />} />
-          <Route path="/relatorios" element={<EmBreve titulo="Relatórios" />} />
+          <Route path="/relatorios" element={<RelatoriosPage />} />
           <Route path="/conta/senha" element={<DefinirSenhaPage />} />
         </Route>
       </Route>

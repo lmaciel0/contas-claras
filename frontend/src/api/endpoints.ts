@@ -10,6 +10,7 @@ import type {
   ItemResponse,
   LancamentoResponse,
   LoginRequest,
+  RelatorioAnualResponse,
   ResumoResponse,
   SalvarLancamentoRequest,
   StatusLancamento,
@@ -19,7 +20,6 @@ import type {
 const json = (corpo: unknown): RequestInit => ({ body: JSON.stringify(corpo) })
 const consulta = (ano: number, mes: number) => `ano=${ano}&mes=${mes}`
 
-// Telas seguintes acrescentam seus tipos (relatório) junto com as páginas.
 export const endpoints = {
   auth: {
     me: () => api<UsuarioResponse>('/api/auth/me'),
@@ -53,6 +53,9 @@ export const endpoints = {
     mudarStatus: (id: number, status: StatusLancamento) =>
       api<LancamentoResponse>(`/api/lancamentos/${id}/status`, { method: 'PATCH', ...json({ status }) }),
     excluir: (id: number) => api<void>(`/api/lancamentos/${id}`, { method: 'DELETE' }),
+  },
+  relatorios: {
+    ano: (ano: number) => api<RelatorioAnualResponse>(`/api/relatorios/ano/${ano}`),
   },
   resumo: (ano: number, mes: number) => api<ResumoResponse>(`/api/resumo?${consulta(ano, mes)}`),
   saude: () => api<{ status: string }>('/api/health'),
