@@ -8,6 +8,8 @@ import { RotaProtegida } from './auth/RotaProtegida'
 import { useAuth } from './auth/useAuth'
 import { AppShell } from './layout/AppShell'
 import { InicioPage } from './paginas/inicio/InicioPage'
+import { LancamentoForm } from './paginas/lancamentos/LancamentoForm'
+import { LancamentosPage } from './paginas/lancamentos/LancamentosPage'
 
 function EmBreve({ titulo }: { titulo: string }): ReactNode {
   return (
@@ -47,7 +49,7 @@ function MolduraDoUsuario() {
 
 /**
  * Rotas do app (dentro de `AuthProvider`). Login e cadastro são públicos; o resto exige sessão
- * (`RotaProtegida`). As demais telas de dados entram nas tarefas seguintes (Lançamentos na 13, ...).
+ * (`RotaProtegida`). O formulário de lançamento é rota filha da lista. As demais telas entram nas tarefas seguintes.
  */
 export function App() {
   return (
@@ -57,9 +59,10 @@ export function App() {
       <Route element={<RotaProtegida />}>
         <Route element={<MolduraDoUsuario />}>
           <Route path="/" element={<InicioPage />} />
-          <Route path="/lancamentos" element={<EmBreve titulo="Lançamentos" />} />
-          <Route path="/lancamentos/novo" element={<EmBreve titulo="Novo lançamento" />} />
-          <Route path="/lancamentos/:id" element={<EmBreve titulo="Lançamento" />} />
+          <Route path="/lancamentos" element={<LancamentosPage />}>
+            <Route path="novo" element={<LancamentoForm />} />
+            <Route path=":id" element={<LancamentoForm />} />
+          </Route>
           <Route path="/cartoes" element={<EmBreve titulo="Cartões" />} />
           <Route path="/categorias" element={<EmBreve titulo="Categorias" />} />
           <Route path="/relatorios" element={<EmBreve titulo="Relatórios" />} />
