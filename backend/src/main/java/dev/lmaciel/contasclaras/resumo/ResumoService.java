@@ -27,13 +27,15 @@ import dev.lmaciel.contasclaras.resumo.dto.TotaisMes;
 
 /**
  * Dados da tela Início. Tudo sai de consultas agregadas (soma por mês, tipo e status; soma por categoria);
- * só as próximas contas carregam lançamentos, e apenas as que vencem até 30 dias.
+ * só as próximas contas carregam lançamentos, e apenas as vencidas há até 90 dias ou que vencem em até 30.
  */
 @Service
 public class ResumoService {
 
     private static final BigDecimal ZERO = new BigDecimal("0.00");
     private static final int DIAS_A_FRENTE = 30;
+    /** Atrasada há mais que isso é resto de importação ou conta esquecida: sai da lista do Início. */
+    private static final int DIAS_ATRAS = 90;
     private static final int CASAS_PERCENTUAL = 4;
 
     private final LancamentoRepository lancamentos;
@@ -83,11 +85,11 @@ public class ResumoService {
                 .toList();
     }
 
-    /** Despesas previstas já vencidas ou que vencem em até 30 dias, a partir de hoje (não do mês escolhido). */
+    /** Despesas previstas vencidas há até 90 dias ou que vencem em até 30 dias, a partir de hoje (não do mês escolhido). */
     private List<ProximaConta> proximas(UsuarioLogado u) {
         LocalDate hoje = LocalDate.now(clock);
-        return lancamentos.findComVencimentoAte(u.id(), TipoCategoria.DESPESA, StatusLancamento.PREVISTO,
-                hoje.plusDays(DIAS_A_FRENTE)).stream()
+        return lancamentos.findComVencimentoEntre(u.id(), TipoCategoria.DESPESA, StatusLancamento.PREVISTO,
+                hoje.minusDays(DIAS_ATRAS), hoje.plusDays(DIAS_A_FRENTE)).stream()
                 .map(l -> proxima(l, hoje))
                 .toList();
     }

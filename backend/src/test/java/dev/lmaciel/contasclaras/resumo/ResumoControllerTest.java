@@ -27,20 +27,6 @@ class ResumoControllerTest extends IntegracaoTest {
         jdbc.update("delete from usuario");
     }
 
-    private long itemDe(String categoria, String nome) {
-        return jdbc.queryForObject("""
-                insert into item (categoria_id, nome)
-                values ((select c.id from categoria c join usuario u on u.id = c.usuario_id
-                         where u.email = ? and c.nome = ?), ?)
-                returning id""", Long.class, DONO, categoria, nome);
-    }
-
-    private void lancar(long itemId, int ano, int mes, String valor, String status, String vencimento) {
-        jdbc.update("""
-                insert into lancamento (item_id, ano, mes, valor, status, vencimento)
-                values (?, ?, ?, ?::numeric, ?, ?::date)""", itemId, ano, mes, valor, status, vencimento);
-    }
-
     private ResultActions resumo(Cookie sessao, String query) throws Exception {
         return mvc.perform(get("/api/resumo" + query).cookie(sessao));
     }
@@ -72,10 +58,10 @@ class ResumoControllerTest extends IntegracaoTest {
     @Test
     void resposta_traz_todos_os_campos_no_formato_combinado() throws Exception {
         Cookie sessao = cadastrarEEntrar(DONO);
-        lancar(itemDe("Receitas", "Salário"), 2026, 10, "5000.00", "PAGO", null);
-        lancar(itemDe("Doméstica", "Aluguel"), 2026, 10, "1300.00", "PREVISTO", "2026-10-20");
-        lancar(itemDe("Transporte", "Ônibus"), 2026, 10, "1400.00", "PAGO", null);
-        lancar(itemDe("Transporte", "Aplicativo"), 2026, 9, "50.00", "PAGO", null);
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO", null);
+        criarLancamento(criarItem(DONO, "Doméstica", "Aluguel"), 2026, 10, "1300.00", "PREVISTO", "2026-10-20");
+        criarLancamento(criarItem(DONO, "Transporte", "Ônibus"), 2026, 10, "1400.00", "PAGO", null);
+        criarLancamento(criarItem(DONO, "Transporte", "Aplicativo"), 2026, 9, "50.00", "PAGO", null);
 
         resumo(sessao, "?ano=2026&mes=10")
                 .andExpect(status().isOk())

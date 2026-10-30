@@ -70,6 +70,33 @@ public abstract class IntegracaoTest {
         jdbcDaBase.update("delete from lancamento");
     }
 
+    /**
+     * Cria direto no banco um item sem dia de vencimento na categoria (de nome {@code categoria}) do usuário
+     * de {@code email}, que já precisa ter se cadastrado (as categorias padrão nascem no cadastro).
+     * Devolve o id do item.
+     */
+    protected long criarItem(String email, String categoria, String nome) {
+        return jdbcDaBase.queryForObject("""
+                insert into item (categoria_id, nome)
+                values ((select c.id from categoria c join usuario u on u.id = c.usuario_id
+                         where u.email = ? and c.nome = ?), ?)
+                returning id""", Long.class, email, categoria, nome);
+    }
+
+    /** Cria direto no banco um lançamento sem vencimento ({@code valor} como "1200.50"). Devolve o id. */
+    protected long criarLancamento(long itemId, int ano, int mes, String valor, String status) {
+        return criarLancamento(itemId, ano, mes, valor, status, null);
+    }
+
+    /** Igual ao anterior, com vencimento ISO ("2026-10-20") ou {@code null}. */
+    protected long criarLancamento(long itemId, int ano, int mes, String valor, String status,
+            String vencimento) {
+        return jdbcDaBase.queryForObject("""
+                insert into lancamento (item_id, ano, mes, valor, status, vencimento)
+                values (?, ?, ?, ?::numeric, ?, ?::date) returning id""",
+                Long.class, itemId, ano, mes, valor, status, vencimento);
+    }
+
     /** Cadastra o e-mail (precisa estar na lista liberada) e devolve o cookie {@code cc_session} da sessão. */
     protected Cookie cadastrarEEntrar(String email) throws Exception {
         String setCookie = mvc.perform(post("/api/auth/cadastro")

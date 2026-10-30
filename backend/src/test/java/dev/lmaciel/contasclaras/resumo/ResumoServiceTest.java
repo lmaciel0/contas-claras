@@ -39,25 +39,6 @@ class ResumoServiceTest extends IntegracaoTest {
         return new UsuarioLogado(jdbc.queryForObject("select id from usuario where email = ?", Long.class, email));
     }
 
-    private long itemDe(String email, String categoria, String nome) {
-        return jdbc.queryForObject("""
-                insert into item (categoria_id, nome)
-                values ((select c.id from categoria c join usuario u on u.id = c.usuario_id
-                         where u.email = ? and c.nome = ?), ?)
-                returning id""", Long.class, email, categoria, nome);
-    }
-
-    private long lancar(long itemId, int ano, int mes, String valor, String status, String vencimento) {
-        return jdbc.queryForObject("""
-                insert into lancamento (item_id, ano, mes, valor, status, vencimento)
-                values (?, ?, ?, ?::numeric, ?, ?::date) returning id""",
-                Long.class, itemId, ano, mes, valor, status, vencimento);
-    }
-
-    private long lancar(long itemId, int ano, int mes, String valor, String status) {
-        return lancar(itemId, ano, mes, valor, status, null);
-    }
-
     private static BigDecimal v(String valor) {
         return new BigDecimal(valor);
     }
@@ -65,9 +46,9 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void resumo_calcula_receitas_despesas_e_sobra() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        lancar(itemDe(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
-        lancar(itemDe(DONO, "Doméstica", "Aluguel"), 2026, 10, "3000.00", "PAGO");
-        lancar(itemDe(DONO, "Doméstica", "Luz"), 2026, 10, "1200.50", "PREVISTO");
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Doméstica", "Aluguel"), 2026, 10, "3000.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Doméstica", "Luz"), 2026, 10, "1200.50", "PREVISTO");
 
         ResumoMes r = resumos.resumo(2026, 10, u);
 
@@ -80,14 +61,14 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void sobra_do_ano_soma_so_os_meses_do_ano() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        long salario = itemDe(DONO, "Receitas", "Salário");
-        long aluguel = itemDe(DONO, "Doméstica", "Aluguel");
-        lancar(salario, 2026, 1, "1000.00", "PAGO");
-        lancar(aluguel, 2026, 1, "400.00", "PAGO");
-        lancar(salario, 2026, 10, "5000.00", "PAGO");
-        lancar(aluguel, 2026, 12, "7000.00", "PREVISTO");
-        lancar(salario, 2025, 12, "9999.00", "PAGO");
-        lancar(salario, 2027, 1, "8888.00", "PAGO");
+        long salario = criarItem(DONO, "Receitas", "Salário");
+        long aluguel = criarItem(DONO, "Doméstica", "Aluguel");
+        criarLancamento(salario, 2026, 1, "1000.00", "PAGO");
+        criarLancamento(aluguel, 2026, 1, "400.00", "PAGO");
+        criarLancamento(salario, 2026, 10, "5000.00", "PAGO");
+        criarLancamento(aluguel, 2026, 12, "7000.00", "PREVISTO");
+        criarLancamento(salario, 2025, 12, "9999.00", "PAGO");
+        criarLancamento(salario, 2027, 1, "8888.00", "PAGO");
 
         ResumoMes r = resumos.resumo(2026, 10, u);
 
@@ -97,10 +78,10 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void resumo_sem_mes_anterior_retorna_anterior_null() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        lancar(itemDe(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
         // Setembro vazio; agosto e novembro com dados não contam como "mês anterior".
-        lancar(itemDe(DONO, "Doméstica", "Aluguel"), 2026, 8, "100.00", "PAGO");
-        lancar(itemDe(DONO, "Doméstica", "Luz"), 2026, 11, "100.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Doméstica", "Aluguel"), 2026, 8, "100.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Doméstica", "Luz"), 2026, 11, "100.00", "PAGO");
 
         assertThat(resumos.resumo(2026, 10, u).anterior()).isNull();
     }
@@ -108,11 +89,11 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void resumo_traz_totais_do_mes_anterior() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        long salario = itemDe(DONO, "Receitas", "Salário");
-        long aluguel = itemDe(DONO, "Doméstica", "Aluguel");
-        lancar(salario, 2026, 9, "4000.00", "PAGO");
-        lancar(aluguel, 2026, 9, "1500.25", "PREVISTO");
-        lancar(salario, 2026, 10, "5000.00", "PAGO");
+        long salario = criarItem(DONO, "Receitas", "Salário");
+        long aluguel = criarItem(DONO, "Doméstica", "Aluguel");
+        criarLancamento(salario, 2026, 9, "4000.00", "PAGO");
+        criarLancamento(aluguel, 2026, 9, "1500.25", "PREVISTO");
+        criarLancamento(salario, 2026, 10, "5000.00", "PAGO");
 
         ResumoMes r = resumos.resumo(2026, 10, u);
 
@@ -125,13 +106,13 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void resumo_janeiro_compara_com_dezembro_do_ano_anterior() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        long salario = itemDe(DONO, "Receitas", "Salário");
-        long aluguel = itemDe(DONO, "Doméstica", "Aluguel");
-        lancar(salario, 2025, 12, "2000.00", "PAGO");
-        lancar(aluguel, 2025, 12, "500.00", "PAGO");
-        lancar(salario, 2026, 1, "3000.00", "PAGO");
+        long salario = criarItem(DONO, "Receitas", "Salário");
+        long aluguel = criarItem(DONO, "Doméstica", "Aluguel");
+        criarLancamento(salario, 2025, 12, "2000.00", "PAGO");
+        criarLancamento(aluguel, 2025, 12, "500.00", "PAGO");
+        criarLancamento(salario, 2026, 1, "3000.00", "PAGO");
         // Dezembro do mesmo ano (depois de janeiro) não pode ser confundido com o anterior.
-        lancar(salario, 2026, 12, "7777.00", "PREVISTO");
+        criarLancamento(salario, 2026, 12, "7777.00", "PREVISTO");
 
         ResumoMes r = resumos.resumo(2026, 1, u);
 
@@ -167,7 +148,7 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void mes_vazio_em_ano_com_dados_zera_o_mes_mas_mantem_o_ano() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        lancar(itemDe(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
 
         ResumoMes r = resumos.resumo(2026, 3, u);
 
@@ -182,7 +163,7 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void mes_so_com_receitas_tem_categorias_vazias_sem_dividir_por_zero() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        lancar(itemDe(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
 
         ResumoMes r = resumos.resumo(2026, 10, u);
 
@@ -194,17 +175,17 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void categorias_ordenadas_por_total_com_percentual() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        lancar(itemDe(DONO, "Receitas", "Salário"), 2026, 10, "9000.00", "PAGO");
-        long aluguel = itemDe(DONO, "Doméstica", "Aluguel");
-        long luz = itemDe(DONO, "Doméstica", "Luz");
-        long onibus = itemDe(DONO, "Transporte", "Ônibus");
-        long consulta = itemDe(DONO, "Saúde", "Consulta");
-        lancar(aluguel, 2026, 10, "1000.00", "PAGO");
-        lancar(luz, 2026, 10, "300.00", "PREVISTO");
-        lancar(onibus, 2026, 10, "900.00", "PAGO");
-        lancar(consulta, 2026, 10, "500.00", "PREVISTO");
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 10, "9000.00", "PAGO");
+        long aluguel = criarItem(DONO, "Doméstica", "Aluguel");
+        long luz = criarItem(DONO, "Doméstica", "Luz");
+        long onibus = criarItem(DONO, "Transporte", "Ônibus");
+        long consulta = criarItem(DONO, "Saúde", "Consulta");
+        criarLancamento(aluguel, 2026, 10, "1000.00", "PAGO");
+        criarLancamento(luz, 2026, 10, "300.00", "PREVISTO");
+        criarLancamento(onibus, 2026, 10, "900.00", "PAGO");
+        criarLancamento(consulta, 2026, 10, "500.00", "PREVISTO");
         // Outro mês não entra.
-        lancar(consulta, 2026, 9, "4000.00", "PAGO");
+        criarLancamento(consulta, 2026, 9, "4000.00", "PAGO");
 
         ResumoMes r = resumos.resumo(2026, 10, u);
 
@@ -221,10 +202,10 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void proximas_inclui_atrasadas_e_ate_30_dias_e_ignora_pagas() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        long atrasada = lancar(itemDe(DONO, "Doméstica", "Aluguel"), 2026, 10, "900.00", "PREVISTO", "2026-10-20");
-        long noMes = lancar(itemDe(DONO, "Doméstica", "Luz"), 2026, 11, "150.00", "PREVISTO", "2026-11-20");
-        lancar(itemDe(DONO, "Doméstica", "Gás"), 2026, 12, "90.00", "PREVISTO", "2026-12-15");
-        lancar(itemDe(DONO, "Transporte", "Seguro"), 2026, 11, "80.00", "PAGO", "2026-11-05");
+        long atrasada = criarLancamento(criarItem(DONO, "Doméstica", "Aluguel"), 2026, 10, "900.00", "PREVISTO", "2026-10-20");
+        long noMes = criarLancamento(criarItem(DONO, "Doméstica", "Luz"), 2026, 11, "150.00", "PREVISTO", "2026-11-20");
+        criarLancamento(criarItem(DONO, "Doméstica", "Gás"), 2026, 12, "90.00", "PREVISTO", "2026-12-15");
+        criarLancamento(criarItem(DONO, "Transporte", "Seguro"), 2026, 11, "80.00", "PAGO", "2026-11-05");
 
         // O mês escolhido não muda a lista: "hoje" é que manda.
         for (int mes : new int[] {10, 3}) {
@@ -245,14 +226,14 @@ class ResumoServiceTest extends IntegracaoTest {
     @Test
     void proximas_respeita_limites_e_ordena_por_vencimento() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        long salario = itemDe(DONO, "Receitas", "Salário");
-        long limite = lancar(itemDe(DONO, "Doméstica", "Aluguel"), 2026, 11, "1.00", "PREVISTO", "2026-11-28");
-        lancar(itemDe(DONO, "Doméstica", "Luz"), 2026, 11, "2.00", "PREVISTO", "2026-11-29");
-        long hoje = lancar(itemDe(DONO, "Doméstica", "Gás"), 2026, 10, "3.00", "PREVISTO", "2026-10-29");
-        long ontem = lancar(itemDe(DONO, "Doméstica", "Água"), 2026, 10, "4.00", "PREVISTO", "2026-10-28");
-        lancar(itemDe(DONO, "Transporte", "Seguro"), 2026, 10, "5.00", "PREVISTO");
+        long salario = criarItem(DONO, "Receitas", "Salário");
+        long limite = criarLancamento(criarItem(DONO, "Doméstica", "Aluguel"), 2026, 11, "1.00", "PREVISTO", "2026-11-28");
+        criarLancamento(criarItem(DONO, "Doméstica", "Luz"), 2026, 11, "2.00", "PREVISTO", "2026-11-29");
+        long hoje = criarLancamento(criarItem(DONO, "Doméstica", "Gás"), 2026, 10, "3.00", "PREVISTO", "2026-10-29");
+        long ontem = criarLancamento(criarItem(DONO, "Doméstica", "Água"), 2026, 10, "4.00", "PREVISTO", "2026-10-28");
+        criarLancamento(criarItem(DONO, "Transporte", "Seguro"), 2026, 10, "5.00", "PREVISTO");
         // Receita prevista nunca é "conta a pagar".
-        lancar(salario, 2026, 11, "6.00", "PREVISTO", "2026-11-05");
+        criarLancamento(salario, 2026, 11, "6.00", "PREVISTO", "2026-11-05");
 
         ResumoMes r = resumos.resumo(2026, 10, u);
 
@@ -261,18 +242,32 @@ class ResumoServiceTest extends IntegracaoTest {
     }
 
     @Test
+    void proximas_ignora_atrasadas_com_mais_de_90_dias() throws Exception {
+        UsuarioLogado u = cadastrar(DONO);
+        // Hoje é 2026-10-29: 90 dias atrás é 2026-07-31; 91 dias atrás é 2026-07-30.
+        criarLancamento(criarItem(DONO, "Doméstica", "Aluguel"), 2026, 7, "10.00", "PREVISTO", "2026-07-30");
+        long noLimite = criarLancamento(criarItem(DONO, "Doméstica", "Luz"), 2026, 7, "20.00", "PREVISTO",
+                "2026-07-31");
+
+        ResumoMes r = resumos.resumo(2026, 10, u);
+
+        assertThat(r.proximas()).extracting(ProximaConta::lancamentoId).containsExactly(noLimite);
+        assertThat(r.proximas().get(0).atrasada()).isTrue();
+    }
+
+    @Test
     void serie_ano_tem_12_meses_e_separa_previsto() throws Exception {
         UsuarioLogado u = cadastrar(DONO);
-        long salario = itemDe(DONO, "Receitas", "Salário");
-        long extra = itemDe(DONO, "Receitas", "Extra");
-        long aluguel = itemDe(DONO, "Doméstica", "Aluguel");
-        long luz = itemDe(DONO, "Doméstica", "Luz");
-        lancar(salario, 2026, 3, "1000.00", "PAGO");
-        lancar(extra, 2026, 3, "250.00", "PREVISTO");
-        lancar(aluguel, 2026, 3, "400.00", "PAGO");
-        lancar(luz, 2026, 3, "60.50", "PREVISTO");
-        lancar(salario, 2026, 12, "1000.00", "PREVISTO");
-        lancar(salario, 2025, 3, "9999.00", "PAGO");
+        long salario = criarItem(DONO, "Receitas", "Salário");
+        long extra = criarItem(DONO, "Receitas", "Extra");
+        long aluguel = criarItem(DONO, "Doméstica", "Aluguel");
+        long luz = criarItem(DONO, "Doméstica", "Luz");
+        criarLancamento(salario, 2026, 3, "1000.00", "PAGO");
+        criarLancamento(extra, 2026, 3, "250.00", "PREVISTO");
+        criarLancamento(aluguel, 2026, 3, "400.00", "PAGO");
+        criarLancamento(luz, 2026, 3, "60.50", "PREVISTO");
+        criarLancamento(salario, 2026, 12, "1000.00", "PREVISTO");
+        criarLancamento(salario, 2025, 3, "9999.00", "PAGO");
 
         ResumoMes r = resumos.resumo(2026, 10, u);
 
@@ -296,12 +291,12 @@ class ResumoServiceTest extends IntegracaoTest {
     void resumo_so_conta_dados_do_usuario_logado() throws Exception {
         UsuarioLogado dono = cadastrar(DONO);
         UsuarioLogado outra = cadastrar(OUTRA);
-        lancar(itemDe(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
-        lancar(itemDe(DONO, "Doméstica", "Aluguel"), 2026, 10, "1000.00", "PREVISTO", "2026-10-25");
-        lancar(itemDe(DONO, "Doméstica", "Luz"), 2026, 9, "10.00", "PAGO");
-        lancar(itemDe(OUTRA, "Receitas", "Salário"), 2026, 10, "777.00", "PAGO");
-        lancar(itemDe(OUTRA, "Doméstica", "Aluguel"), 2026, 10, "333.00", "PREVISTO", "2026-10-26");
-        lancar(itemDe(OUTRA, "Transporte", "Ônibus"), 2026, 9, "22.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 10, "5000.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Doméstica", "Aluguel"), 2026, 10, "1000.00", "PREVISTO", "2026-10-25");
+        criarLancamento(criarItem(DONO, "Doméstica", "Luz"), 2026, 9, "10.00", "PAGO");
+        criarLancamento(criarItem(OUTRA, "Receitas", "Salário"), 2026, 10, "777.00", "PAGO");
+        criarLancamento(criarItem(OUTRA, "Doméstica", "Aluguel"), 2026, 10, "333.00", "PREVISTO", "2026-10-26");
+        criarLancamento(criarItem(OUTRA, "Transporte", "Ônibus"), 2026, 9, "22.00", "PAGO");
 
         ResumoMes doDono = resumos.resumo(2026, 10, dono);
         ResumoMes daOutra = resumos.resumo(2026, 10, outra);

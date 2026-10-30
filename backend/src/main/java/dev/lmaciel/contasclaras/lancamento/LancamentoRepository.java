@@ -58,16 +58,16 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
             @Param("ano") int ano, @Param("mes") int mes);
 
     /**
-     * Lançamentos do status e tipo informados, com vencimento até a data limite (inclusive), do mais antigo
-     * para o mais novo. Sem vencimento não entra. Não filtra por mês: o que ficou para trás continua aparecendo.
+     * Lançamentos do status e tipo informados com vencimento entre as duas datas (inclusive), do mais antigo
+     * para o mais novo. Sem vencimento não entra. Não filtra por mês: o que vence fora do mês escolhido também vem.
      */
     @Query("""
             select l from Lancamento l join fetch l.item i join fetch i.categoria c
             where c.usuario.id = :usuarioId and c.tipo = :tipo and l.status = :status
-              and l.vencimento is not null and l.vencimento <= :ate
+              and l.vencimento is not null and l.vencimento between :de and :ate
             order by l.vencimento, l.id""")
-    List<Lancamento> findComVencimentoAte(@Param("usuarioId") long usuarioId, @Param("tipo") TipoCategoria tipo,
-            @Param("status") StatusLancamento status, @Param("ate") LocalDate ate);
+    List<Lancamento> findComVencimentoEntre(@Param("usuarioId") long usuarioId, @Param("tipo") TipoCategoria tipo,
+            @Param("status") StatusLancamento status, @Param("de") LocalDate de, @Param("ate") LocalDate ate);
 
     boolean existsByItemCategoriaId(long categoriaId);
 }
