@@ -1,5 +1,10 @@
 import type { ReactNode } from 'react'
 import { Route, Routes } from 'react-router'
+import { CadastroPage } from './auth/CadastroPage'
+import { DefinirSenhaPage } from './auth/DefinirSenhaPage'
+import { LoginPage } from './auth/LoginPage'
+import { RotaProtegida } from './auth/RotaProtegida'
+import { useAuth } from './auth/useAuth'
 import { AppShell } from './layout/AppShell'
 
 function EmBreve({ titulo }: { titulo: string }): ReactNode {
@@ -11,24 +16,32 @@ function EmBreve({ titulo }: { titulo: string }): ReactNode {
   )
 }
 
+/** Moldura das telas logadas, alimentada pela sessão. */
+function MolduraDoUsuario() {
+  const { usuario, sair } = useAuth()
+  return <AppShell nomeUsuario={usuario?.nome} aoSair={() => void sair()} />
+}
+
 /**
- * Rotas do app. As telas entram nas tarefas seguintes (login/cadastro na 11, Início na 12,
- * Lançamentos na 13, ...); aqui só o esqueleto com a moldura responsiva.
+ * Rotas do app (dentro de `AuthProvider`). Login e cadastro são públicos; o resto exige sessão
+ * (`RotaProtegida`). As telas de dados entram nas tarefas seguintes (Início na 12, Lançamentos na 13, ...).
  */
 export function App() {
   return (
     <Routes>
-      <Route path="/login" element={<EmBreve titulo="Entrar" />} />
-      <Route path="/cadastro" element={<EmBreve titulo="Criar conta" />} />
-      <Route element={<AppShell />}>
-        <Route path="/" element={<EmBreve titulo="Início" />} />
-        <Route path="/lancamentos" element={<EmBreve titulo="Lançamentos" />} />
-        <Route path="/lancamentos/novo" element={<EmBreve titulo="Novo lançamento" />} />
-        <Route path="/lancamentos/:id" element={<EmBreve titulo="Lançamento" />} />
-        <Route path="/cartoes" element={<EmBreve titulo="Cartões" />} />
-        <Route path="/categorias" element={<EmBreve titulo="Categorias" />} />
-        <Route path="/relatorios" element={<EmBreve titulo="Relatórios" />} />
-        <Route path="/conta/senha" element={<EmBreve titulo="Alterar senha" />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/cadastro" element={<CadastroPage />} />
+      <Route element={<RotaProtegida />}>
+        <Route element={<MolduraDoUsuario />}>
+          <Route path="/" element={<EmBreve titulo="Início" />} />
+          <Route path="/lancamentos" element={<EmBreve titulo="Lançamentos" />} />
+          <Route path="/lancamentos/novo" element={<EmBreve titulo="Novo lançamento" />} />
+          <Route path="/lancamentos/:id" element={<EmBreve titulo="Lançamento" />} />
+          <Route path="/cartoes" element={<EmBreve titulo="Cartões" />} />
+          <Route path="/categorias" element={<EmBreve titulo="Categorias" />} />
+          <Route path="/relatorios" element={<EmBreve titulo="Relatórios" />} />
+          <Route path="/conta/senha" element={<DefinirSenhaPage />} />
+        </Route>
       </Route>
     </Routes>
   )
