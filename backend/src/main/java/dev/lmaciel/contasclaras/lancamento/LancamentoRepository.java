@@ -24,10 +24,13 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
 
     Optional<Lancamento> findByItemIdAndAnoAndMes(long itemId, int ano, int mes);
 
-    /** Lançamentos do item entre dois meses (inclusive), cada mês contado como {@code ano * 12 + mes}. */
+    /**
+     * Lançamentos do item entre dois meses (inclusive). {@code de} e {@code ate} são índices de
+     * {@code MesAno.indice()}, ou seja, {@code ano * 12 + mes - 1}; a consulta usa a mesma conta.
+     */
     @Query("""
             select l from Lancamento l
-            where l.item.id = :itemId and (l.ano * 12 + l.mes) between :de and :ate""")
+            where l.item.id = :itemId and (l.ano * 12 + l.mes - 1) between :de and :ate""")
     List<Lancamento> findDoItemNoPeriodo(@Param("itemId") long itemId, @Param("de") int de, @Param("ate") int ate);
 
     boolean existsByItemCategoriaId(long categoriaId);

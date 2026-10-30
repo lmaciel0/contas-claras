@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -11,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -52,6 +55,20 @@ public abstract class IntegracaoTest {
 
     @Autowired
     protected MockMvc mvc;
+
+    @Autowired
+    private JdbcTemplate jdbcDaBase;
+
+    /**
+     * A chave de {@code lancamento.item_id} é RESTRICT: com lançamento sobrando, o {@code delete from usuario}
+     * que os testes usam para limpar falha. Antes (herdado de um teste anterior) e depois (para o próximo),
+     * os lançamentos saem primeiro.
+     */
+    @BeforeEach
+    @AfterEach
+    void limparLancamentos() {
+        jdbcDaBase.update("delete from lancamento");
+    }
 
     /** Cadastra o e-mail (precisa estar na lista liberada) e devolve o cookie {@code cc_session} da sessão. */
     protected Cookie cadastrarEEntrar(String email) throws Exception {

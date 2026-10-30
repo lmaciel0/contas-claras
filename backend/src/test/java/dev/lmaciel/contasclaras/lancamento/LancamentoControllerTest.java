@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,15 +30,7 @@ class LancamentoControllerTest extends IntegracaoTest {
 
     @BeforeEach
     void limpar() {
-        // a chave de lancamento.item_id é RESTRICT: apagar o usuário só funciona sem lançamentos
-        jdbc.update("delete from lancamento");
         jdbc.update("delete from usuario");
-    }
-
-    /** Sem isto os lançamentos deste teste travariam o "delete from usuario" das outras classes. */
-    @AfterEach
-    void limparLancamentos() {
-        jdbc.update("delete from lancamento");
     }
 
     private long itemDe(String email, String categoria, String nome, Integer dia) {
@@ -243,6 +234,28 @@ class LancamentoControllerTest extends IntegracaoTest {
                 .andExpect(jsonPath("$[0].valor").value("650.00"))
                 .andExpect(jsonPath("$[0].status").value("PAGO"));
         assertThat(contar()).isEqualTo(4);
+    }
+
+    @Test
+    void repetir_ate_um_mes_ja_ocupado_nao_sobrescreve_nem_falha() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long luz = itemDe(DONO, "Doméstica", "Luz", 10);
+        lancamentoDireto(luz, 2026, 12, "650.00", "PAGO");
+
+        salvar(sessao, """
+                {"itemId":%d,"ano":2026,"mes":10,"valor":"500.00","status":"PAGO","repetirAte":{"ano":2026,"mes":12}}"""
+                .formatted(luz))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].mes").value(10))
+                .andExpect(jsonPath("$[1].mes").value(11))
+                .andExpect(jsonPath("$[1].status").value("PREVISTO"));
+
+        listar(sessao, 2026, 12)
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].valor").value("650.00"))
+                .andExpect(jsonPath("$[0].status").value("PAGO"));
+        assertThat(contar()).isEqualTo(3);
     }
 
     @Test
