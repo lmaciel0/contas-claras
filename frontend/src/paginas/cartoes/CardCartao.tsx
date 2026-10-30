@@ -11,11 +11,11 @@ const COR_DA_BARRA: Record<Exclude<FaixaUso, 'SEM_LIMITE'>, string> = {
   VERMELHO: '#D64545',
 }
 
-// Texto do chip um tom mais escuro que a barra para chegar a 4,5:1 sobre o fundo claro (WCAG AA).
+// Texto do chip um tom mais escuro que a barra para chegar a 4,5:1 sobre o fundo claro (WCAG AA); tokens em index.css.
 const CLASSE_DO_CHIP: Record<Exclude<FaixaUso, 'SEM_LIMITE'>, string> = {
-  VERDE: 'bg-[#e5f5ec] text-[#1f7a45]',
+  VERDE: 'bg-[#e5f5ec] text-[var(--cor-positivo-texto)]',
   AMARELO: 'bg-[#fff2cb] text-[#7a5f00]',
-  VERMELHO: 'bg-[#fbe5e5] text-[#b73333]',
+  VERMELHO: 'bg-[#fbe5e5] text-[var(--cor-negativo-texto)]',
 }
 
 const classeFoco =

@@ -13,8 +13,8 @@ interface Props {
 type Tom = 'bom' | 'ruim' | 'neutro'
 
 const CORES_DO_CHIP: Record<Tom, string> = {
-  bom: 'bg-[#e5f5ec] text-[var(--cor-positivo)]',
-  ruim: 'bg-[#fbe5e5] text-[var(--cor-negativo)]',
+  bom: 'bg-[#e5f5ec] text-[var(--cor-positivo-texto)]',
+  ruim: 'bg-[#fbe5e5] text-[var(--cor-negativo-texto)]',
   neutro: 'bg-[var(--cor-linha)] text-[var(--cor-mutado)]',
 }
 

@@ -33,7 +33,7 @@ export function ProximasContas({ contas }: Props) {
               <span className="flex flex-col items-end gap-0.5">
                 <span className="valor font-medium">{formatarMoeda(conta.valor)}</span>
                 {conta.atrasada && (
-                  <span className="rounded-full bg-[#fbe5e5] px-2 py-0.5 text-[11px] font-semibold text-[var(--cor-negativo)]">
+                  <span className="rounded-full bg-[#fbe5e5] px-2 py-0.5 text-[11px] font-semibold text-[var(--cor-negativo-texto)]">
                     atrasada
                   </span>
                 )}

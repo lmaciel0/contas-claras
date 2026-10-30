@@ -19,6 +19,9 @@ function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn()) {
       <Route element={<AppShell nomeUsuario="Ana" aoSair={aoSair} />}>
         <Route path="/" element={<p>Conteúdo do Início</p>} />
         <Route path="/lancamentos" element={<p>Conteúdo dos Lançamentos</p>} />
+        <Route path="/cartoes" element={<p>Conteúdo dos Cartões</p>} />
+        <Route path="/categorias" element={<p>Conteúdo das Categorias</p>} />
+        <Route path="/relatorios" element={<p>Conteúdo dos Relatórios</p>} />
       </Route>
     </Routes>,
     rota,
@@ -122,6 +125,36 @@ describe('seletor de mês', () => {
 
     expect(screen.getByRole('link', { name: 'Lançamentos' })).toHaveAttribute('href', '/lancamentos?ano=2026&mes=11')
   })
+})
+
+describe('seletor de mês só onde o mês importa', () => {
+  const larguras = [390, 1280]
+
+  it.each(larguras.flatMap((largura) => ['/', '/lancamentos', '/cartoes'].map((rota) => [largura, rota] as const)))(
+    'aparece em %i px em %s',
+    (largura, rota) => {
+      definirLargura(largura)
+      renderizar(`${rota}?ano=2026&mes=10`)
+
+      expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Mês seguinte' })).toBeInTheDocument()
+      expect(screen.getByText('Outubro 2026')).toBeInTheDocument()
+    },
+  )
+
+  it.each(larguras.flatMap((largura) => ['/relatorios', '/categorias'].map((rota) => [largura, rota] as const)))(
+    'não aparece em %i px em %s',
+    (largura, rota) => {
+      definirLargura(largura)
+      renderizar(`${rota}?ano=2026&mes=10`)
+
+      expect(screen.queryByRole('button', { name: 'Mês anterior' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Mês seguinte' })).not.toBeInTheDocument()
+      expect(screen.queryByText('Outubro 2026')).not.toBeInTheDocument()
+      // O resto do topo continua lá.
+      expect(screen.getByRole('button', { name: 'Menu do usuário' })).toBeInTheDocument()
+    },
+  )
 })
 
 describe('aviso de servidor acordando', () => {

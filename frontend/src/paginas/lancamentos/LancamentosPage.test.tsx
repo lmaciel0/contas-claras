@@ -130,7 +130,7 @@ describe('LancamentosPage', () => {
     expect(enviados).toEqual([{ status: 'PREVISTO' }])
   })
 
-  it('invalida_o_resumo_depois_de_mudar_o_status', async () => {
+  it('invalida_o_resumo_e_o_relatorio_depois_de_mudar_o_status', async () => {
     responderLancamentos(() => [lancamento({ id: 1, itemId: 20, itemNome: 'Luz' })])
     servidor.use(
       http.patch('/api/lancamentos/:id/status', () =>
@@ -139,10 +139,12 @@ describe('LancamentosPage', () => {
     )
     const { queryClient } = renderizar()
     queryClient.setQueryData(['resumo', 2026, 10], { sobra: '0.00' })
+    queryClient.setQueryData(['relatorio', 2026], { categorias: [] })
 
     await userEvent.click(await screen.findByRole('button', { name: /Luz.*Previsto/ }))
 
     await waitFor(() => expect(queryClient.getQueryState(['resumo', 2026, 10])?.isInvalidated).toBe(true))
+    expect(queryClient.getQueryState(['relatorio', 2026])?.isInvalidated).toBe(true)
   })
 
   it('mes_sem_lancamentos_avisa_e_nao_quebra', async () => {

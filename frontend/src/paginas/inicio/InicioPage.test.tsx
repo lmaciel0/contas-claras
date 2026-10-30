@@ -118,6 +118,9 @@ describe('InicioPage', () => {
     const chipDespesas = within(await bloco('Despesas')).getByText('↓ 50% vs setembro')
     expect(chipReceitas).toHaveAttribute('data-tom', 'ruim')
     expect(chipDespesas).toHaveAttribute('data-tom', 'bom')
+    // Texto dos chips no tom escuro (contraste AA sobre o fundo claro).
+    expect(chipReceitas).toHaveClass('text-[var(--cor-negativo-texto)]')
+    expect(chipDespesas).toHaveClass('text-[var(--cor-positivo-texto)]')
   })
 
   it('esconde_comparacao_quando_anterior_null', async () => {
@@ -189,6 +192,7 @@ describe('InicioPage', () => {
     expect(atrasada).toHaveTextContent('Moradia')
     expect(atrasada).toHaveTextContent('R$ 180,40')
     expect(within(atrasada!).getByText('atrasada')).toBeInTheDocument()
+    expect(within(atrasada!).getByText('atrasada')).toHaveClass('text-[var(--cor-negativo-texto)]')
     expect(emDia).toHaveTextContent('10/11')
     expect(emDia).toHaveTextContent('Internet')
     expect(within(emDia!).queryByText('atrasada')).not.toBeInTheDocument()

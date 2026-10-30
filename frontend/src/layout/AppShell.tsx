@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router'
+import { Link, Outlet, useLocation } from 'react-router'
 import { AbasTopo } from './AbasTopo'
 import { AvisoServidor } from './AvisoServidor'
 import { MenuUsuario } from './MenuUsuario'
@@ -29,10 +29,18 @@ function Logo() {
   )
 }
 
-/** Moldura das telas logadas: abas no topo em ≥ 768 px, navbar inferior fixa abaixo disso. */
+/** Telas que não dependem do mês em foco: o relatório é do ano e as categorias não têm período. */
+const ROTAS_SEM_MES = ['/relatorios', '/categorias']
+
+/**
+ * Moldura das telas logadas: abas no topo em ≥ 768 px, navbar inferior fixa abaixo disso. O seletor de mês só aparece
+ * onde o mês importa (nas rotas de `ROTAS_SEM_MES` ele some).
+ */
 export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const ehDesktop = useEhDesktop()
   const { busca } = useMesSelecionado()
+  const { pathname } = useLocation()
+  const comMes = !ROTAS_SEM_MES.some((rota) => pathname === rota || pathname.startsWith(`${rota}/`))
 
   return (
     <div className="min-h-dvh bg-[var(--cor-fundo)]">
@@ -44,14 +52,10 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
             <AbasTopo />
           </div>
         )}
-        {!ehDesktop && (
-          <div className="ml-auto">
-            <SeletorMes />
-          </div>
-        )}
+        {!ehDesktop && <div className="ml-auto">{comMes && <SeletorMes />}</div>}
         {ehDesktop && (
           <>
-            <SeletorMes />
+            {comMes && <SeletorMes />}
             <Link
               to={{ pathname: '/lancamentos/novo', search: busca }}
               className="rounded-full bg-[var(--cor-principal)] px-4 py-2.5 text-sm font-semibold text-white no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"

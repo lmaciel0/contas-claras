@@ -105,11 +105,14 @@ describe('CartoesPage', () => {
 
     const verde = screen.getByRole('region', { name: 'Cartão Verde' })
     expect(within(verde).getByText('20%')).toBeInTheDocument()
+    // Texto do chip usa o tom escuro (contraste AA); a barra mantém o verde da paleta.
+    expect(within(verde).getByText('20%')).toHaveClass('text-[var(--cor-positivo-texto)]')
     expect(preenchimento(verde)).toHaveStyle({ backgroundColor: '#2E9E5B', width: '20%' })
     expect(verde).toHaveTextContent('vence dia 25')
 
     const vermelho = screen.getByRole('region', { name: 'Cartão Vermelho' })
     expect(within(vermelho).getByText('99%')).toBeInTheDocument()
+    expect(within(vermelho).getByText('99%')).toHaveClass('text-[var(--cor-negativo-texto)]')
     expect(preenchimento(vermelho)).toHaveStyle({ backgroundColor: '#D64545', width: '99%' })
 
     // Resumo do mês.

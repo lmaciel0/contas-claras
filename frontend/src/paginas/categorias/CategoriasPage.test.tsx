@@ -358,7 +358,7 @@ describe('CategoriasPage', () => {
     expect(await regiao('Moradia')).toBeInTheDocument()
   })
 
-  it('salvar_invalida_categorias_cartoes_lancamentos_e_resumo', async () => {
+  it('salvar_invalida_categorias_cartoes_lancamentos_resumo_e_relatorio', async () => {
     responder()
     servidor.use(http.put('/api/itens/20', () => HttpResponse.json(item({ id: 20, nome: 'Luz' }))))
     const { queryClient } = renderizar()
@@ -373,6 +373,6 @@ describe('CategoriasPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Editar item Luz' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Salvar' }))
 
-    await waitFor(() => expect(chaves).toEqual(expect.arrayContaining([['categorias'], ['cartoes'], ['lancamentos'], ['resumo']])))
+    await waitFor(() => expect(chaves).toEqual(expect.arrayContaining([['categorias'], ['cartoes'], ['lancamentos'], ['resumo'], ['relatorio']])))
   })
 })

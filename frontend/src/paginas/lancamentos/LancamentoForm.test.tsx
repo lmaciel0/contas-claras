@@ -253,15 +253,17 @@ describe('LancamentoForm (novo)', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('salvar_invalida_lancamentos_e_resumo', async () => {
+  it('salvar_invalida_lancamentos_resumo_e_relatorio', async () => {
     const { queryClient } = renderizar('/lancamentos/novo?ano=2026&mes=10')
     capturarPut()
     queryClient.setQueryData(['resumo', 2026, 10], { sobra: '0.00' })
+    queryClient.setQueryData(['relatorio', 2026], { categorias: [] })
 
     await preencherLuz('10')
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
 
     await waitFor(() => expect(queryClient.getQueryState(['resumo', 2026, 10])?.isInvalidated).toBe(true))
+    expect(queryClient.getQueryState(['relatorio', 2026])?.isInvalidated).toBe(true)
   })
 })
 
