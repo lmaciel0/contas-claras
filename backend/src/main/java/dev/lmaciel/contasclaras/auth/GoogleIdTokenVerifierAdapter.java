@@ -2,7 +2,6 @@ package dev.lmaciel.contasclaras.auth;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +14,7 @@ import org.springframework.util.StringUtils;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 
 /**
@@ -27,24 +27,19 @@ class GoogleIdTokenVerifierAdapter implements GoogleTokenVerifier {
 
     private static final Logger log = LoggerFactory.getLogger(GoogleIdTokenVerifierAdapter.class);
 
-    /** Teto de conexão e de leitura na busca das chaves do Google (rota pública: não pode prender threads). */
-    private static final Duration TIMEOUT = Duration.ofSeconds(3);
-
     private final GoogleIdTokenVerifier verificador;
 
     GoogleIdTokenVerifierAdapter(@Value("${app.google.client-id:}") String clientId) {
         this.verificador = StringUtils.hasText(clientId)
-                ? new GoogleIdTokenVerifier.Builder(novoTransporte(), GsonFactory.getDefaultInstance())
+                // Timeout padrão da biblioteca (20 s) aceito de propósito: as chaves do Google ficam em cache
+                // e são buscadas raramente, então um transporte próprio custaria mais que o risco.
+                ? new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance())
                         .setAudience(List.of(clientId.trim()))
                         .build()
                 : null;
         if (verificador == null) {
             log.warn("GOOGLE_CLIENT_ID não configurado: o login com Google está desligado.");
         }
-    }
-
-    static TransporteComTimeout novoTransporte() {
-        return new TransporteComTimeout(TIMEOUT, TIMEOUT);
     }
 
     @Override
