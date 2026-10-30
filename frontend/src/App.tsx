@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Route, Routes } from 'react-router'
 import { CadastroPage } from './auth/CadastroPage'
@@ -16,10 +17,31 @@ function EmBreve({ titulo }: { titulo: string }): ReactNode {
   )
 }
 
-/** Moldura das telas logadas, alimentada pela sessão. */
+/** Moldura das telas logadas, alimentada pela sessão. Se o logout falhar, a pessoa continua logada e é avisada. */
 function MolduraDoUsuario() {
   const { usuario, sair } = useAuth()
-  return <AppShell nomeUsuario={usuario?.nome} aoSair={() => void sair()} />
+  const [erroAoSair, setErroAoSair] = useState<string | null>(null)
+
+  function aoSair() {
+    setErroAoSair(null)
+    sair().catch(() => setErroAoSair('Não foi possível sair. Tente de novo.'))
+  }
+
+  return (
+    <>
+      <AppShell nomeUsuario={usuario?.nome} aoSair={aoSair} />
+      {erroAoSair !== null && (
+        <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 md:bottom-6">
+          <p
+            role="alert"
+            className="m-0 rounded-xl border border-[var(--cor-negativo)] bg-[#fdecec] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
+          >
+            {erroAoSair}
+          </p>
+        </div>
+      )}
+    </>
+  )
 }
 
 /**

@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { aoNaoAutenticado } from '../api/cliente'
+import { aoNaoAutenticado, ErroApi } from '../api/cliente'
 import { endpoints } from '../api/endpoints'
 import type { UsuarioResponse } from '../api/tipos'
 import { AuthContexto } from './useAuth'
@@ -68,9 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sair: async () => {
       try {
         await endpoints.auth.logout()
-      } catch {
-        // Cookie já expirado (a API responde 401) ou servidor fora do ar: a pessoa quis sair, então sai
-        // do app de qualquer jeito. No segundo caso o cookie segue válido no servidor até expirar.
+      } catch (erro) {
+        // 401 = cookie já expirado, a pessoa já está deslogada. Qualquer outra falha (rede, 5xx, 90 s sem
+        // resposta) sobe: o cookie HttpOnly segue válido no servidor, então não finge que saiu.
+        if (!(erro instanceof ErroApi && erro.status === 401)) {
+          throw erro
+        }
       }
       setUsuario(null)
     },

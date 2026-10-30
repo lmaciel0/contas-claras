@@ -10,7 +10,10 @@ export interface Auth {
   entrar: (email: string, senha: string) => Promise<void>
   entrarComGoogle: (credential: string) => Promise<void>
   cadastrar: (nome: string, email: string, senha: string) => Promise<void>
-  /** Sempre deixa o app deslogado, mesmo que a API recuse (cookie já expirado). */
+  /**
+   * Deixa o app deslogado se a API confirmar (204) ou disser que a sessão já expirou (401). Qualquer outra
+   * falha rejeita e mantém `usuario`: o cookie ainda vale no servidor, e a tela deve avisar.
+   */
   sair: () => Promise<void>
   /** Relê `GET /api/auth/me` sem voltar a `carregando` (ex.: `temSenha` mudou). */
   recarregar: () => Promise<void>

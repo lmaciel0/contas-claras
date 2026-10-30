@@ -98,6 +98,20 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
   })
 
+  it.each([
+    ['tab', '%2F%09%2Fevil.example'],
+    ['quebra de linha', '%2F%0a%2Fevil.example'],
+    ['barra invertida', '%2F%5Cevil.example'],
+  ])('ignora_voltar_com_%s_escondendo_outro_site', async (_nome, voltar) => {
+    semSessao()
+    servidor.use(http.post('/api/auth/login', () => HttpResponse.json(usuarioFicticio)))
+    renderizar(`/login?voltar=${voltar}`)
+
+    await preencherEEnviar('ana@exemplo.com', 'senha-correta')
+
+    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+  })
+
   it('desabilita_o_botao_enquanto_envia', async () => {
     semSessao()
     let liberar: () => void = () => undefined
