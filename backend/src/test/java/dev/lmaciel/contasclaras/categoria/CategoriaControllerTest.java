@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,15 @@ class CategoriaControllerTest extends IntegracaoTest {
 
     @BeforeEach
     void limpar() {
+        // a chave de lancamento.item_id é RESTRICT: apagar o usuário só funciona sem lançamentos
+        jdbc.update("delete from lancamento");
         jdbc.update("delete from usuario");
+    }
+
+    /** Sem isto os lançamentos deste teste travariam o "delete from usuario" das outras classes. */
+    @AfterEach
+    void limparLancamentos() {
+        jdbc.update("delete from lancamento");
     }
 
     private long categoriaId(String email, String nome) {
@@ -201,6 +210,10 @@ class CategoriaControllerTest extends IntegracaoTest {
 
         mvc.perform(get("/api/categorias").cookie(sessao))
                 .andExpect(jsonPath("$", hasSize(11)));
+        assertThat(jdbc.queryForObject("select count(*) from lancamento where item_id = ?", Integer.class, item))
+                .isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from item where id = ?", Integer.class, item))
+                .isEqualTo(1);
     }
 
     @Test

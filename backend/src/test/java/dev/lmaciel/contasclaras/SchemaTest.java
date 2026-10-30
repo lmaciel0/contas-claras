@@ -43,4 +43,28 @@ class SchemaTest extends IntegracaoTest {
             jdbc.update("delete from usuario where id = ?", usuarioId);
         }
     }
+
+    @Test
+    void lancamento_impede_apagar_o_item() {
+        Long usuarioId = jdbc.queryForObject(
+                "insert into usuario (nome, email) values ('Fulano de Teste', 'fulano@exemplo.invalid') returning id",
+                Long.class);
+        Long categoriaId = jdbc.queryForObject(
+                "insert into categoria (usuario_id, nome, tipo, ordem) values (?, 'Moradia', 'DESPESA', 1) returning id",
+                Long.class, usuarioId);
+        Long itemId = jdbc.queryForObject(
+                "insert into item (categoria_id, nome) values (?, 'Aluguel') returning id", Long.class, categoriaId);
+        jdbc.update("insert into lancamento (item_id, ano, mes, valor, status) values (?, 2026, 10, 10, 'PREVISTO')",
+                itemId);
+
+        try {
+            assertThatThrownBy(() -> jdbc.update("delete from item where id = ?", itemId))
+                    .isInstanceOf(DataIntegrityViolationException.class);
+            assertThat(jdbc.queryForObject("select count(*) from lancamento where item_id = ?", Integer.class, itemId))
+                    .isEqualTo(1);
+        } finally {
+            jdbc.update("delete from lancamento where item_id = ?", itemId);
+            jdbc.update("delete from usuario where id = ?", usuarioId);
+        }
+    }
 }

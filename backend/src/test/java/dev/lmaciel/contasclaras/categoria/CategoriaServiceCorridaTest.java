@@ -18,6 +18,7 @@ import dev.lmaciel.contasclaras.auth.UsuarioLogado;
 import dev.lmaciel.contasclaras.categoria.dto.CategoriaRequest;
 import dev.lmaciel.contasclaras.comum.ConflitoException;
 import dev.lmaciel.contasclaras.item.ItemRepository;
+import dev.lmaciel.contasclaras.lancamento.LancamentoRepository;
 import dev.lmaciel.contasclaras.usuario.Usuario;
 import dev.lmaciel.contasclaras.usuario.UsuarioRepository;
 
@@ -32,7 +33,9 @@ class CategoriaServiceCorridaTest {
 
     private final CategoriaRepository categorias = mock(CategoriaRepository.class);
     private final UsuarioRepository usuarios = mock(UsuarioRepository.class);
-    private final CategoriaService service = new CategoriaService(categorias, mock(ItemRepository.class), usuarios);
+    private final LancamentoRepository lancamentos = mock(LancamentoRepository.class);
+    private final CategoriaService service = new CategoriaService(categorias, mock(ItemRepository.class),
+            lancamentos, usuarios);
 
     private static DataIntegrityViolationException violacao(ConstraintKind tipo) {
         var causa = new ConstraintViolationException("violação", new SQLException("falsa"), tipo, "categoria_nome");
@@ -58,5 +61,28 @@ class CategoriaServiceCorridaTest {
         assertThatThrownBy(() -> service.renomear(5, new CategoriaRequest("Viagens", null), USUARIO))
                 .isInstanceOf(ConflitoException.class)
                 .hasMessage(MENSAGEM);
+    }
+
+    @Test
+    void chave_estrangeira_de_lancamento_ao_excluir_vira_409() {
+        // o lançamento surgiu depois da checagem prévia: quem barra é o RESTRICT do banco
+        Categoria existente = new Categoria(mock(Usuario.class), "Pessoais", TipoCategoria.DESPESA, 1);
+        when(categorias.findByIdAndUsuarioId(5, 1)).thenReturn(Optional.of(existente));
+        when(lancamentos.existsByItemCategoriaId(5)).thenReturn(false);
+        doThrow(violacao(ConstraintKind.FOREIGN_KEY)).when(categorias).flush();
+
+        assertThatThrownBy(() -> service.excluir(5, USUARIO))
+                .isInstanceOf(ConflitoException.class)
+                .hasMessage("Categoria tem lançamentos. Arquive os itens em vez de apagar.");
+    }
+
+    @Test
+    void outra_violacao_ao_excluir_nao_vira_409() {
+        Categoria existente = new Categoria(mock(Usuario.class), "Pessoais", TipoCategoria.DESPESA, 1);
+        when(categorias.findByIdAndUsuarioId(5, 1)).thenReturn(Optional.of(existente));
+        doThrow(violacao(ConstraintKind.CHECK)).when(categorias).flush();
+
+        assertThatThrownBy(() -> service.excluir(5, USUARIO))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 }

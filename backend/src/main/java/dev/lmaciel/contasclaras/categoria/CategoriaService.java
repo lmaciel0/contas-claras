@@ -20,10 +20,12 @@ import dev.lmaciel.contasclaras.categoria.dto.CategoriaResponse;
 import dev.lmaciel.contasclaras.comum.ConflitoException;
 import dev.lmaciel.contasclaras.comum.NaoEncontradoException;
 import dev.lmaciel.contasclaras.comum.RequisicaoInvalidaException;
+import dev.lmaciel.contasclaras.comum.ViolacaoDeChaveEstrangeira;
 import dev.lmaciel.contasclaras.comum.ViolacaoDeUnicidade;
 import dev.lmaciel.contasclaras.item.Item;
 import dev.lmaciel.contasclaras.item.ItemRepository;
 import dev.lmaciel.contasclaras.item.dto.ItemResponse;
+import dev.lmaciel.contasclaras.lancamento.LancamentoRepository;
 import dev.lmaciel.contasclaras.usuario.UsuarioRepository;
 
 @Service
@@ -40,11 +42,14 @@ public class CategoriaService {
 
     private final CategoriaRepository categorias;
     private final ItemRepository itens;
+    private final LancamentoRepository lancamentos;
     private final UsuarioRepository usuarios;
 
-    public CategoriaService(CategoriaRepository categorias, ItemRepository itens, UsuarioRepository usuarios) {
+    public CategoriaService(CategoriaRepository categorias, ItemRepository itens, LancamentoRepository lancamentos,
+            UsuarioRepository usuarios) {
         this.categorias = categorias;
         this.itens = itens;
+        this.lancamentos = lancamentos;
         this.usuarios = usuarios;
     }
 
@@ -107,10 +112,17 @@ public class CategoriaService {
     @Transactional
     public void excluir(long categoriaId, UsuarioLogado u) {
         Categoria categoria = buscarDoUsuario(categoriaId, u);
-        if (categorias.temLancamentos(categoriaId)) {
+        if (lancamentos.existsByItemCategoriaId(categoriaId)) {
             throw new ConflitoException(COM_LANCAMENTOS);
         }
-        categorias.delete(categoria);
+        // A checagem acima evita o erro no caso comum; o RESTRICT do banco decide se um lançamento surgir
+        // logo depois dela.
+        try {
+            categorias.delete(categoria);
+            categorias.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw ViolacaoDeChaveEstrangeira.ocorreu(e) ? new ConflitoException(COM_LANCAMENTOS) : e;
+        }
     }
 
     /** A lista precisa ter exatamente as categorias do usuário, cada uma uma vez; a posição vira a ordem. */
