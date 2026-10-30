@@ -60,7 +60,7 @@ describe('AppShell no celular (390 px)', () => {
     const nav = screen.getByRole('navigation', { name: 'Navegação principal' })
     expect(within(nav).queryByText('Categorias')).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Menu do usuário' }))
+    await userEvent.click(screen.getByRole('button', { name: /Menu do usuário/ }))
 
     const opcoes = screen.getByRole('group', { name: 'Opções da conta' })
     expect(within(opcoes).getByRole('link', { name: 'Categorias' })).toHaveAttribute('href', '/categorias?ano=2026&mes=10')
@@ -86,7 +86,7 @@ describe('AppShell no computador (1280 px)', () => {
 
     expect(screen.getByRole('link', { name: '+ Lançar' })).toHaveAttribute('href', '/lancamentos/novo?ano=2026&mes=10')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Menu do usuário' }))
+    await userEvent.click(screen.getByRole('button', { name: /Menu do usuário/ }))
 
     const opcoes = screen.getByRole('group', { name: 'Opções da conta' })
     expect(within(opcoes).getByRole('link', { name: 'Alterar senha' })).toHaveAttribute('href', '/conta/senha')
@@ -100,6 +100,38 @@ describe('AppShell no computador (1280 px)', () => {
 
     expect(screen.getByRole('link', { name: 'Lançamentos' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current')
+  })
+})
+
+describe('cabeçalho sem quebra de linha no computador', () => {
+  // O jsdom não calcula layout (css: false): a garantia visual é medida no navegador; aqui fixamos as classes que a produzem.
+  it('logo, + Lançar e menu do usuário não encolhem nem quebram o texto', () => {
+    definirLargura(1280)
+    renderizar()
+
+    const itens = [
+      screen.getByRole('link', { name: 'Contas Claras' }),
+      screen.getByRole('link', { name: '+ Lançar' }),
+      screen.getByRole('button', { name: /Menu do usuário/ }),
+    ]
+
+    for (const item of itens) {
+      expect(item).toHaveClass('whitespace-nowrap', 'shrink-0')
+    }
+  })
+
+  it('o botão do usuário mostra só a inicial; o nome fica no rótulo acessível e dentro do painel', async () => {
+    definirLargura(1280)
+    renderizar()
+
+    const botao = screen.getByRole('button', { name: 'Menu do usuário, Ana' })
+
+    expect(botao).toHaveTextContent('A▾')
+    expect(botao).toHaveAttribute('title', 'Ana')
+
+    await userEvent.click(botao)
+
+    expect(within(screen.getByRole('group', { name: 'Opções da conta' })).getByText('Ana')).toBeVisible()
   })
 })
 
@@ -152,7 +184,7 @@ describe('seletor de mês só onde o mês importa', () => {
       expect(screen.queryByRole('button', { name: 'Mês seguinte' })).not.toBeInTheDocument()
       expect(screen.queryByText('Outubro 2026')).not.toBeInTheDocument()
       // O resto do topo continua lá.
-      expect(screen.getByRole('button', { name: 'Menu do usuário' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Menu do usuário/ })).toBeInTheDocument()
     },
   )
 })

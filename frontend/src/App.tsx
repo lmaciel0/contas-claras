@@ -11,6 +11,7 @@ import { CategoriasPage } from './paginas/categorias/CategoriasPage'
 import { InicioPage } from './paginas/inicio/InicioPage'
 import { LancamentoForm } from './paginas/lancamentos/LancamentoForm'
 import { LancamentosPage } from './paginas/lancamentos/LancamentosPage'
+import { NaoEncontradaPage } from './paginas/NaoEncontradaPage'
 import { RelatoriosPage } from './paginas/relatorios/RelatoriosPage'
 
 /** Moldura das telas logadas, alimentada pela sessão. Se o logout falhar, a pessoa continua logada e é avisada. */
@@ -60,6 +61,7 @@ export function App() {
           <Route path="/categorias" element={<CategoriasPage />} />
           <Route path="/relatorios" element={<RelatoriosPage />} />
           <Route path="/conta/senha" element={<DefinirSenhaPage />} />
+          <Route path="*" element={<NaoEncontradaPage />} />
         </Route>
       </Route>
     </Routes>

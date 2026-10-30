@@ -16,7 +16,7 @@ function Logo() {
   return (
     <Link
       to="/"
-      className="flex items-center gap-2 rounded-full bg-white py-1.5 pr-4 pl-1.5 font-bold text-[var(--cor-texto)] no-underline shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+      className="flex shrink-0 items-center gap-2 rounded-full bg-white py-1.5 pr-4 pl-1.5 font-bold whitespace-nowrap text-[var(--cor-texto)] no-underline shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
     >
       <span
         aria-hidden="true"
@@ -58,7 +58,7 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
             {comMes && <SeletorMes />}
             <Link
               to={{ pathname: '/lancamentos/novo', search: busca }}
-              className="rounded-full bg-[var(--cor-principal)] px-4 py-2.5 text-sm font-semibold text-white no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+              className="shrink-0 rounded-full bg-[var(--cor-principal)] px-4 py-2.5 text-sm font-semibold whitespace-nowrap text-white no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
             >
               + Lançar
             </Link>

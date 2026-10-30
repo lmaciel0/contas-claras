@@ -26,7 +26,7 @@ function renderizar(rota = '/') {
 }
 
 async function clicarEmSair() {
-  await userEvent.click(await screen.findByRole('button', { name: 'Menu do usuário' }))
+  await userEvent.click(await screen.findByRole('button', { name: /Menu do usuário/ }))
   await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
 }
 
@@ -36,7 +36,7 @@ describe('AuthProvider', () => {
     renderizar()
 
     expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Menu do usuário' })).toHaveTextContent('Ana')
+    expect(screen.getByRole('button', { name: 'Menu do usuário, Ana' })).toBeInTheDocument()
   })
 
   it('sair_chama_logout_e_volta_para_o_login', async () => {
@@ -78,7 +78,7 @@ describe('AuthProvider', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_NAO_SAIU)
     expect(screen.getByRole('heading', { name: 'Início' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Menu do usuário' })).toHaveTextContent('Ana')
+    expect(screen.getByRole('button', { name: 'Menu do usuário, Ana' })).toBeInTheDocument()
   })
 
   it('sair_sem_resposta_do_servidor_mantem_logado_e_avisa', async () => {

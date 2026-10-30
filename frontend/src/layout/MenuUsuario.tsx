@@ -14,7 +14,11 @@ const itemClasse =
   'hover:bg-[var(--cor-fundo)] focus-visible:outline-2 focus-visible:-outline-offset-2 ' +
   'focus-visible:outline-[var(--cor-principal)]'
 
-/** Botão do perfil com as opções da conta (padrão disclosure: abre/fecha, Esc devolve o foco ao botão). */
+/**
+ * Botão do perfil com as opções da conta (padrão disclosure: abre/fecha, Esc devolve o foco ao botão). O botão mostra só
+ * a inicial: com o nome ao lado o cabeçalho passa dos 1104 px úteis do `max-w-6xl` e quebra; o nome vai no rótulo
+ * acessível, no `title` e no topo do painel.
+ */
 export function MenuUsuario({ nomeUsuario, comCategorias, aoSair }: Props) {
   const [aberto, setAberto] = useState(false)
   const raiz = useRef<HTMLDivElement>(null)
@@ -53,11 +57,12 @@ export function MenuUsuario({ nomeUsuario, comCategorias, aoSair }: Props) {
       <button
         ref={botao}
         type="button"
-        aria-label="Menu do usuário"
+        aria-label={nomeUsuario ? `Menu do usuário, ${nomeUsuario}` : 'Menu do usuário'}
+        title={nomeUsuario}
         aria-expanded={aberto}
         aria-controls={idPainel}
         onClick={() => setAberto((valor) => !valor)}
-        className="flex min-h-10 items-center gap-2 rounded-full bg-white py-1 pr-3 pl-1 text-sm shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+        className="flex min-h-10 shrink-0 items-center gap-2 rounded-full bg-white py-1 pr-3 pl-1 text-sm whitespace-nowrap shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
       >
         <span
           aria-hidden="true"
@@ -65,7 +70,6 @@ export function MenuUsuario({ nomeUsuario, comCategorias, aoSair }: Props) {
         >
           {inicial}
         </span>
-        {nomeUsuario && <span className="hidden md:inline">{nomeUsuario}</span>}
         <span aria-hidden="true" className="text-[var(--cor-mutado)]">
           ▾
         </span>
@@ -78,6 +82,9 @@ export function MenuUsuario({ nomeUsuario, comCategorias, aoSair }: Props) {
         hidden={!aberto}
         className="absolute right-0 z-50 mt-2 w-52 rounded-2xl border border-[var(--cor-linha)] bg-white p-1.5 shadow-lg"
       >
+        {nomeUsuario && (
+          <p className="m-0 truncate px-3 pt-2 pb-1.5 text-xs font-semibold text-[var(--cor-mutado)]">{nomeUsuario}</p>
+        )}
         {comCategorias && (
           <Link to={{ pathname: '/categorias', search: busca }} className={itemClasse} onClick={fechar}>
             Categorias
