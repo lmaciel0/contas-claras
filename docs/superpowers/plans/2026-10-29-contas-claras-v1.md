@@ -11,6 +11,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-29-contas-claras-design.md`
 
+> **Atualização 2026-10-30 (durante a execução):** o deploy passou a ser um único projeto Vercel com Services (`web` = front Vite, `api` = backend em container) e banco Supabase. Onde este plano cita Render, Neon, `render.yaml` ou rewrite externo em `frontend/vercel.json`, vale o `vercel.json` da raiz (Tasks 16a/16b) e a seção 9 do spec.
+
 **Branch:** todo o trabalho em `feat/v1`, com um commit por task e PR para `main` no fim (o dono liberou branch, push, PR e merge neste repo).
 
 ## Global Constraints
@@ -434,7 +436,7 @@ Referência visual: `.local/mockups/dashboard-indigo.html` e `.local/mockups/car
     - Em < 768 px, `NavbarInferior` fixa com Início · Lançamentos · (+) · Cartões · Relatórios. O "+" central é um círculo `#27187E` elevado; Categorias e Sair ficam no menu do perfil, no topo.
   - Rotas: `/login`, `/cadastro`, `/` (Início), `/lancamentos`, `/lancamentos/novo`, `/lancamentos/:id`, `/cartoes`, `/categorias`, `/relatorios`, `/conta/senha`.
   - `index.css`: tokens `--cor-fundo:#F7F7FF; --cor-principal:#27187E; --cor-principal-clara:#A49DDB; --cor-positivo:#2E9E5B; --cor-negativo:#D64545; --cor-texto:#16123A; --cor-mutado:#7D7A99; --cor-linha:#E9E8F5`, cards brancos com `border-radius` 20–24 px e fonte Inter.
-  - `vercel.json`: rewrite `/api/(.*)` → `https://contas-claras-api.onrender.com/api/$1` e fallback SPA `/(.*)` → `/index.html`.
+  - `vercel.json`: rewrite `/api/(.*)` para a API e fallback SPA `/(.*)` → `/index.html` (substituído pelo `vercel.json` da raiz na Task 16b).
 
 - [ ] **Step 1: Criar o projeto** (`npm create vite@latest frontend -- --template react-ts`), instalar react-router, @tanstack/react-query, tailwindcss v4 (+ plugin Vite), recharts, vitest, @testing-library/react, @testing-library/user-event, jsdom, msw. Script `"test": "vitest"`.
 - [ ] **Step 2: Escrever os testes que falham**
