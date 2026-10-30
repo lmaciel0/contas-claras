@@ -2,6 +2,7 @@ package dev.lmaciel.contasclaras.importacao;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -56,8 +58,18 @@ public final class PlanilhaParser {
     }
 
     public static PlanilhaLida ler(InputStream xlsx) {
-        try (XSSFWorkbook pasta = new XSSFWorkbook(xlsx)) {
+        try (XSSFWorkbook pasta = abrir(xlsx)) {
             return lerPasta(pasta);
+        } catch (IOException e) { // só o close() da pasta chega aqui; falha ao abrir já virou IllegalArgumentException
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** Só a abertura vira "arquivo inválido"; erros na leitura da estrutura são bugs e não são mascarados. */
+    private static XSSFWorkbook abrir(InputStream xlsx) {
+        Objects.requireNonNull(xlsx, "xlsx");
+        try {
+            return new XSSFWorkbook(xlsx);
         } catch (IOException | RuntimeException e) {
             throw new IllegalArgumentException(MENSAGEM_ARQUIVO_INVALIDO, e);
         }
@@ -144,7 +156,9 @@ public final class PlanilhaParser {
 
         ItemAcumulado item = categoria.itens.computeIfAbsent(chave, k -> new ItemAcumulado());
         item.nome = nome;
-        item.diaVencimento = separado.dia();
+        if (separado.dia() != null) {
+            item.diaVencimento = separado.dia(); // anos em ordem crescente: vale o último ano com sufixo numérico
+        }
         item.cartao = categoria.chave.startsWith(PREFIXO_CARTOES);
 
         for (int mes = 1; mes <= MESES; mes++) {

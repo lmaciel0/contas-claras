@@ -4,11 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -133,6 +141,31 @@ class PlanilhaParserTest {
     }
 
     @Test
+    void vencimento_vem_do_ultimo_ano_cujo_nome_tem_sufixo_numerico() {
+        PlanilhaLida lida = ler(planilhaComNomesPorAno(Map.of(2025, "X (10)", 2026, "X (12)", 2027, "X")));
+
+        ItemLido x = lida.categorias().get(0).itens().get(0);
+        assertThat(x.nome()).isEqualTo("X");
+        assertThat(x.diaVencimento()).isEqualTo(12);
+        assertThat(x.valores().keySet())
+                .containsExactly(new MesAno(2025, 1), new MesAno(2026, 1), new MesAno(2027, 1));
+    }
+
+    @Test
+    void ano_mais_recente_sem_sufixo_nao_apaga_o_vencimento_dos_anos_anteriores() {
+        PlanilhaLida lida = ler(planilhaComNomesPorAno(Map.of(2025, "X (10)", 2026, "X")));
+
+        assertThat(lida.categorias().get(0).itens().get(0).diaVencimento()).isEqualTo(10);
+    }
+
+    @Test
+    void item_que_nunca_teve_sufixo_fica_sem_vencimento() {
+        PlanilhaLida lida = ler(planilhaComNomesPorAno(Map.of(2025, "X", 2026, "X")));
+
+        assertThat(lida.categorias().get(0).itens().get(0).diaVencimento()).isNull();
+    }
+
+    @Test
     void arquivo_que_nao_e_xlsx_vira_erro_claro() {
         byte[] valida = PlanilhaFicticia.gerar();
         List<byte[]> invalidos = List.of(
@@ -143,11 +176,36 @@ class PlanilhaParserTest {
         for (byte[] bytes : invalidos) {
             assertThatThrownBy(() -> PlanilhaParser.ler(new ByteArrayInputStream(bytes)))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Arquivo não é uma planilha .xlsx válida.");
+                    .hasMessage(PlanilhaParser.MENSAGEM_ARQUIVO_INVALIDO);
         }
     }
 
     // ---- ajudantes
+
+    private static PlanilhaLida ler(byte[] xlsx) {
+        return PlanilhaParser.ler(new ByteArrayInputStream(xlsx));
+    }
+
+    /** Uma aba por ano, cada uma com a categoria CAT e um único item chamado como no mapa, com valor em janeiro. */
+    private static byte[] planilhaComNomesPorAno(Map<Integer, String> nomeDoItemPorAno) {
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream saida = new ByteArrayOutputStream()) {
+            new TreeMap<>(nomeDoItemPorAno).forEach((ano, nome) -> {
+                XSSFSheet aba = wb.createSheet(String.valueOf(ano));
+                Row cabecalho = aba.createRow(0);
+                cabecalho.createCell(1).setCellValue("CAT");
+                cabecalho.createCell(2).setCellValue("JAN");
+                Row item = aba.createRow(1);
+                item.createCell(1).setCellValue(nome);
+                item.createCell(2).setCellValue(10.00);
+                aba.createRow(2).createCell(1).setCellValue("TOTAL");
+                aba.createRow(3).createCell(1).setCellValue("TOTAIS");
+            });
+            wb.write(saida);
+            return saida.toByteArray();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 
     private static List<String> nomesDasCategorias() {
         return planilha.categorias().stream().map(CategoriaLida::nome).toList();
