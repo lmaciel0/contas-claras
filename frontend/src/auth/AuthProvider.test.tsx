@@ -109,7 +109,7 @@ describe('AuthProvider', () => {
     await clicarEmSair()
     expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_NAO_SAIU)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
+    await clicarEmSair() // o menu fecha ao clicar em Sair; reabre para tentar de novo
 
     expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
     expect(chamadas).toBe(2)

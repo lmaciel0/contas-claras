@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Route, Routes } from 'react-router'
 import { CadastroPage } from './auth/CadastroPage'
 import { DefinirSenhaPage } from './auth/DefinirSenhaPage'
@@ -14,27 +14,51 @@ import { LancamentosPage } from './paginas/lancamentos/LancamentosPage'
 import { NaoEncontradaPage } from './paginas/NaoEncontradaPage'
 import { RelatoriosPage } from './paginas/relatorios/RelatoriosPage'
 
-/** Moldura das telas logadas, alimentada pela sessão. Se o logout falhar, a pessoa continua logada e é avisada. */
+/**
+ * Moldura das telas logadas, alimentada pela sessão. Ao sair mostra "Saindo…" na hora (a API pode estar acordando) e
+ * ignora novo clique enquanto a chamada dura. Se o logout falhar, a pessoa continua logada e é avisada.
+ */
 function MolduraDoUsuario() {
   const { usuario, sair } = useAuth()
+  const [saindo, setSaindo] = useState(false)
   const [erroAoSair, setErroAoSair] = useState<string | null>(null)
+  // O ref vale já no clique; o estado só chega no próximo render, tarde para barrar um segundo clique rápido.
+  const saindoAgora = useRef(false)
 
   function aoSair() {
+    if (saindoAgora.current) {
+      return
+    }
+    saindoAgora.current = true
+    setSaindo(true)
     setErroAoSair(null)
-    sair().catch(() => setErroAoSair('Não foi possível sair. Tente de novo.'))
+    sair().catch(() => {
+      saindoAgora.current = false
+      setSaindo(false)
+      setErroAoSair('Não foi possível sair. Tente de novo.')
+    })
   }
 
   return (
     <>
       <AppShell nomeUsuario={usuario?.nome} aoSair={aoSair} />
-      {erroAoSair !== null && (
+      {(saindo || erroAoSair !== null) && (
         <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 xl:bottom-6">
-          <p
-            role="alert"
-            className="m-0 rounded-xl border border-[var(--cor-negativo)] bg-[#fdecec] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
-          >
-            {erroAoSair}
-          </p>
+          {saindo ? (
+            <p
+              role="status"
+              className="m-0 rounded-xl border border-[var(--cor-linha)] bg-white px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
+            >
+              Saindo…
+            </p>
+          ) : (
+            <p
+              role="alert"
+              className="m-0 rounded-xl border border-[var(--cor-negativo)] bg-[#fdecec] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
+            >
+              {erroAoSair}
+            </p>
+          )}
         </div>
       )}
     </>

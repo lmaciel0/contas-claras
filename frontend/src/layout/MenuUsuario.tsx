@@ -93,7 +93,14 @@ export function MenuUsuario({ nomeUsuario, comCategorias, aoSair }: Props) {
         <Link to="/conta/senha" className={itemClasse} onClick={fechar}>
           Alterar senha
         </Link>
-        <button type="button" className={itemClasse} onClick={aoSair}>
+        <button
+          type="button"
+          className={itemClasse}
+          onClick={() => {
+            fechar()
+            aoSair()
+          }}
+        >
           Sair
         </button>
       </div>
