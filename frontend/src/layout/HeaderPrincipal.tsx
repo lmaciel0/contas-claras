@@ -3,11 +3,11 @@ import { Link } from 'react-router'
 import { BotaoTema } from '../tema/BotaoTema'
 
 interface HeaderPrincipalProps {
-  nomeUsuario?: string
-  aoSair?: () => void
-  onAbrirBusca?: () => void
-  onAlternarPainelProdutividade?: () => void
-  painelProdutividadeAberto?: boolean
+  readonly nomeUsuario?: string
+  readonly aoSair?: () => void
+  readonly onAbrirBusca?: () => void
+  readonly onAlternarPainelProdutividade?: () => void
+  readonly painelProdutividadeAberto?: boolean
 }
 
 const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'

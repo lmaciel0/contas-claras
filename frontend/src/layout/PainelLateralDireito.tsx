@@ -23,8 +23,8 @@ const NOMES_MESES = [
 const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
 interface PainelLateralDireitoProps {
-  className?: string
-  aoFechar?: () => void
+  readonly className?: string
+  readonly aoFechar?: () => void
 }
 
 function extrairAnoEMes(dadosHoje?: string) {
@@ -37,6 +37,124 @@ function extrairAnoEMes(dadosHoje?: string) {
     }
   }
   return { ano: 2026, mes: 9 }
+}
+
+function obterEstiloDia(ehSelecionado: boolean, ehHoje: boolean) {
+  if (ehSelecionado) {
+    return 'bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)] font-bold shadow-xs'
+  }
+  if (ehHoje) {
+    return 'border border-[var(--cor-principal)] text-[var(--cor-principal)] font-bold'
+  }
+  return 'text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)]'
+}
+
+function EsqueletoLista() {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="h-6 animate-pulse rounded bg-[var(--cor-linha)]" />
+      <div className="h-6 animate-pulse rounded bg-[var(--cor-linha)]" />
+    </div>
+  )
+}
+
+function ListaTarefasHoje({
+  isPending,
+  tarefas,
+  onAlternar,
+}: {
+  readonly isPending: boolean
+  readonly tarefas: TarefaResponse[]
+  readonly onAlternar: (tarefa: TarefaResponse) => void
+}) {
+  if (isPending) {
+    return <EsqueletoLista />
+  }
+  if (tarefas.length === 0) {
+    return <p className="text-xs text-[var(--cor-mutado)]">Nenhuma tarefa pendente para hoje.</p>
+  }
+  return (
+    <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+      {tarefas.slice(0, 5).map((tarefa) => (
+        <li
+          key={tarefa.id}
+          className="group flex items-center justify-between gap-2 rounded-xl p-1.5 transition-colors hover:bg-[var(--cor-fundo)]"
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <button
+              type="button"
+              aria-label={
+                tarefa.concluida
+                  ? `Reabrir tarefa ${tarefa.titulo}`
+                  : `Concluir tarefa ${tarefa.titulo}`
+              }
+              onClick={() => onAlternar(tarefa)}
+              className={`grid size-5 shrink-0 place-items-center rounded-md border ${
+                tarefa.concluida
+                  ? 'border-[var(--cor-positivo)] bg-[var(--cor-positivo)] text-[var(--cor-sobre-principal)]'
+                  : 'border-[var(--cor-linha)] bg-[var(--cor-card)] group-hover:border-[var(--cor-principal)]'
+              } ${foco}`}
+            >
+              {tarefa.concluida && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </button>
+            <span
+              className={`truncate text-xs ${
+                tarefa.concluida
+                  ? 'text-[var(--cor-mutado)] line-through'
+                  : 'text-[var(--cor-texto)] font-medium'
+              }`}
+            >
+              {tarefa.titulo}
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function ListaProximasTarefas({
+  isPending,
+  tarefas,
+}: {
+  readonly isPending: boolean
+  readonly tarefas: TarefaResponse[]
+}) {
+  if (isPending) {
+    return <EsqueletoLista />
+  }
+  if (tarefas.length === 0) {
+    return <p className="text-xs text-[var(--cor-mutado)]">Nenhuma tarefa agendada adiante.</p>
+  }
+  return (
+    <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+      {tarefas.map((tarefa) => (
+        <li
+          key={tarefa.id}
+          className="flex items-center justify-between gap-2 rounded-xl p-1.5 transition-colors hover:bg-[var(--cor-fundo)]"
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="size-2 shrink-0 rounded-full bg-[var(--cor-principal)]"
+            />
+            <span className="truncate text-xs font-medium text-[var(--cor-texto)]">
+              {tarefa.titulo}
+            </span>
+          </div>
+          {tarefa.data && (
+            <span className="shrink-0 rounded-md bg-[var(--cor-fundo)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cor-mutado)]">
+              {tarefa.data.slice(5).replace('-', '/')}
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 /**
@@ -65,7 +183,6 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
   const [novaTarefaHoje, setNovaTarefaHoje] = useState('')
   const [mostrarFormNova, setMostrarFormNova] = useState(false)
 
-  // Atualiza se ano/mês ainda não tiver sido tocado
   const mesNome = NOMES_MESES[mesExibido]
 
   function mesAnterior() {
@@ -148,7 +265,7 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
             onClick={aoFechar}
             className={`rounded-lg p-2 text-[var(--cor-mutado)] hover:bg-[var(--cor-card)] ${foco}`}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
@@ -172,7 +289,7 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
               onClick={mesAnterior}
               className={`grid size-7 place-items-center rounded-lg text-[var(--cor-mutado)] transition-colors hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)] ${foco}`}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
@@ -185,7 +302,7 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
               onClick={mesSeguinte}
               className={`grid size-7 place-items-center rounded-lg text-[var(--cor-mutado)] transition-colors hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)] ${foco}`}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
@@ -203,7 +320,7 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
         <div className="grid grid-cols-7 gap-1 text-center">
           {diasDoMes.map((dia, idx) => {
             if (!dia) {
-              return <div key={`vazio-${idx}`} className="size-7" />
+              return <div key={`espaco-vazio-${mesExibido}-${anoExibido}-${idx}`} className="size-7" />
             }
             const ehHoje = dia.iso === dados?.hoje
             const ehSelecionado = dia.iso === diaSelecionado
@@ -215,13 +332,10 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
                 type="button"
                 onClick={() => setDiaSelecionado(dia.iso)}
                 aria-label={`Dia ${dia.numero} de ${mesNome}`}
-                className={`relative flex size-7 items-center justify-center rounded-lg text-xs font-medium transition-all ${
-                  ehSelecionado
-                    ? 'bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)] font-bold shadow-xs'
-                    : ehHoje
-                      ? 'border border-[var(--cor-principal)] text-[var(--cor-principal)] font-bold'
-                      : 'text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)]'
-                } ${foco}`}
+                className={`relative flex size-7 items-center justify-center rounded-lg text-xs font-medium transition-all ${obterEstiloDia(
+                  ehSelecionado,
+                  ehHoje,
+                )} ${foco}`}
               >
                 <span>{dia.numero}</span>
                 {temTarefa && !ehSelecionado && (
@@ -259,7 +373,7 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
             onClick={() => setMostrarFormNova((v) => !v)}
             className={`grid size-7 place-items-center rounded-lg bg-[var(--cor-principal-clara)] text-[var(--cor-principal)] transition-colors hover:bg-[var(--cor-principal)] hover:text-[var(--cor-sobre-principal)] ${foco}`}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
             </svg>
           </button>
@@ -269,7 +383,6 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
           <form onSubmit={aoCriarTarefa} className="mb-3 flex items-center gap-1.5">
             <input
               type="text"
-              autoFocus
               value={novaTarefaHoje}
               onChange={(e) => setNovaTarefaHoje(e.target.value)}
               placeholder="Nova tarefa hoje…"
@@ -285,58 +398,14 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
           </form>
         )}
 
-        {isPending ? (
-          <div className="flex flex-col gap-2">
-            {[1, 2].map((i) => (
-              <div key={i} className="h-6 animate-pulse rounded bg-[var(--cor-linha)]" />
-            ))}
-          </div>
-        ) : tarefasHojeEAtrazadas.length === 0 ? (
-          <p className="text-xs text-[var(--cor-mutado)]">Nenhuma tarefa pendente para hoje.</p>
-        ) : (
-          <ul className="flex flex-col gap-1.5 list-none p-0 m-0">
-            {tarefasHojeEAtrazadas.slice(0, 5).map((tarefa: TarefaResponse) => (
-              <li
-                key={tarefa.id}
-                className="group flex items-center justify-between gap-2 rounded-xl p-1.5 transition-colors hover:bg-[var(--cor-fundo)]"
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <button
-                    type="button"
-                    aria-label={
-                      tarefa.concluida
-                        ? `Reabrir tarefa ${tarefa.titulo}`
-                        : `Concluir tarefa ${tarefa.titulo}`
-                    }
-                    onClick={() =>
-                      concluir.mutate({ id: tarefa.id, concluida: !tarefa.concluida })
-                    }
-                    className={`grid size-5 shrink-0 place-items-center rounded-md border ${
-                      tarefa.concluida
-                        ? 'border-[var(--cor-positivo)] bg-[var(--cor-positivo)] text-[var(--cor-sobre-principal)]'
-                        : 'border-[var(--cor-linha)] bg-[var(--cor-card)] group-hover:border-[var(--cor-principal)]'
-                    } ${foco}`}
-                  >
-                    {tarefa.concluida && (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
-                  </button>
-                  <span
-                    className={`truncate text-xs ${
-                      tarefa.concluida
-                        ? 'text-[var(--cor-mutado)] line-through'
-                        : 'text-[var(--cor-texto)] font-medium'
-                    }`}
-                  >
-                    {tarefa.titulo}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ListaTarefasHoje
+          isPending={isPending}
+          tarefas={tarefasHojeEAtrazadas}
+          onAlternar={(tarefa) =>
+            concluir.mutate({ id: tarefa.id, concluida: !tarefa.concluida })
+          }
+        />
+
         <div className="mt-2 pt-2 border-t border-[var(--cor-linha)]">
           <Link
             to="/tarefas"
@@ -364,39 +433,7 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
           )}
         </div>
 
-        {isPending ? (
-          <div className="flex flex-col gap-2">
-            {[1, 2].map((i) => (
-              <div key={i} className="h-6 animate-pulse rounded bg-[var(--cor-linha)]" />
-            ))}
-          </div>
-        ) : proximasTarefas.length === 0 ? (
-          <p className="text-xs text-[var(--cor-mutado)]">Nenhuma tarefa agendada adiante.</p>
-        ) : (
-          <ul className="flex flex-col gap-1.5 list-none p-0 m-0">
-            {proximasTarefas.map((tarefa: TarefaResponse) => (
-              <li
-                key={tarefa.id}
-                className="flex items-center justify-between gap-2 rounded-xl p-1.5 transition-colors hover:bg-[var(--cor-fundo)]"
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <span
-                    aria-hidden="true"
-                    className="size-2 shrink-0 rounded-full bg-[var(--cor-principal)]"
-                  />
-                  <span className="truncate text-xs font-medium text-[var(--cor-texto)]">
-                    {tarefa.titulo}
-                  </span>
-                </div>
-                {tarefa.data && (
-                  <span className="shrink-0 rounded-md bg-[var(--cor-fundo)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cor-mutado)]">
-                    {tarefa.data.slice(5).replace('-', '/')}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        <ListaProximasTarefas isPending={isPending} tarefas={proximasTarefas} />
       </section>
     </aside>
   )
