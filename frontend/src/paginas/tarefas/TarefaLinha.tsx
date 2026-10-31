@@ -22,7 +22,7 @@ function rotuloDaData(data: string, hoje: string): string {
 
 export function TarefaLinha({ tarefa, hoje, aoAlternar, desabilitada = false, mostrarSemData = false, acoes }: Props) {
   const atrasada = !tarefa.concluida && tarefa.data !== null && tarefa.data < hoje
-  const rotulo = tarefa.concluida ? 'Reabrir tarefa' : 'Marcar como feita'
+  const rotulo = `${tarefa.concluida ? 'Reabrir tarefa' : 'Marcar como feita'}: ${tarefa.titulo}`
 
   return (
     <li className="flex min-h-11 items-center gap-3" data-atrasada={atrasada || undefined}>

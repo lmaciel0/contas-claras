@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import type { TarefaResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
@@ -13,6 +13,8 @@ const classeBotaoTexto = `min-h-11 cursor-pointer rounded-full px-3 text-sm font
 const classeBotaoPerigoTexto = `min-h-11 cursor-pointer rounded-full px-3 text-sm font-semibold text-[var(--cor-negativo-texto)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-negativo)]`
 
 type Modo = 'ver' | 'editar' | 'excluir'
+
+const LIMITE_CONCLUIDAS = 50
 
 interface LinhaProps {
   tarefa: TarefaResponse
@@ -31,6 +33,17 @@ function LinhaDeTarefa({ tarefa, hoje, mostrarSemData, aoAlternar, alternando }:
   const excluir = useExcluirTarefa()
   const idTitulo = useId()
   const idData = useId()
+  const botaoEditar = useRef<HTMLButtonElement>(null)
+  const botaoExcluir = useRef<HTMLButtonElement>(null)
+  // Botão que recebe o foco quando a linha volta ao modo normal (a edição e a confirmação desmontam o botão de origem).
+  const devolverFocoA = useRef<'editar' | 'excluir' | null>(null)
+
+  useEffect(() => {
+    if (modo !== 'ver' || devolverFocoA.current === null) return
+    const alvo = devolverFocoA.current === 'editar' ? botaoEditar.current : botaoExcluir.current
+    devolverFocoA.current = null
+    alvo?.focus()
+  }, [modo])
 
   function abrirEdicao() {
     setTitulo(tarefa.titulo)
@@ -41,6 +54,7 @@ function LinhaDeTarefa({ tarefa, hoje, mostrarSemData, aoAlternar, alternando }:
 
   function cancelar() {
     editar.reset()
+    devolverFocoA.current = 'editar'
     setModo('ver')
   }
 
@@ -48,7 +62,12 @@ function LinhaDeTarefa({ tarefa, hoje, mostrarSemData, aoAlternar, alternando }:
     evento.preventDefault()
     const limpo = titulo.trim()
     if (limpo === '' || editar.isPending) return
-    editar.mutate({ id: tarefa.id, titulo: limpo, data: data === '' ? null : data }, { onSuccess: () => setModo('ver') })
+    editar.mutate({ id: tarefa.id, titulo: limpo, data: data === '' ? null : data }, {
+      onSuccess: () => {
+        devolverFocoA.current = 'editar'
+        setModo('ver')
+      },
+    })
   }
 
   function aoTeclar(evento: KeyboardEvent<HTMLFormElement>) {
@@ -116,7 +135,15 @@ function LinhaDeTarefa({ tarefa, hoje, mostrarSemData, aoAlternar, alternando }:
           >
             {excluir.isPending ? 'Excluindo…' : 'Sim, excluir'}
           </button>
-          <button type="button" onClick={() => setModo('ver')} className={classeBotaoTexto}>
+          <button
+            type="button"
+            autoFocus
+            onClick={() => {
+              devolverFocoA.current = 'excluir'
+              setModo('ver')
+            }}
+            className={classeBotaoTexto}
+          >
             Cancelar
           </button>
           {excluir.isError && (
@@ -139,6 +166,7 @@ function LinhaDeTarefa({ tarefa, hoje, mostrarSemData, aoAlternar, alternando }:
       acoes={
         <>
           <button
+            ref={botaoEditar}
             type="button"
             aria-label={`Editar tarefa ${tarefa.titulo}`}
             onClick={abrirEdicao}
@@ -147,6 +175,7 @@ function LinhaDeTarefa({ tarefa, hoje, mostrarSemData, aoAlternar, alternando }:
             Editar
           </button>
           <button
+            ref={botaoExcluir}
             type="button"
             aria-label={`Excluir tarefa ${tarefa.titulo}`}
             onClick={() => {
@@ -225,7 +254,7 @@ export function TarefasPage() {
         Carregando as tarefas…
       </p>
     )
-  } else if (consulta.isError) {
+  } else if (consulta.data === undefined) {
     conteudo = (
       <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">
         <p className="m-0">{mensagemDoErro(consulta.error)}</p>
@@ -240,6 +269,16 @@ export function TarefasPage() {
     const comum = { hoje: dados.hoje, aoAlternar: alternar, alternando: concluir.isPending }
     conteudo = (
       <>
+        {consulta.isError && (
+          <p role="alert" className="m-0 text-xs text-[var(--cor-negativo-texto)]">
+            {mensagemDoErro(consulta.error)}
+          </p>
+        )}
+        {concluir.isError && (
+          <p role="alert" className="m-0 text-xs text-[var(--cor-negativo-texto)]">
+            {mensagemDoErro(concluir.error)}
+          </p>
+        )}
         {semAbertas && (
           <p className="card m-0 text-sm text-[var(--cor-mutado)]">Nenhuma tarefa por aqui. Que tal adicionar uma?</p>
         )}
@@ -271,6 +310,9 @@ export function TarefasPage() {
             </button>
           </h2>
           <div id={idLista} hidden={!concluidasAbertas}>
+            {dados.totalConcluidas > LIMITE_CONCLUIDAS && (
+              <p className="m-0 mt-1 text-xs text-[var(--cor-mutado)]">{`Mostrando as ${LIMITE_CONCLUIDAS} mais recentes`}</p>
+            )}
             {concluidasAbertas && dados.concluidas.length > 0 && (
               <ul className="m-0 mt-1 flex list-none flex-col p-0">
                 {dados.concluidas.map((tarefa) => (

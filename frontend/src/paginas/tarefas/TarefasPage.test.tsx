@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -36,7 +36,7 @@ function responder(corpo: TarefasResponse) {
 
 function renderizar() {
   comSessao()
-  renderComApp(<TarefasPage />, '/tarefas')
+  return renderComApp(<TarefasPage />, '/tarefas')
 }
 
 const secao = (nome: string) => screen.getByRole('region', { name: nome })
@@ -92,7 +92,8 @@ describe('TarefasPage', () => {
     expect(botao).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByText('Feita X')).toBeInTheDocument()
     expect(screen.getByText('Feita Y')).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: 'Reabrir tarefa' })).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Reabrir tarefa: Feita X' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reabrir tarefa: Feita Y' })).toBeInTheDocument()
   })
 
   it('adicionarCriaSemData', async () => {
@@ -264,11 +265,129 @@ describe('TarefasPage', () => {
     )
     renderizar()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Marcar como feita' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Marcar como feita: Aberta' }))
     await userEvent.click(screen.getByRole('button', { name: /Concluídas \(1\)/ }))
-    await userEvent.click(screen.getByRole('button', { name: 'Reabrir tarefa' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Reabrir tarefa: Feita' }))
 
     await waitFor(() => expect(corpos).toEqual({ '7': { concluida: true }, '8': { concluida: false } }))
+  })
+
+  it('erroAoConcluirMostraAlertaNaPagina', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Aberta' })] }))
+    servidor.use(
+      http.patch('/api/tarefas/7/concluida', () => HttpResponse.json({ erro: 'Falha ao concluir.' }, { status: 500 })),
+    )
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Marcar como feita: Aberta' }))
+
+    const alerta = await screen.findByRole('alert')
+    expect(within(alerta).getByText('Falha ao concluir.')).toBeInTheDocument()
+  })
+
+  it('erroAoReabrirMostraAlertaNaPagina', async () => {
+    responder(resposta({ concluidas: [tarefa(8, { titulo: 'Feita', concluida: true })], totalConcluidas: 1 }))
+    servidor.use(
+      http.patch('/api/tarefas/8/concluida', () => HttpResponse.json({ erro: 'Falha ao reabrir.' }, { status: 500 })),
+    )
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: /Concluídas \(1\)/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Reabrir tarefa: Feita' }))
+
+    expect(within(await screen.findByRole('alert')).getByText('Falha ao reabrir.')).toBeInTheDocument()
+  })
+
+  it('salvarEdicaoDevolveOFocoAoBotaoEditar', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Ligar' })] }))
+    servidor.use(http.put('/api/tarefas/7', () => HttpResponse.json(tarefa(7, { titulo: 'Ligar agora' }))))
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Editar tarefa Ligar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Editar tarefa Ligar' })).toHaveFocus())
+  })
+
+  it('cancelarEdicaoDevolveOFocoAoBotaoEditar', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Ligar' })] }))
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Editar tarefa Ligar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.getByRole('button', { name: 'Editar tarefa Ligar' })).toHaveFocus()
+  })
+
+  it('escNaEdicaoDevolveOFocoAoBotaoEditar', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Ligar' })] }))
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Editar tarefa Ligar' }))
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.getByRole('button', { name: 'Editar tarefa Ligar' })).toHaveFocus()
+  })
+
+  it('abrirConfirmacaoDeExclusaoFocaOBotaoCancelar', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Ligar' })] }))
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Excluir tarefa Ligar' }))
+
+    expect(within(screen.getByRole('group', { name: 'Confirmar exclusão' })).getByRole('button', { name: 'Cancelar' })).toHaveFocus()
+  })
+
+  it('cancelarExclusaoDevolveOFocoAoBotaoExcluir', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Ligar' })] }))
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Excluir tarefa Ligar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.getByRole('button', { name: 'Excluir tarefa Ligar' })).toHaveFocus()
+  })
+
+  it('refetchComErroMantemAListaEMostraAviso', async () => {
+    responder(resposta({ deHoje: [tarefa(2, { titulo: 'De hoje B' })] }))
+    const { queryClient } = renderizar()
+    await screen.findByText('De hoje B')
+
+    servidor.use(http.get('/api/tarefas', () => HttpResponse.json({ erro: 'Falha nas tarefas.' }, { status: 500 })))
+    await act(() => queryClient.refetchQueries({ queryKey: ['tarefas'] }))
+
+    const alerta = await screen.findByRole('alert')
+    expect(within(alerta).getByText('Falha nas tarefas.')).toBeInTheDocument()
+    expect(screen.getByText('De hoje B')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Concluídas \(0\)/ })).toBeInTheDocument()
+  })
+
+  it('maisDeCinquentaConcluidasAvisaDoLimite', async () => {
+    responder(
+      resposta({
+        concluidas: [tarefa(10, { titulo: 'Feita X', concluida: true })],
+        totalConcluidas: 51,
+      }),
+    )
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: /Concluídas \(51\)/ }))
+
+    expect(within(secao('Concluídas (51)')).getByText('Mostrando as 50 mais recentes')).toBeVisible()
+  })
+
+  it('ateCinquentaConcluidasNaoAvisaDoLimite', async () => {
+    responder(
+      resposta({
+        concluidas: [tarefa(10, { titulo: 'Feita X', concluida: true })],
+        totalConcluidas: 50,
+      }),
+    )
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: /Concluídas \(50\)/ }))
+
+    expect(screen.queryByText('Mostrando as 50 mais recentes')).not.toBeInTheDocument()
   })
 
   it('tarefaSemDataMostraSemDataSoEmProximas', async () => {

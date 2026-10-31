@@ -19,7 +19,7 @@ describe('TarefaLinha', () => {
   it('mostraBotaoMarcarComoFeita', () => {
     render(<TarefaLinha tarefa={tarefa()} hoje={HOJE} aoAlternar={() => {}} />)
 
-    expect(screen.getByRole('button', { name: 'Marcar como feita' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Marcar como feita: Pagar o boleto' })).toBeInTheDocument()
     expect(screen.getByText('Pagar o boleto')).toBeInTheDocument()
   })
 
@@ -28,7 +28,7 @@ describe('TarefaLinha', () => {
     const t = tarefa()
     render(<TarefaLinha tarefa={t} hoje={HOJE} aoAlternar={aoAlternar} />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Marcar como feita' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Marcar como feita: Pagar o boleto' }))
 
     expect(aoAlternar).toHaveBeenCalledExactlyOnceWith(t)
   })
@@ -42,7 +42,7 @@ describe('TarefaLinha', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Reabrir tarefa' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reabrir tarefa: Pagar o boleto' })).toBeInTheDocument()
     expect(screen.getByText('Pagar o boleto')).toHaveClass('line-through')
   })
 
@@ -78,6 +78,18 @@ describe('TarefaLinha', () => {
   it('desabilitadaBloqueiaOCirculo', () => {
     render(<TarefaLinha tarefa={tarefa()} hoje={HOJE} aoAlternar={() => {}} desabilitada />)
 
-    expect(screen.getByRole('button', { name: 'Marcar como feita' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Marcar como feita: Pagar o boleto' })).toBeDisabled()
+  })
+
+  it('rotuloDoBotaoIncluiOTituloParaDistinguirLinhas', () => {
+    render(
+      <ul>
+        <TarefaLinha tarefa={tarefa({ id: 1, titulo: 'Ligar' })} hoje={HOJE} aoAlternar={() => {}} />
+        <TarefaLinha tarefa={tarefa({ id: 2, titulo: 'Pagar' })} hoje={HOJE} aoAlternar={() => {}} />
+      </ul>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Marcar como feita: Ligar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Marcar como feita: Pagar' })).toBeInTheDocument()
   })
 })

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link } from 'react-router'
 import { ErroApi } from '../../api/cliente'
 import type { TarefaResponse } from '../../api/tipos'
+import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { TarefaLinha } from '../tarefas/TarefaLinha'
 import { useConcluirTarefa, useCriarTarefa, useTarefas } from '../tarefas/useTarefas'
 
@@ -68,7 +69,7 @@ export function TarefasDeHoje() {
         </div>
       )}
 
-      {consulta.isError && (
+      {consulta.isError && dados === undefined && (
         <div role="alert" className="flex flex-wrap items-center gap-3 text-sm">
           <p className="m-0">
             {consulta.error instanceof ErroApi ? consulta.error.mensagem : 'Não deu para carregar as tarefas.'}
@@ -85,6 +86,16 @@ export function TarefasDeHoje() {
 
       {dados && (
         <>
+          {consulta.isError && (
+            <p role="alert" className="m-0 mb-3 text-xs text-[var(--cor-negativo-texto)]">
+              {mensagemDoErro(consulta.error)}
+            </p>
+          )}
+          {concluir.isError && (
+            <p role="alert" className="m-0 mb-3 text-xs text-[var(--cor-negativo-texto)]">
+              {mensagemDoErro(concluir.error)}
+            </p>
+          )}
           {visiveis.length === 0 ? (
             <p className="m-0 mb-3 text-sm text-[var(--cor-mutado)]">Nada para hoje. Que tal adicionar uma tarefa?</p>
           ) : (
@@ -101,7 +112,9 @@ export function TarefasDeHoje() {
             </ul>
           )}
           {restantes > 0 && (
-            <Link to="/tarefas" className={`${classeLink} mb-2`}>{`+${restantes}`}</Link>
+            <Link to="/tarefas" aria-label={`Ver mais ${restantes} tarefas`} className={`${classeLink} mb-2`}>
+              {`+${restantes}`}
+            </Link>
           )}
 
           <form onSubmit={aoEnviar} className="mt-2 flex items-center gap-2">

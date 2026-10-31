@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { Route, Routes } from 'react-router'
@@ -40,7 +40,7 @@ function responder(corpo: TarefasResponse) {
 
 function renderizar() {
   comSessao()
-  renderComApp(<TarefasDeHoje />)
+  return renderComApp(<TarefasDeHoje />)
 }
 
 describe('TarefasDeHoje', () => {
@@ -80,7 +80,9 @@ describe('TarefasDeHoje', () => {
     renderizar()
 
     expect(await screen.findAllByRole('listitem')).toHaveLength(5)
-    expect(screen.getByRole('link', { name: '+3' })).toHaveAttribute('href', '/tarefas')
+    const link = screen.getByRole('link', { name: 'Ver mais 3 tarefas' })
+    expect(link).toHaveAttribute('href', '/tarefas')
+    expect(link).toHaveTextContent('+3')
   })
 
   it('cincoItensExatosNaoMostramMais', async () => {
@@ -88,7 +90,7 @@ describe('TarefasDeHoje', () => {
     renderizar()
 
     expect(await screen.findAllByRole('listitem')).toHaveLength(5)
-    expect(screen.queryByRole('link', { name: /^\+/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^Ver mais/ })).not.toBeInTheDocument()
   })
 
   it('clicarNoCirculoEnviaPatchConcluida', async () => {
@@ -102,9 +104,46 @@ describe('TarefasDeHoje', () => {
     )
     renderizar()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Marcar como feita' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Marcar como feita: Ligar para o banco' }))
 
     await waitFor(() => expect(corpos).toEqual([{ concluida: true }]))
+  })
+
+  it('erroAoConcluirMostraAlertaNoCard', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Ligar para o banco' })] }))
+    servidor.use(
+      http.patch('/api/tarefas/7/concluida', () => HttpResponse.json({ erro: 'Falha ao concluir.' }, { status: 500 })),
+    )
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Marcar como feita: Ligar para o banco' }))
+
+    const alerta = await screen.findByRole('alert')
+    expect(within(alerta).getByText('Falha ao concluir.')).toBeInTheDocument()
+  })
+
+  it('erroSemCorpoAoConcluirMostraMensagemPadrao', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Ligar para o banco' })] }))
+    servidor.use(http.patch('/api/tarefas/7/concluida', () => new HttpResponse(null, { status: 500 })))
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Marcar como feita: Ligar para o banco' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/\S/)
+  })
+
+  it('refetchComErroMantemAListaEMostraAviso', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Ligar para o banco' })] }))
+    const { queryClient } = renderizar()
+    await screen.findByText('Ligar para o banco')
+
+    servidor.use(http.get('/api/tarefas', () => HttpResponse.json({ erro: 'Falha nas tarefas.' }, { status: 500 })))
+    await act(() => queryClient.refetchQueries({ queryKey: ['tarefas'] }))
+
+    const alerta = await screen.findByRole('alert')
+    expect(within(alerta).getByText('Falha nas tarefas.')).toBeInTheDocument()
+    expect(screen.getByText('Ligar para o banco')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Nova tarefa' })).toBeInTheDocument()
   })
 
   it('adicionarComEnterCriaComDataDeHoje', async () => {
