@@ -586,3 +586,93 @@ Abra o PR e faça o merge. Grave as variáveis na Vercel lendo do arquivo, sem i
 - [ ] **Step 6: Limpar**
 
 Remova `ALLOWED_EMAILS` da Vercel e atualize a memória do projeto.
+
+### Task 12: Senha só depois da prova de posse (backend)
+
+Decisão do dono depois da revisão, que encontrou tomada de conta por troca de `senha_hash` na pendência. Prevalece sobre as Tasks 5 e 6 onde houver conflito. Roda antes dos Steps 3 a 6 da Task 11.
+
+Agent: `java-spring`.
+
+**Files:**
+- Modify: `V4__codigo_email.sql` (tira `senha_hash`; a `V4` ainda não foi a produção), `auth/CodigoEmail.java`, `auth/FluxoEmailService.java`, `auth/AuthController.java`, `auth/dto/CadastroRequest.java`, `auth/dto/ConfirmarCadastroRequest.java`, `auth/ModelosEmail.java`
+- Test: `auth/CadastroEmailTest.java`, `auth/CadastroSemEnumeracaoTest.java`, `auth/AuthControllerTest.java`, `auth/ModelosEmailTest.java`
+
+**Interfaces:**
+- `record CadastroRequest(String nome, String email)`, sem `senha`.
+- `record ConfirmarCadastroRequest(String email, String codigo, String token, String senha)`; `senha` obrigatória, com as mesmas regras de `RedefinirSenhaRequest`.
+- `FluxoEmailService`: `pedirCadastro(nome, email, ip)`; `confirmarCadastro(email, codigo, senha)`; `confirmarCadastroPorToken(token, senha)`.
+
+- [ ] **Step 1: Ajuste os testes para o contrato novo**
+
+```java
+// CadastroEmailTest
+void pendencia_nao_guarda_senha();                                 // a coluna senha_hash não existe mais
+void confirmar_define_a_senha_escolhida_e_ela_entra();             // login com a senha enviada na confirmação
+void terceiro_nao_consegue_definir_a_senha_da_conta();             // novo POST /cadastro de terceiro; a vítima confirma com o código novo e a senha dela; a senha dela entra
+void confirmar_com_token_exige_senha();
+void senha_fora_do_tamanho_na_confirmacao_responde_400_sem_consumir_tentativa();
+void reenvio_com_pendencia_troca_codigo_e_link_e_mantem_nome();    // substitui reenvio_..._mantem_nome_e_senha
+
+// CadastroSemEnumeracaoTest
+void com_ou_sem_conta_nao_gasta_bcrypt_responde_igual_e_envia_um_email();
+```
+
+- [ ] **Step 2: Run to verify they fail**
+
+Run: `cd backend && ./mvnw -q test -Dtest='CadastroEmailTest,CadastroSemEnumeracaoTest,AuthControllerTest,ModelosEmailTest'`
+Expected: FAIL.
+
+- [ ] **Step 3: Implement**
+
+Tire a senha do pedido e da pendência. Na confirmação, gere o BCrypt antes da transação; o resto da conferência não muda. O e-mail de cadastro diz que a senha será definida ao confirmar.
+
+- [ ] **Step 4: Run to verify they pass**
+
+Run: `cd backend && ./mvnw -q test`
+Expected: BUILD SUCCESS.
+
+- [ ] **Step 5: Commit**
+
+`git commit -m "fix(api): senha do cadastro só depois da prova de posse do e-mail"`
+
+### Task 13: Senha só depois da prova de posse (front)
+
+Agent: `frontend-developer`.
+
+**Files:**
+- Modify: `frontend/src/auth/CadastroPage.tsx`, `frontend/src/auth/ConfirmarPage.tsx`, `frontend/src/auth/AuthProvider.tsx`, `frontend/src/auth/useAuth.ts`, `frontend/src/api/endpoints.ts`, `frontend/src/api/tipos.ts`
+- Test: `frontend/src/auth/CadastroPage.test.tsx`, `frontend/src/auth/ConfirmarPage.test.tsx`
+
+**Interfaces:**
+- Consumes: contrato da Task 12.
+- `endpoints.auth`: `cadastro({ nome, email })`; `confirmarCadastro({ email, codigo, senha } | { token, senha })`.
+
+- [ ] **Step 1: Write the failing tests**
+
+```tsx
+// CadastroPage.test.tsx
+it('cadastro_nao_pede_senha', ...)                        // corpo só com nome e email
+// ConfirmarPage.test.tsx
+it('confirmar_envia_a_senha_junto_do_codigo', ...)
+it('confirmar_com_token_envia_a_senha_junto_do_token', ...)
+it('senhas_diferentes_bloqueiam_o_envio', ...)            // "As senhas não são iguais."; 0 chamadas à API
+it('senha_curta_avisa_sem_chamar_a_api', ...)             // MENSAGEM_SENHA_FORA_DO_TAMANHO
+```
+
+- [ ] **Step 2: Run to verify they fail**
+
+Run: `cd frontend && npx vitest run src/auth/ConfirmarPage.test.tsx src/auth/CadastroPage.test.tsx`
+Expected: FAIL.
+
+- [ ] **Step 3: Implement**
+
+`CadastroPage` perde os campos de senha. `ConfirmarPage` ganha "Senha" e "Repetir senha" (`autoComplete="new-password"`) nos dois modos. Abrir o link continua sem chamar a API até o clique.
+
+- [ ] **Step 4: Run to verify they pass**
+
+Run: `cd frontend && npx vitest run && npm run lint && npm run build`
+Expected: testes verdes, sem erro de lint, build concluído.
+
+- [ ] **Step 5: Commit**
+
+`git commit -m "fix(web): senha do cadastro definida na confirmação"`

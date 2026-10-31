@@ -11,7 +11,7 @@ O Contas Claras é portfólio público, mas só e-mails da lista `ALLOWED_EMAILS
 1. O Sair reage na hora ao clique.
 2. Qualquer visitante cria conta; a lista `ALLOWED_EMAILS` sai do código.
 3. Login e cadastro oferecem Google, com o ícone na tela.
-4. O cadastro normal pede a senha duas vezes e só cria a conta depois da confirmação por e-mail, com código de 6 dígitos ou link clicável.
+4. O cadastro normal só cria a conta depois da confirmação por e-mail, com código de 6 dígitos ou link clicável. A senha é definida nessa confirmação, digitada duas vezes.
 5. "Esqueci a senha": a pessoa informa o e-mail, recebe um código e define a senha nova.
 6. A troca entre login e cadastro é animada, e as telas seguem o CSS de referência (Uiverse, Smit-Prajapati).
 
@@ -35,6 +35,7 @@ O Contas Claras é portfólio público, mas só e-mails da lista `ALLOWED_EMAILS
 - Sem domínio: envio por um Gmail só do app, com senha de app.
 - O e-mail de cadastro traz código e link. O de senha traz só código.
 - Sem mockup: o CSS de referência basta.
+- A senha só é definida depois da prova de posse do e-mail (decisão de 2026-10-31, depois da revisão). Se a pendência guardasse a senha, um terceiro poderia trocá-la por um novo `POST /cadastro`, e a vítima, ao confirmar, criaria a conta com a senha dele.
 
 ## O que os logs de produção mostraram
 
@@ -61,7 +62,6 @@ create table codigo_email (
     tipo        varchar(10) not null check (tipo in ('CADASTRO', 'SENHA')),
     email       varchar(254) not null,
     nome        varchar(120),          -- só CADASTRO
-    senha_hash  varchar(100),          -- só CADASTRO
     codigo_hmac varchar(64) not null,
     token_hash  varchar(64),           -- só CADASTRO
     tentativas  int not null default 0,
@@ -87,9 +87,9 @@ O cadastro pendente fica fora de `usuario`. Assim, nenhum caminho de login preci
 
 | Rota | Corpo | Resposta |
 |---|---|---|
-| `POST /api/auth/cadastro` | `nome, email, senha` | sempre `202`, sem cookie |
+| `POST /api/auth/cadastro` | `nome, email` | sempre `202`, sem cookie |
 | `POST /api/auth/cadastro/reenviar` | `email` | sempre `202` |
-| `POST /api/auth/cadastro/confirmar` | `email, codigo` ou `token` | `201`, cookie e `UsuarioResponse` |
+| `POST /api/auth/cadastro/confirmar` | `email, codigo, senha` ou `token, senha` | `201`, cookie e `UsuarioResponse` |
 | `POST /api/auth/esqueci-senha` | `email` | sempre `202` |
 | `POST /api/auth/redefinir-senha` | `email, codigo, senha` | `200`, cookie e `UsuarioResponse` |
 
@@ -104,9 +104,9 @@ Cadastro e esqueci-senha enviam sempre exatamente um e-mail, para resposta e tem
 | Cadastro | código + link | aviso: já existe conta; entre ou use "Esqueci a senha" |
 | Esqueci-senha | aviso: não há conta com este e-mail | código |
 
-Ordem no cadastro: validar, gerar o BCrypt (sempre), aplicar limites, decidir o e-mail, gravar, enviar.
+Ordem no cadastro: validar, aplicar limites, decidir o e-mail, gravar, enviar. O pedido não gera BCrypt em nenhum dos dois casos.
 
-Reenvio: com cadastro pendente, gera novo código e novo link e mantém nome e senha. Sem pendência, responde `202` sem enviar. Esse caso revela só que não há cadastro pendente, nunca que há conta; o risco é aceito.
+Reenvio: com cadastro pendente, gera novo código e novo link e mantém o nome. Sem pendência, responde `202` sem enviar. Esse caso revela só que não há cadastro pendente, nunca que há conta; o risco é aceito.
 
 Limites, contados em `envio_email`:
 
@@ -129,7 +129,7 @@ O SMTP roda dentro da requisição, com `await` efetivo, porque a Vercel pode pa
 
 ### Regras de conta
 
-- Confirmar chama `criarUsuario`, com o hash guardado, e emite sessão. Se o e-mail já virou conta (ex.: Google nesse meio-tempo), apaga a pendência e responde o erro genérico.
+- Confirmar valida o tamanho da senha antes de consumir tentativa, gera o BCrypt antes da transação, chama `criarUsuario` com esse hash e emite sessão. Se o e-mail já virou conta (ex.: Google nesse meio-tempo), apaga a pendência e responde o erro genérico.
 - Redefinir valida o tamanho da senha antes de consumir tentativa, grava o hash, chama `invalidarSessoes` e emite sessão nova. Vale também para conta só com Google.
 - `entrarComGoogle` perde a checagem da lista e cria a conta para qualquer e-mail verificado pelo Google. O resto do fluxo não muda, inclusive vincular e apagar a senha.
 - Sai: `EmailsLiberados`, `ALLOWED_EMAILS`, `app.allowed-emails` e os usos em testes, `DemoSeeder`, `.env.example` e `README`. Specs e planos antigos ficam como estão.
@@ -147,10 +147,10 @@ O SMTP roda dentro da requisição, com `await` efetivo, porque a Vercel pode pa
 ### Telas
 
 - `/login`: e-mail, senha, "Esqueci a senha", Google, link para cadastro.
-- `/cadastro`: nome, e-mail, senha, repetir senha, Google, link para login. Senhas diferentes bloqueiam o envio no próprio formulário. Sucesso leva a `/confirmar`, com o e-mail no estado da rota, nunca na URL.
-- `/confirmar`:
-  - Sem token: e-mail, código (`inputMode="numeric"`, `autoComplete="one-time-code"`), "Reenviar" com contagem de 60 s e aviso para olhar o spam.
-  - Com `?token=`: lê o token, tira da URL com `history.replaceState` e mostra só o botão "Confirmar minha conta".
+- `/cadastro`: nome, e-mail, Google, link para login. Sucesso leva a `/confirmar`, com o e-mail no estado da rota, nunca na URL.
+- `/confirmar`: nos dois casos, senha e repetir senha; senhas diferentes bloqueiam o envio no próprio formulário.
+  - Sem token: também e-mail, código (`inputMode="numeric"`, `autoComplete="one-time-code"`), "Reenviar" com contagem de 60 s e aviso para olhar o spam.
+  - Com `?token=`: lê o token, tira da URL com `history.replaceState` e mostra, além das senhas, só o botão "Confirmar minha conta".
 - `/esqueci-senha`: passo 1 com e-mail; passo 2 com código, senha nova e repetir senha. Também com "Reenviar" e contagem.
 
 Quem já tem sessão é levado a `/`. Todo botão de envio mostra estado de espera e fica desabilitado enquanto a chamada dura. O `AvisoServidor` segue cobrindo o cold start.
