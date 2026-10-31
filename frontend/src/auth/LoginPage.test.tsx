@@ -140,4 +140,26 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('link', { name: 'Criar conta' })).toHaveAttribute('href', '/cadastro')
     expect(screen.queryByTestId('botao-google')).not.toBeInTheDocument()
   })
+
+  it('login_tem_link_esqueci_a_senha', async () => {
+    semSessao()
+    renderizar()
+
+    const link = await screen.findByRole('link', { name: 'Esqueci a senha' })
+    expect(link).toHaveAttribute('href', '/esqueci-senha')
+    // Logo abaixo do campo de senha e antes do botão Entrar.
+    const senha = screen.getByLabelText('Senha')
+    const entrar = screen.getByRole('button', { name: 'Entrar' })
+    expect(senha.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(link.compareDocumentPosition(entrar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('o_link_esqueci_a_senha_leva_para_a_recuperacao', async () => {
+    semSessao()
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'Esqueci a senha' }))
+
+    expect(await screen.findByRole('heading', { name: 'Esqueci a senha' })).toBeInTheDocument()
+  })
 })

@@ -62,8 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     entrarComGoogle: async (credential) => {
       setUsuario(await endpoints.auth.google({ credential }))
     },
-    cadastrar: async (nome, email, senha) => {
-      setUsuario(await endpoints.auth.cadastro({ nome, email, senha }))
+    cadastrar: async (nome, email) => {
+      await endpoints.auth.cadastro({ nome, email })
+    },
+    confirmarCadastro: async (req) => {
+      setUsuario(await endpoints.auth.confirmarCadastro(req))
+    },
+    redefinirSenha: async (req) => {
+      setUsuario(await endpoints.auth.redefinirSenha(req))
     },
     sair: async () => {
       try {

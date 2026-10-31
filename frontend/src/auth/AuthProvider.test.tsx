@@ -5,10 +5,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import { ErroApi } from '../api/cliente'
 import { endpoints } from '../api/endpoints'
-import { comSessao, semSessao } from '../teste/auth'
+import { comSessao, semSessao, usuarioFicticio } from '../teste/auth'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
+import { useAuth } from './useAuth'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -109,7 +110,7 @@ describe('AuthProvider', () => {
     await clicarEmSair()
     expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_NAO_SAIU)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
+    await clicarEmSair() // o menu fecha ao clicar em Sair; reabre para tentar de novo
 
     expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
     expect(chamadas).toBe(2)
@@ -128,5 +129,78 @@ describe('AuthProvider', () => {
     renderizar('/login')
 
     expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+  })
+})
+
+describe('AuthProvider: cadastro por e-mail e recuperação de senha', () => {
+  /** Mostra quem está logado e expõe um botão por operação nova de `Auth`. */
+  function Sonda() {
+    const { usuario, carregando, cadastrar, confirmarCadastro, redefinirSenha } = useAuth()
+    if (carregando) {
+      return <p>carregando</p>
+    }
+    return (
+      <>
+        <p data-testid="quem">{usuario?.nome ?? 'ninguém'}</p>
+        <button type="button" onClick={() => void cadastrar('Ana', 'ana@exemplo.com')}>
+          cadastrar
+        </button>
+        <button type="button" onClick={() => void confirmarCadastro({ token: 'abc', senha: 'senha-segura' })}>
+          confirmar
+        </button>
+        <button
+          type="button"
+          onClick={() => void redefinirSenha({ email: 'ana@exemplo.com', codigo: '123456', senha: 'senha-nova-1' })}
+        >
+          redefinir
+        </button>
+      </>
+    )
+  }
+
+  function renderizarSonda() {
+    return renderComApp(
+      <AuthProvider>
+        <Sonda />
+      </AuthProvider>,
+    )
+  }
+
+  it('cadastrar_nao_define_o_usuario', async () => {
+    semSessao()
+    let chamadas = 0
+    servidor.use(
+      http.post('/api/auth/cadastro', () => {
+        chamadas += 1
+        // Corpo de usuário de propósito: o cadastro por e-mail nunca deve abrir sessão, mesmo que a API devolva um.
+        return HttpResponse.json(usuarioFicticio, { status: 202 })
+      }),
+    )
+    renderizarSonda()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'cadastrar' }))
+
+    await vi.waitFor(() => expect(chamadas).toBe(1))
+    expect(screen.getByTestId('quem')).toHaveTextContent('ninguém')
+  })
+
+  it('confirmar_o_cadastro_define_o_usuario', async () => {
+    semSessao()
+    servidor.use(http.post('/api/auth/cadastro/confirmar', () => HttpResponse.json(usuarioFicticio, { status: 201 })))
+    renderizarSonda()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'confirmar' }))
+
+    expect(await screen.findByText('Ana')).toBeInTheDocument()
+  })
+
+  it('redefinir_a_senha_define_o_usuario', async () => {
+    semSessao()
+    servidor.use(http.post('/api/auth/redefinir-senha', () => HttpResponse.json(usuarioFicticio)))
+    renderizarSonda()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'redefinir' }))
+
+    expect(await screen.findByText('Ana')).toBeInTheDocument()
   })
 })

@@ -20,9 +20,20 @@ export interface LoginRequest {
   email: string
   senha: string
 }
+/** Pede o cadastro. Sem senha: ela só é definida em `/confirmar`, depois da prova de posse do e-mail. */
 export interface CadastroRequest {
   nome: string
   email: string
+}
+/** Pedidos que só levam o e-mail (reenviar o código do cadastro, esqueci a senha). */
+export interface EmailRequest {
+  email: string
+}
+/** Confirma o cadastro por código (`email` + `codigo` de 6 dígitos) ou pelo link do e-mail (`token`), já com a senha. */
+export type ConfirmarCadastroRequest = ({ email: string; codigo: string } | { token: string }) & { senha: string }
+export interface RedefinirSenhaRequest {
+  email: string
+  codigo: string
   senha: string
 }
 export interface GoogleLoginRequest {

@@ -3,30 +3,14 @@ import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import { semSessao, usuarioFicticio } from '../teste/auth'
+import { instalarGoogleFalso, removerGoogleFalso } from '../teste/google'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
 
-interface ConfiguracaoGoogle {
-  client_id: string
-  callback: (resposta: { credential: string }) => void
-}
-
-/** Biblioteca do Google já "carregada": o componente a usa sem baixar o script (nada de rede nos testes). */
-function instalarGoogleFalso() {
-  const inicializar = vi.fn<(configuracao: ConfiguracaoGoogle) => void>()
-  const desenharBotao = vi.fn<(elemento: HTMLElement, opcoes: object) => void>()
-  Object.defineProperty(window, 'google', {
-    configurable: true,
-    value: { accounts: { id: { initialize: inicializar, renderButton: desenharBotao } } },
-  })
-  return { inicializar, desenharBotao }
-}
-
 afterEach(() => {
   vi.unstubAllEnvs()
-  Reflect.deleteProperty(window, 'google')
-  document.querySelectorAll('script[src*="accounts.google.com"]').forEach((script) => script.remove())
+  removerGoogleFalso()
 })
 
 function renderizar() {
@@ -60,6 +44,19 @@ describe('BotaoGoogle', () => {
       expect.objectContaining({ client_id: 'cliente-de-teste.apps.googleusercontent.com' }),
     )
     expect(screen.getByTestId('botao-google')).toBeInTheDocument()
+  })
+
+  it('renderiza_o_icone_redondo', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'cliente-de-teste.apps.googleusercontent.com')
+    const { desenharBotao } = instalarGoogleFalso()
+    semSessao()
+    renderizar()
+
+    await waitFor(() => expect(desenharBotao).toHaveBeenCalledTimes(1))
+    expect(desenharBotao).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      expect.objectContaining({ type: 'icon', shape: 'circle', theme: 'outline', size: 'large' }),
+    )
   })
 
   it('o_callback_envia_a_credential_para_a_api_e_entra', async () => {

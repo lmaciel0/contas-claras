@@ -1,47 +1,48 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { Link, Navigate } from 'react-router'
-import { BotaoGoogle } from './BotaoGoogle'
+import { Link, Navigate, useNavigate } from 'react-router'
 import { CampoTexto, classeBotaoPrimario, MensagemDeErro } from './CampoTexto'
 import { mensagemDoErro } from './mensagemDoErro'
-import { MENSAGEM_SENHA_FORA_DO_TAMANHO, senhaValida } from './senha'
-import { TelaAuth, TelaCarregando } from './TelaAuth'
+import { TelaAuth } from './TelaAuth'
 import { useAuth } from './useAuth'
 
-/** `/cadastro`. A API cria a conta já com sessão (cookie), então depois do sucesso a pessoa vai direto ao Início. */
+/**
+ * `/cadastro`. A API não cria a conta aqui: manda um código (e um link) por e-mail, e a conta só nasce em `/confirmar`.
+ * Aqui não há senha: a pendência não a guarda (um terceiro poderia trocá-la); ela é definida na confirmação.
+ * Por isso o sucesso leva à confirmação, com o e-mail no estado da rota (nunca na URL).
+ */
 export function CadastroPage() {
-  const { usuario, carregando, cadastrar } = useAuth()
+  const { usuario, cadastrar } = useAuth()
+  const navigate = useNavigate()
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
-  if (carregando) {
-    return <TelaCarregando />
-  }
   if (usuario !== null) {
     return <Navigate to="/" replace />
   }
 
   async function enviar(evento: SubmitEvent<HTMLFormElement>) {
     evento.preventDefault()
+    if (enviando) {
+      return
+    }
     setErro(null)
     if (nome.trim() === '' || email.trim() === '') {
       setErro('Informe seu nome e seu e-mail.')
       return
     }
-    if (!senhaValida(senha)) {
-      setErro(MENSAGEM_SENHA_FORA_DO_TAMANHO)
-      return
-    }
     setEnviando(true)
     try {
-      await cadastrar(nome.trim(), email.trim(), senha)
+      await cadastrar(nome.trim(), email.trim())
     } catch (falha) {
       setErro(mensagemDoErro(falha))
       setEnviando(false)
+      return
     }
+    // O botão segue em "Enviando…" até a tela trocar: não há o que reativar depois do sucesso.
+    void navigate('/confirmar', { state: { email: email.trim() } })
   }
 
   return (
@@ -62,28 +63,17 @@ export function CadastroPage() {
           value={email}
           onChange={(evento) => setEmail(evento.target.value)}
         />
-        <CampoTexto
-          rotulo="Senha"
-          type="password"
-          autoComplete="new-password"
-          value={senha}
-          onChange={(evento) => setSenha(evento.target.value)}
-        />
-        <p className="m-0 -mt-2 text-xs">De 8 a 72 caracteres.</p>
         <MensagemDeErro texto={erro} />
         <button type="submit" disabled={enviando} className={classeBotaoPrimario}>
-          {enviando ? 'Criando…' : 'Criar conta'}
+          {enviando ? 'Enviando…' : 'Criar conta'}
         </button>
       </form>
-      <div className="mt-4 flex flex-col gap-4">
-        <BotaoGoogle aoErro={setErro} />
-        <p className="m-0 text-center text-sm">
-          Já tem conta?{' '}
-          <Link to="/login" className="font-semibold text-[var(--cor-principal)]">
-            Entrar
-          </Link>
-        </p>
-      </div>
+      <p className="m-0 mt-5 text-center text-sm">
+        Já tem conta?{' '}
+        <Link to="/login" className="font-semibold text-[var(--cor-principal)]">
+          Entrar
+        </Link>
+      </p>
     </TelaAuth>
   )
 }

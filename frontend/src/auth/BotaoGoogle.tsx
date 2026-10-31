@@ -30,8 +30,9 @@ function carregarScript(): Promise<void> {
 }
 
 /**
- * "Continuar com Google" (Google Identity Services). O Google devolve um `credential` (ID token) ao callback,
- * que o envia à API em `entrarComGoogle`. Sem `VITE_GOOGLE_CLIENT_ID` não renderiza nada nem baixa o script.
+ * Ícone redondo do Google (Google Identity Services); o texto "ou continue com" é do `LayoutAuth`. O Google devolve
+ * um `credential` (ID token) ao callback, que o envia à API em `entrarComGoogle`. Sem `VITE_GOOGLE_CLIENT_ID` não
+ * renderiza nada nem baixa o script.
  */
 export function BotaoGoogle({ aoErro }: { aoErro: (mensagem: string) => void }) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -64,11 +65,10 @@ export function BotaoGoogle({ aoErro }: { aoErro: (mensagem: string) => void }) 
           callback: ({ credential }) => aoReceberCredential.current(credential),
         })
         google.renderButton(alvo.current, {
-          type: 'standard',
+          type: 'icon',
           theme: 'outline',
           size: 'large',
-          text: 'continue_with',
-          shape: 'pill',
+          shape: 'circle',
           locale: 'pt-BR',
         })
       })

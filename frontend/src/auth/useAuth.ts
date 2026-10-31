@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { UsuarioResponse } from '../api/tipos'
+import type { ConfirmarCadastroRequest, RedefinirSenhaRequest, UsuarioResponse } from '../api/tipos'
 
 export interface Auth {
   /** `null` enquanto não há sessão (visitante) ou antes da primeira conferência (`carregando`). */
@@ -9,7 +9,12 @@ export interface Auth {
   /** Rejeitam com `ErroApi` (a tela mostra `mensagem`); em sucesso `usuario` já vale o novo usuário. */
   entrar: (email: string, senha: string) => Promise<void>
   entrarComGoogle: (credential: string) => Promise<void>
-  cadastrar: (nome: string, email: string, senha: string) => Promise<void>
+  /** Só pede o cadastro: a API manda o código por e-mail e não abre sessão, então `usuario` não muda. */
+  cadastrar: (nome: string, email: string) => Promise<void>
+  /** Confirma o e-mail (código ou link) e já entra na conta. */
+  confirmarCadastro: (req: ConfirmarCadastroRequest) => Promise<void>
+  /** Troca a senha com o código recebido por e-mail e já entra na conta. */
+  redefinirSenha: (req: RedefinirSenhaRequest) => Promise<void>
   /**
    * Deixa o app deslogado se a API confirmar (204) ou disser que a sessão já expirou (401). Qualquer outra
    * falha rejeita e mantém `usuario`: o cookie ainda vale no servidor, e a tela deve avisar.

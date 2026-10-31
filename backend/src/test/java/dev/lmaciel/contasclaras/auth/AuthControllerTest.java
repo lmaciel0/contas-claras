@@ -59,11 +59,11 @@ class AuthControllerTest extends IntegracaoTest {
 
     // ---- helpers -----------------------------------------------------------------------
 
-    private ResultActions cadastrar(String nome, String email, String senha) throws Exception {
+    private ResultActions cadastrar(String nome, String email) throws Exception {
         return mvc.perform(post("/api/auth/cadastro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                        {"nome":"%s","email":"%s","senha":"%s"}""".formatted(nome, email, senha)));
+                        {"nome":"%s","email":"%s"}""".formatted(nome, email)));
     }
 
     private ResultActions login(String email, String senha) throws Exception {
@@ -81,7 +81,7 @@ class AuthControllerTest extends IntegracaoTest {
     }
 
     private Cookie cookieDeUsuarioNovo(String email) throws Exception {
-        return cookieDe(cadastrar("Dono Teste", email, SENHA).andExpect(status().isCreated()).andReturn());
+        return cadastrarEEntrar(email);
     }
 
     /** Monta o JWT como o contrato define (HS256, sub = id), sem depender do TokenService. */
@@ -116,115 +116,22 @@ class AuthControllerTest extends IntegracaoTest {
     // ---- cadastro ----------------------------------------------------------------------
 
     @Test
-    void cadastro_com_email_liberado_cria_usuario_e_seta_cookie() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", SENHA)
-                .andExpect(status().isCreated())
-                .andExpect(header().string(HttpHeaders.SET_COOKIE, allOf(
-                        containsString("cc_session="),
-                        containsString("HttpOnly"),
-                        containsString("Secure"),
-                        containsString("SameSite=Strict"),
-                        containsString("Path=/"),
-                        containsString("Max-Age=2592000"))))
-                .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.nome").value("Dono Teste"))
-                .andExpect(jsonPath("$.email").value("dono@exemplo.com"))
-                .andExpect(jsonPath("$.temSenha").value(true))
-                .andExpect(content().string(not(containsString("senha"))))
-                .andExpect(jsonPath("$.senhaHash").doesNotExist());
-    }
-
-    @Test
-    void cadastro_grava_senha_com_hash_bcrypt() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", SENHA).andExpect(status().isCreated());
-
-        String hash = jdbc.queryForObject("select senha_hash from usuario", String.class);
-
-        assertThat(hash).startsWith("$2").doesNotContain(SENHA);
-    }
-
-    @Test
-    void cadastro_cria_11_categorias_padrao() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", SENHA).andExpect(status().isCreated());
-
-        List<Map<String, Object>> categorias = jdbc.queryForList(
-                "select nome, tipo, ordem from categoria order by ordem");
-
-        assertThat(categorias).hasSize(11);
-        assertThat(categorias.get(0)).containsEntry("ordem", 0).containsEntry("nome", "Receitas")
-                .containsEntry("tipo", "RECEITA");
-        assertThat(categorias.stream().map(c -> c.get("nome")).toList()).containsExactly(
-                "Receitas", "Doméstica", "Transporte", "Entretenimento", "Saúde", "Dívidas/Empréstimos",
-                "Cartões de crédito", "Bancos", "Obrigações financeiras", "Pagamentos diversos", "Pessoais");
-        assertThat(categorias.stream().skip(1).map(c -> c.get("tipo")).distinct().toList())
-                .containsExactly("DESPESA");
-    }
-
-    @Test
-    void cadastro_com_email_nao_liberado_retorna_403() throws Exception {
-        cadastrar("Intruso", "intruso@exemplo.com", SENHA)
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.erro").value("Não foi possível criar a conta com este e-mail."));
-
-        assertThat(jdbc.queryForObject("select count(*) from usuario", Long.class)).isZero();
-    }
-
-    @Test
-    void cadastro_normaliza_email() throws Exception {
-        cadastrar("Dono Teste", " Dono@Exemplo.com ", SENHA)
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("dono@exemplo.com"));
-
-        assertThat(jdbc.queryForObject("select email from usuario", String.class)).isEqualTo("dono@exemplo.com");
-    }
-
-    @Test
-    void cadastro_repetido_retorna_a_mesma_resposta_do_nao_liberado() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", SENHA).andExpect(status().isCreated());
-
-        cadastrar("Dono Teste", "DONO@exemplo.com", SENHA)
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.erro").value("Não foi possível criar a conta com este e-mail."));
-    }
-
-    @Test
-    void cadastro_com_senha_curta_retorna_400() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", "1234567")
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.erro").value("A senha deve ter entre 8 e 72 caracteres."));
-    }
-
-    @Test
-    void cadastro_com_senha_longa_demais_retorna_400() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", "a".repeat(73))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.erro").value("A senha deve ter entre 8 e 72 caracteres."));
-    }
-
-    @Test
-    void cadastro_com_senha_acima_de_72_bytes_retorna_400() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", "é".repeat(60))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.erro").value("A senha deve ter entre 8 e 72 caracteres."));
-    }
-
-    @Test
     void cadastro_com_email_invalido_retorna_400() throws Exception {
-        cadastrar("Dono Teste", "isto-nao-e-email", SENHA)
+        cadastrar("Dono Teste", "isto-nao-e-email")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value("Informe um e-mail válido."));
     }
 
     @Test
     void cadastro_sem_nome_retorna_400() throws Exception {
-        cadastrar("   ", "dono@exemplo.com", SENHA)
+        cadastrar("   ", "dono@exemplo.com")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value("Informe o nome."));
     }
 
     @Test
     void cadastro_com_nome_maior_que_120_retorna_400() throws Exception {
-        cadastrar("n".repeat(121), "dono@exemplo.com", SENHA)
+        cadastrar("n".repeat(121), "dono@exemplo.com")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value("O nome deve ter até 120 caracteres."));
     }
@@ -233,7 +140,7 @@ class AuthControllerTest extends IntegracaoTest {
     void cadastro_so_aceita_application_json() throws Exception {
         mvc.perform(post("/api/auth/cadastro")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("nome", "Dono Teste").param("email", "dono@exemplo.com").param("senha", SENHA))
+                .param("nome", "Dono Teste").param("email", "dono@exemplo.com"))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.erro").isNotEmpty());
     }
@@ -242,7 +149,7 @@ class AuthControllerTest extends IntegracaoTest {
 
     @Test
     void login_com_senha_certa_retorna_200_e_cookie() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", SENHA).andExpect(status().isCreated());
+        cadastrarEEntrar("dono@exemplo.com");
 
         login(" Dono@Exemplo.com ", SENHA)
                 .andExpect(status().isOk())
@@ -374,7 +281,7 @@ class AuthControllerTest extends IntegracaoTest {
         mvc.perform(get("/api/auth/me").cookie(cookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.nome").value("Dono Teste"))
+                .andExpect(jsonPath("$.nome").value("Usuario Teste"))
                 .andExpect(jsonPath("$.email").value("dono@exemplo.com"))
                 .andExpect(jsonPath("$.temSenha").value(true));
     }

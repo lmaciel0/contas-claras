@@ -16,7 +16,7 @@ const AVISO_APOS_MS = 3_000
 /** Tempo máximo de espera por uma chamada; a API grátis leva ~30–60 s para acordar. */
 const TIMEOUT_MS = 90_000
 
-/** Esperas entre tentativas quando o proxy responde 502/503/504 ou a conexão falha; a última se repete. */
+/** Esperas entre tentativas quando o proxy responde 502/503/504 (503 sem `{erro}`) ou a conexão falha; a última se repete. */
 const ESPERAS_ENTRE_TENTATIVAS_MS = [2_000, 3_000] as const
 /** O proxy da Vercel responde estes status enquanto a API ainda está acordando. */
 const STATUS_DE_PROXY_SEM_API = new Set([502, 503, 504])
@@ -75,11 +75,16 @@ async function lerCorpo(resposta: Response): Promise<unknown> {
   }
 }
 
-function mensagemDoErro(corpo: unknown): string {
+/** A mensagem de `{erro}`, ou `null` se o corpo não trouxer uma. */
+function erroDoCorpo(corpo: unknown): string | null {
   if (typeof corpo === 'object' && corpo !== null && 'erro' in corpo && typeof corpo.erro === 'string') {
     return corpo.erro
   }
-  return MENSAGEM_PADRAO
+  return null
+}
+
+function mensagemDoErro(corpo: unknown): string {
+  return erroDoCorpo(corpo) ?? MENSAGEM_PADRAO
 }
 
 /** Espera `ms` ou até o sinal abortar (o que vier primeiro); quem chama confere o sinal depois. */
@@ -93,6 +98,21 @@ function esperar(ms: number, sinal: AbortSignal): Promise<void> {
     const temporizador = setTimeout(terminar, ms)
     sinal.addEventListener('abort', terminar, { once: true })
   })
+}
+
+/**
+ * `true` quando a resposta é do proxy, sem API por trás, e vale tentar de novo. 502 e 504 sempre; 503 só sem `{erro}`:
+ * com `{erro}` ele vem da própria API (ex.: falha de SMTP) e repetir só gastaria e-mail e BCrypt à toa.
+ * Lê um clone, para o corpo original continuar disponível.
+ */
+async function ehRespostaDeProxySemApi(resposta: Response): Promise<boolean> {
+  if (!STATUS_DE_PROXY_SEM_API.has(resposta.status)) {
+    return false
+  }
+  if (resposta.status !== 503) {
+    return true
+  }
+  return erroDoCorpo(await lerCorpo(resposta.clone())) === null
 }
 
 async function tratarResposta<T>(resposta: Response): Promise<T> {
@@ -110,9 +130,9 @@ async function tratarResposta<T>(resposta: Response): Promise<T> {
  * Chama a API. Sempre envia o cookie de sessão (`same-origin`) e, havendo corpo, `Content-Type: application/json`.
  * Erro HTTP vira `ErroApi` com a mensagem de `{erro}`; 401 também aciona o tratador de `aoNaoAutenticado`.
  *
- * Cold start da API: sem resposta em 3 s liga `servidorAcordando()`. Resposta 502/503/504 do proxy ou falha de
+ * Cold start da API: sem resposta em 3 s liga `servidorAcordando()`. Resposta 502/504 do proxy, 503 sem `{erro}` ou falha de
  * conexão são tentadas de novo (esperas de 2 s, depois 3 s), com o aviso ligado, até o limite de 90 s, quando
- * rejeita com `ErroApi` de `status` 0. Outros erros HTTP (inclusive 500) não são repetidos.
+ * rejeita com `ErroApi` de `status` 0. Outros erros HTTP (inclusive 500 e 503 com `{erro}`) não são repetidos.
  */
 export async function api<T>(caminho: string, opcoes: RequestInit = {}): Promise<T> {
   const { signal: sinalDoChamador, ...restoDasOpcoes } = opcoes
@@ -164,7 +184,7 @@ export async function api<T>(caminho: string, opcoes: RequestInit = {}): Promise
         // falha de conexão (TypeError): tenta de novo abaixo
       }
 
-      if (resposta !== null && !STATUS_DE_PROXY_SEM_API.has(resposta.status)) {
+      if (resposta !== null && !(await ehRespostaDeProxySemApi(resposta))) {
         return await tratarResposta<T>(resposta)
       }
 

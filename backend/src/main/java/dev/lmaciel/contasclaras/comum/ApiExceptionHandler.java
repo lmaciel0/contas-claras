@@ -63,6 +63,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return resposta(HttpStatus.TOO_MANY_REQUESTS, e.getMessage());
     }
 
+    @ExceptionHandler(EmailIndisponivelException.class)
+    ResponseEntity<ApiErro> emailIndisponivel(EmailIndisponivelException e) {
+        return resposta(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     ResponseEntity<ApiErro> violacao(ConstraintViolationException e) {
         String mensagem = e.getConstraintViolations().stream()

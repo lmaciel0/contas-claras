@@ -16,8 +16,8 @@ import org.springframework.test.context.ActiveProfiles;
 import dev.lmaciel.contasclaras.IntegracaoTest;
 
 /**
- * O seed de demonstração roda no profile {@code demo}. O e-mail dele não está em {@code ALLOWED_EMAILS}
- * dos testes: a conta nasce direto no banco, sem passar pelo cadastro.
+ * O seed de demonstração roda no profile {@code demo}: a conta nasce direto no banco, sem passar pelo
+ * cadastro por e-mail.
  */
 @ActiveProfiles("demo")
 class DemoSeederTest extends IntegracaoTest {
@@ -78,14 +78,13 @@ class DemoSeederTest extends IntegracaoTest {
     }
 
     @Test
-    void senha_confere_e_o_email_nao_precisa_estar_na_lista_liberada() {
+    void senha_confere() {
         seeder.semear();
 
         String hash = jdbc.queryForObject("select senha_hash from usuario where email = ?", String.class,
                 EMAIL_DEMO);
 
         assertThat(encoder.matches("demo12345", hash)).isTrue();
-        assertThat(EMAILS_LIBERADOS_TESTE).doesNotContain(EMAIL_DEMO);
     }
 
     @Test
