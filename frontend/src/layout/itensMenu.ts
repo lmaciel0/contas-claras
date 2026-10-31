@@ -12,13 +12,14 @@ export interface GrupoMenu {
   itens: ItemMenu[]
 }
 
-/** Itens do menu lateral. Notas, projetos e calendário entram aqui quando o módulo existir. */
+/** Itens do menu lateral. Projetos e calendário entram aqui quando o módulo existir. */
 export const GRUPOS_MENU: GrupoMenu[] = [
   {
     titulo: null,
     itens: [
       { rotulo: 'Início', caminho: '/', exata: true },
       { rotulo: 'Tarefas', caminho: '/tarefas' },
+      { rotulo: 'Notas', caminho: '/notas' },
     ],
   },
   {
