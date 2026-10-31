@@ -2,7 +2,8 @@ export type Tema = 'claro' | 'escuro'
 
 export const CHAVE_TEMA = 'aprumo-tema'
 
-export const CONSULTA_ESCURO = '(prefers-color-scheme: dark)'
+/** Tema de quem ainda não escolheu: sempre o claro, sem olhar o sistema operacional. */
+export const TEMA_PADRAO: Tema = 'claro'
 
 /** Tema gravado pelo usuário; `null` se ausente, inválido ou se o navegador bloquear o `localStorage`. */
 export function lerTemaSalvo(): Tema | null {
@@ -21,12 +22,6 @@ export function gravarTema(tema: Tema): void {
   } catch {
     // Modo privativo ou cota cheia: o tema continua aplicado, só não persiste.
   }
-}
-
-/** Tema preferido pelo sistema operacional; `claro` quando o ambiente não tem `matchMedia`. */
-export function temaDoSistema(): Tema {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 'claro'
-  return window.matchMedia(CONSULTA_ESCURO).matches ? 'escuro' : 'claro'
 }
 
 /** Cor da barra do navegador (`<meta name="theme-color">`) em cada tema: o roxo da marca e o `--cor-fundo` escuro. */

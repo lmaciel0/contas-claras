@@ -3,29 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CHAVE_TEMA } from './tema'
 import { useTema } from './useTema'
 
-type OuvinteMudanca = (evento: MediaQueryListEvent) => void
-
-/** O jsdom não tem `matchMedia`; este mock deixa o teste escolher o tema do sistema e disparar `change`. */
-function instalarMatchMedia(escuroInicial: boolean) {
-  let escuro = escuroInicial
-  const ouvintes = new Set<OuvinteMudanca>()
-  const consulta = {
-    get matches() {
-      return escuro
-    },
-    media: '(prefers-color-scheme: dark)',
-    addEventListener: (_tipo: string, ouvinte: OuvinteMudanca) => ouvintes.add(ouvinte),
-    removeEventListener: (_tipo: string, ouvinte: OuvinteMudanca) => ouvintes.delete(ouvinte),
-  }
-  vi.stubGlobal('matchMedia', () => consulta)
-  return {
-    mudarSistema(novoEscuro: boolean) {
-      escuro = novoEscuro
-      act(() => {
-        ouvintes.forEach((ouvinte) => ouvinte({ matches: novoEscuro } as MediaQueryListEvent))
-      })
-    },
-  }
+/** O jsdom não tem `matchMedia`; este mock define o tema do sistema e conta as vezes que o hook o consulta ou escuta. */
+function instalarSistema(escuro: boolean) {
+  const addEventListener = vi.fn()
+  const consulta = { matches: escuro, media: '(prefers-color-scheme: dark)', addEventListener, removeEventListener: vi.fn() }
+  const matchMedia = vi.fn(() => consulta)
+  vi.stubGlobal('matchMedia', matchMedia)
+  return { matchMedia, addEventListener }
 }
 
 beforeEach(() => {
@@ -39,40 +23,37 @@ afterEach(() => {
 })
 
 describe('useTema', () => {
-  it('sem escolha salva usa o tema do sistema', () => {
-    instalarMatchMedia(true)
-    const { result } = renderHook(() => useTema())
-    expect(result.current.tema).toBe('escuro')
-    expect(document.documentElement.dataset.tema).toBe('escuro')
-  })
-
-  it('escolha salva vence o sistema', () => {
-    instalarMatchMedia(true)
-    localStorage.setItem(CHAVE_TEMA, 'claro')
+  it('sem escolha salva abre no claro, mesmo com o sistema escuro', () => {
+    instalarSistema(true)
     const { result } = renderHook(() => useTema())
     expect(result.current.tema).toBe('claro')
     expect(document.documentElement.dataset.tema).toBe('claro')
   })
 
-  it('sem escolha salva acompanha o sistema em tempo real', () => {
-    const sistema = instalarMatchMedia(false)
+  it('escolha salva escuro vence o sistema claro', () => {
+    instalarSistema(false)
+    localStorage.setItem(CHAVE_TEMA, 'escuro')
     const { result } = renderHook(() => useTema())
-    expect(result.current.tema).toBe('claro')
-    sistema.mudarSistema(true)
     expect(result.current.tema).toBe('escuro')
     expect(document.documentElement.dataset.tema).toBe('escuro')
   })
 
-  it('com escolha salva ignora mudança do sistema', () => {
-    const sistema = instalarMatchMedia(false)
+  it('escolha salva claro vence o sistema escuro', () => {
+    instalarSistema(true)
     localStorage.setItem(CHAVE_TEMA, 'claro')
     const { result } = renderHook(() => useTema())
-    sistema.mudarSistema(true)
     expect(result.current.tema).toBe('claro')
   })
 
+  it('não consulta nem acompanha o sistema', () => {
+    const { matchMedia, addEventListener } = instalarSistema(true)
+    renderHook(() => useTema())
+    expect(matchMedia).not.toHaveBeenCalled()
+    expect(addEventListener).not.toHaveBeenCalled()
+  })
+
   it('alternar muda o tema, grava em localStorage e atualiza data-tema', () => {
-    instalarMatchMedia(false)
+    instalarSistema(false)
     const { result } = renderHook(() => useTema())
     act(() => result.current.alternar())
     expect(result.current.tema).toBe('escuro')
@@ -84,7 +65,7 @@ describe('useTema', () => {
   })
 
   it('a cor da barra do navegador acompanha o tema escolhido', () => {
-    instalarMatchMedia(false)
+    instalarSistema(false)
     document.head.innerHTML = '<meta name="theme-color" content="#27187E" />'
     const { result } = renderHook(() => useTema())
     const cor = () => document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.content
@@ -97,14 +78,14 @@ describe('useTema', () => {
   })
 
   it('valor inválido salvo é ignorado', () => {
-    instalarMatchMedia(true)
+    instalarSistema(true)
     localStorage.setItem(CHAVE_TEMA, 'roxo')
     const { result } = renderHook(() => useTema())
-    expect(result.current.tema).toBe('escuro')
+    expect(result.current.tema).toBe('claro')
   })
 
   it('localStorage que lança erro não quebra', () => {
-    instalarMatchMedia(false)
+    instalarSistema(false)
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('bloqueado')
     })

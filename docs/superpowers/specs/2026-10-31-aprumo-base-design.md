@@ -67,7 +67,7 @@ O dono liberou o implementador para ajustar espaçamentos e ícones onde o mocku
 - **Toasts de `App.tsx`** (saindo, erro): sem a navbar inferior, a posição fica `bottom-6` em qualquer largura, e as cores fixas (`bg-white`, `bg-[#fdecec]`) viram tokens.
 - **Ctrl K**: abre um seletor modal (foco preso, filtro, setas, atalho global) que navega entre as páginas do menu. Não busca conteúdo. É a última tarefa do plano e pode ser cortada se apertar; nesse caso o campo de busca sai da tela inicial desta etapa.
 - **Tela inicial, nesta etapa**: saudação por horário (Bom dia, Boa tarde, Boa noite) com o primeiro nome, data por extenso em português e um bloco "Finanças do mês" que reaproveita os dados e componentes do painel atual. Sem os blocos de tarefas, agenda, projetos e notas, que chegam com seus módulos.
-- **Tema**: atributo `data-tema` em `<html>` com `claro` ou `escuro`. Escolha salva em `localStorage` (chave `aprumo-tema`), gravada na primeira vez que o dono usa o botão. Sem escolha salva, o app segue `prefers-color-scheme` e acompanha mudanças do sistema em tempo real; com escolha salva, o sistema deixa de mandar. Um script curto no `index.html` aplica o tema antes de o React montar, para não piscar.
+- **Tema**: atributo `data-tema` em `<html>` com `claro` ou `escuro`. Escolha salva em `localStorage` (chave `aprumo-tema`), gravada na primeira vez que o dono usa o botão. Sem escolha salva, o padrão é o claro (o sistema operacional não conta); a escolha salva sempre vence. Um script curto no `index.html` aplica o tema antes de o React montar, para não piscar.
 - **Cores do escuro**: derivadas do roxo `#27187e` atual, mantendo AA. Valores exatos ficam com o implementador.
 - **Botão de tema em CSS puro**, sem adicionar styled-components (o projeto usa Tailwind 4 e variáveis CSS). Mantém o desenho do dono: trilho com sol, que vira lua ao marcar, raios que se recolhem, `role="switch"`. Fica de fora o `.theme__fill`, o overlay de tela cheia com `mix-blend-mode: difference`, que inverteria as cores da página em vez de usar a paleta do Aprumo. Respeita `prefers-reduced-motion`. Marcado = escuro.
 - **Nome Aprumo**: logo com "A", título e descrição em `frontend/index.html`, `LayoutAuth.tsx`, README, `manifest.webmanifest` e `AppShell.test.tsx`. O implementador acha os demais textos visíveis com grep no `frontend/`. Ícones (`favicon.svg`, `icon-192.png`, `icon-512.png`): não existe arte do Aprumo, então, se mostrarem o "C", troca-se por um "A" simples no roxo `#27187e`, até o dono mandar arte própria.
@@ -82,7 +82,7 @@ O dono liberou o implementador para ajustar espaçamentos e ícones onde o mocku
 
 - Acessibilidade: `nav` com rótulo, `aria-current="page"` no item ativo, foco visível, painel do celular fecha com Esc e devolve o foco, alvo de toque de pelo menos 44 px.
 - Sem dependência nova, salvo decisão explícita no plano.
-- TDD. Testes cobrem: itens do menu e item ativo, saudação por horário, tema salvo e tema inicial pelo sistema, botão de tema (estado e teclado), painel do celular, rota `/financeiro` e `/` nova.
+- TDD. Testes cobrem: itens do menu e item ativo, saudação por horário, tema salvo e tema inicial padrão claro, botão de tema (estado e teclado), painel do celular, rota `/financeiro` e `/` nova.
 - Deploy e git seguem o fluxo já autorizado no repositório.
 
 ## Fica para o implementador

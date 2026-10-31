@@ -13,8 +13,8 @@ const css = readFileSync(resolve(process.cwd(), 'src/tema/botao-tema.css'), 'utf
 beforeEach(() => {
   localStorage.clear()
   delete document.documentElement.dataset.tema
-  // O jsdom não tem `matchMedia`; sem ele o sistema conta como claro.
-  vi.stubGlobal('matchMedia', undefined)
+  // Sistema escuro: sem tema salvo o botão deve abrir no claro mesmo assim.
+  vi.stubGlobal('matchMedia', () => ({ matches: true }))
 })
 
 afterEach(() => {
