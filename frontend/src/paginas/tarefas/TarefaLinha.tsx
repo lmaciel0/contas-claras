@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { TarefaResponse } from '../../api/tipos'
 import { isoParaBr } from '../lancamentos/datas'
 
@@ -7,6 +8,10 @@ interface Props {
   hoje: string
   aoAlternar: (tarefa: TarefaResponse) => void
   desabilitada?: boolean
+  /** Mostra "sem data" quando a tarefa não tem data (a página usa em Próximas). */
+  mostrarSemData?: boolean
+  /** Ações extras (editar, excluir) no fim da linha. */
+  acoes?: ReactNode
 }
 
 /** `dd/mm` no ano de hoje, `dd/mm/aaaa` nos demais. */
@@ -15,7 +20,7 @@ function rotuloDaData(data: string, hoje: string): string {
   return data.slice(0, 4) === hoje.slice(0, 4) ? completa.slice(0, 5) : completa
 }
 
-export function TarefaLinha({ tarefa, hoje, aoAlternar, desabilitada = false }: Props) {
+export function TarefaLinha({ tarefa, hoje, aoAlternar, desabilitada = false, mostrarSemData = false, acoes }: Props) {
   const atrasada = !tarefa.concluida && tarefa.data !== null && tarefa.data < hoje
   const rotulo = tarefa.concluida ? 'Reabrir tarefa' : 'Marcar como feita'
 
@@ -60,6 +65,8 @@ export function TarefaLinha({ tarefa, hoje, aoAlternar, desabilitada = false }: 
           <span>{rotuloDaData(tarefa.data, hoje)}</span>
         </span>
       )}
+      {tarefa.data === null && mostrarSemData && <span className="shrink-0 text-xs text-[var(--cor-mutado)]">sem data</span>}
+      {acoes}
     </li>
   )
 }

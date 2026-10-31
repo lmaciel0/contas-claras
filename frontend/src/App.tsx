@@ -17,6 +17,7 @@ import { LancamentosPage } from './paginas/lancamentos/LancamentosPage'
 import { NaoEncontradaPage } from './paginas/NaoEncontradaPage'
 import { PainelPage } from './paginas/painel/PainelPage'
 import { RelatoriosPage } from './paginas/relatorios/RelatoriosPage'
+import { TarefasPage } from './paginas/tarefas/TarefasPage'
 
 /**
  * Moldura das telas logadas, alimentada pela sessão. Ao sair mostra "Saindo…" na hora (a API pode estar acordando) e
@@ -85,6 +86,7 @@ export function App() {
       <Route element={<RotaProtegida />}>
         <Route element={<MolduraDoUsuario />}>
           <Route path="/" element={<PainelPage />} />
+          <Route path="/tarefas" element={<TarefasPage />} />
           <Route path="/financeiro" element={<InicioPage />} />
           <Route path="/lancamentos" element={<LancamentosPage />}>
             <Route path="novo" element={<LancamentoForm />} />
