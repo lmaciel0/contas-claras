@@ -17,6 +17,9 @@ import type {
   ResumoResponse,
   SalvarLancamentoRequest,
   StatusLancamento,
+  TarefaRequest,
+  TarefaResponse,
+  TarefasResponse,
   UsuarioResponse,
 } from './tipos'
 
@@ -64,6 +67,15 @@ export const endpoints = {
     mudarStatus: (id: number, status: StatusLancamento) =>
       api<LancamentoResponse>(`/api/lancamentos/${id}/status`, { method: 'PATCH', ...json({ status }) }),
     excluir: (id: number) => api<void>(`/api/lancamentos/${id}`, { method: 'DELETE' }),
+  },
+  tarefas: {
+    listar: () => api<TarefasResponse>('/api/tarefas'),
+    criar: (req: TarefaRequest) => api<TarefaResponse>('/api/tarefas', { method: 'POST', ...json(req) }),
+    editar: (id: number, req: TarefaRequest) =>
+      api<TarefaResponse>(`/api/tarefas/${id}`, { method: 'PUT', ...json(req) }),
+    concluir: (id: number, concluida: boolean) =>
+      api<TarefaResponse>(`/api/tarefas/${id}/concluida`, { method: 'PATCH', ...json({ concluida }) }),
+    excluir: (id: number) => api<void>(`/api/tarefas/${id}`, { method: 'DELETE' }),
   },
   relatorios: {
     ano: (ano: number) => api<RelatorioAnualResponse>(`/api/relatorios/ano/${ano}`),

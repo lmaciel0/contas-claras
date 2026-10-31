@@ -15,13 +15,14 @@ function renderizar(rota = '/?ano=2026&mes=10', nome = 'Ana', aoSair = vi.fn()) 
 }
 
 describe('Sidebar', () => {
-  it('lista os itens na ordem Início, Visão geral, Lançamentos, Cartões, Categorias, Relatórios', () => {
+  it('lista os itens na ordem Início, Tarefas, Visão geral, Lançamentos, Cartões, Categorias, Relatórios', () => {
     renderizar()
 
     const nav = screen.getByRole('navigation', { name: 'Menu principal' })
 
     expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual([
       'Início',
+      'Tarefas',
       'Visão geral',
       'Lançamentos',
       'Cartões',
@@ -34,7 +35,7 @@ describe('Sidebar', () => {
   it('não lista módulos que ainda não existem', () => {
     renderizar()
 
-    for (const nome of ['Tarefas', 'Notas', 'Projetos', 'Calendário']) {
+    for (const nome of ['Notas', 'Projetos', 'Calendário']) {
       expect(screen.queryByText(new RegExp(nome))).not.toBeInTheDocument()
     }
   })

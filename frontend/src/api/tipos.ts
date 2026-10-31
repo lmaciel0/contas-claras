@@ -200,3 +200,28 @@ export interface RelatorioAnualResponse {
   despesasAno: string
   diferencaAno: string
 }
+
+// Tarefas (datas `yyyy-MM-dd`, momentos em ISO-8601)
+export interface TarefaResponse {
+  id: number
+  titulo: string
+  data: string | null
+  concluida: boolean
+  concluidaEm: string | null
+}
+export interface TarefasResponse {
+  /** Dia de hoje em America/Sao_Paulo, decidido pelo backend. */
+  hoje: string
+  atrasadas: TarefaResponse[]
+  deHoje: TarefaResponse[]
+  /** Futuras por data, depois as sem data. */
+  proximas: TarefaResponse[]
+  concluidasHoje: TarefaResponse[]
+  /** As 50 mais recentes por momento de conclusão. */
+  concluidas: TarefaResponse[]
+  totalConcluidas: number
+}
+export interface TarefaRequest {
+  titulo: string
+  data: string | null
+}
