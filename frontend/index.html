@@ -2,6 +2,20 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Define o tema antes do primeiro paint para não piscar claro no escuro. Mantém a lógica de src/tema/tema.ts.
+      ;(function () {
+        var tema = null
+        try {
+          var salvo = localStorage.getItem('aprumo-tema')
+          if (salvo === 'claro' || salvo === 'escuro') tema = salvo
+        } catch (e) {}
+        if (!tema) {
+          tema = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro'
+        }
+        document.documentElement.dataset.tema = tema
+      })()
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
