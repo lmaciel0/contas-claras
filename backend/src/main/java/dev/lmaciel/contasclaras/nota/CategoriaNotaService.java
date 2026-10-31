@@ -8,7 +8,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,12 +34,12 @@ public class CategoriaNotaService {
 
     private final CategoriaNotaRepository categorias;
     private final UsuarioRepository usuarios;
-    private final JdbcTemplate jdbc;
+    private final NotaRepository notas;
 
-    public CategoriaNotaService(CategoriaNotaRepository categorias, UsuarioRepository usuarios, JdbcTemplate jdbc) {
+    public CategoriaNotaService(CategoriaNotaRepository categorias, UsuarioRepository usuarios, NotaRepository notas) {
         this.categorias = categorias;
         this.usuarios = usuarios;
-        this.jdbc = jdbc;
+        this.notas = notas;
     }
 
     /**
@@ -102,16 +101,9 @@ public class CategoriaNotaService {
         categorias.flush();
     }
 
-    // Trocar pela consulta agrupada do NotaRepository quando a entidade Nota existir (Task 3).
     private Map<Long, Long> totaisPorCategoria(long usuarioId) {
         Map<Long, Long> totais = new HashMap<>();
-        jdbc.query("""
-                select categoria_id, count(*) as total from nota
-                where usuario_id = ? and categoria_id is not null
-                group by categoria_id""",
-                rs -> {
-                    totais.put(rs.getLong("categoria_id"), rs.getLong("total"));
-                }, usuarioId);
+        notas.totaisPorCategoria(usuarioId).forEach(t -> totais.put(t.categoriaId(), t.total()));
         return totais;
     }
 
