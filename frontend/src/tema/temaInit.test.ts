@@ -69,28 +69,24 @@ describe('public/tema-init.js', () => {
     expect(meta()?.content).toBe('#27187E')
   })
 
-  it('sem escolha usa o sistema escuro e pinta a barra do navegador', () => {
+  it('sem escolha abre no claro, mesmo com o sistema escuro, e pinta a barra de roxo', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }))
+    executar()
+    expect(document.documentElement.dataset.tema).toBe('claro')
+    expect(meta()?.content).toBe('#27187E')
+  })
+
+  it('escolha salva escuro vence o sistema claro e pinta a barra escura', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false }))
+    localStorage.setItem(CHAVE_TEMA, 'escuro')
     executar()
     expect(document.documentElement.dataset.tema).toBe('escuro')
     expect(meta()?.content).toBe('#0f0b2b')
   })
 
-  it('sem escolha e sistema claro fica claro', () => {
-    vi.stubGlobal('matchMedia', () => ({ matches: false }))
-    executar()
-    expect(document.documentElement.dataset.tema).toBe('claro')
-  })
-
-  it('valor inválido salvo é ignorado', () => {
+  it('valor inválido salvo é ignorado e cai no claro', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }))
     localStorage.setItem(CHAVE_TEMA, 'roxo')
-    executar()
-    expect(document.documentElement.dataset.tema).toBe('escuro')
-  })
-
-  it('sem matchMedia cai no claro', () => {
-    vi.stubGlobal('matchMedia', undefined)
     executar()
     expect(document.documentElement.dataset.tema).toBe('claro')
   })
@@ -101,7 +97,7 @@ describe('public/tema-init.js', () => {
       throw new Error('bloqueado')
     })
     expect(executar).not.toThrow()
-    expect(document.documentElement.dataset.tema).toBe('escuro')
+    expect(document.documentElement.dataset.tema).toBe('claro')
   })
 
   it('não quebra se a página não tem theme-color', () => {
