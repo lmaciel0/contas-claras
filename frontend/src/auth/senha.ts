@@ -4,3 +4,5 @@ export function senhaValida(senha: string): boolean {
 }
 
 export const MENSAGEM_SENHA_FORA_DO_TAMANHO = 'A senha deve ter de 8 a 72 caracteres.'
+
+export const MENSAGEM_SENHAS_DIFERENTES = 'As senhas não são iguais.'

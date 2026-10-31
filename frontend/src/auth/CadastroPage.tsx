@@ -1,18 +1,23 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { Link, Navigate } from 'react-router'
+import { Link, Navigate, useNavigate } from 'react-router'
 import { CampoTexto, classeBotaoPrimario, MensagemDeErro } from './CampoTexto'
 import { mensagemDoErro } from './mensagemDoErro'
-import { MENSAGEM_SENHA_FORA_DO_TAMANHO, senhaValida } from './senha'
+import { MENSAGEM_SENHA_FORA_DO_TAMANHO, MENSAGEM_SENHAS_DIFERENTES, senhaValida } from './senha'
 import { TelaAuth } from './TelaAuth'
 import { useAuth } from './useAuth'
 
-/** `/cadastro`. A API cria a conta já com sessão (cookie), então depois do sucesso a pessoa vai direto ao Início. */
+/**
+ * `/cadastro`. A API não cria a conta aqui: manda um código (e um link) por e-mail, e a conta só nasce em `/confirmar`.
+ * Por isso o sucesso leva à confirmação, com o e-mail no estado da rota (nunca na URL).
+ */
 export function CadastroPage() {
   const { usuario, cadastrar } = useAuth()
+  const navigate = useNavigate()
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [repetir, setRepetir] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
@@ -22,6 +27,9 @@ export function CadastroPage() {
 
   async function enviar(evento: SubmitEvent<HTMLFormElement>) {
     evento.preventDefault()
+    if (enviando) {
+      return
+    }
     setErro(null)
     if (nome.trim() === '' || email.trim() === '') {
       setErro('Informe seu nome e seu e-mail.')
@@ -31,13 +39,20 @@ export function CadastroPage() {
       setErro(MENSAGEM_SENHA_FORA_DO_TAMANHO)
       return
     }
+    if (senha !== repetir) {
+      setErro(MENSAGEM_SENHAS_DIFERENTES)
+      return
+    }
     setEnviando(true)
     try {
       await cadastrar(nome.trim(), email.trim(), senha)
     } catch (falha) {
       setErro(mensagemDoErro(falha))
       setEnviando(false)
+      return
     }
+    // O botão segue em "Enviando…" até a tela trocar: não há o que reativar depois do sucesso.
+    void navigate('/confirmar', { state: { email: email.trim() } })
   }
 
   return (
@@ -66,9 +81,16 @@ export function CadastroPage() {
           onChange={(evento) => setSenha(evento.target.value)}
         />
         <p className="m-0 -mt-2 text-xs">De 8 a 72 caracteres.</p>
+        <CampoTexto
+          rotulo="Repetir senha"
+          type="password"
+          autoComplete="new-password"
+          value={repetir}
+          onChange={(evento) => setRepetir(evento.target.value)}
+        />
         <MensagemDeErro texto={erro} />
         <button type="submit" disabled={enviando} className={classeBotaoPrimario}>
-          {enviando ? 'Criando…' : 'Criar conta'}
+          {enviando ? 'Enviando…' : 'Criar conta'}
         </button>
       </form>
       <p className="m-0 mt-5 text-center text-sm">

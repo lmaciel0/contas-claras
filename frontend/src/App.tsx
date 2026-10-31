@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Route, Routes } from 'react-router'
 import { CadastroPage } from './auth/CadastroPage'
+import { ConfirmarPage } from './auth/ConfirmarPage'
 import { DefinirSenhaPage } from './auth/DefinirSenhaPage'
 import { LayoutAuth } from './auth/LayoutAuth'
 import { LoginPage } from './auth/LoginPage'
@@ -76,6 +77,7 @@ export function App() {
       <Route element={<LayoutAuth />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<CadastroPage />} />
+        <Route path="/confirmar" element={<ConfirmarPage />} />
       </Route>
       <Route element={<RotaProtegida />}>
         <Route element={<MolduraDoUsuario />}>

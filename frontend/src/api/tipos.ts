@@ -25,6 +25,17 @@ export interface CadastroRequest {
   email: string
   senha: string
 }
+/** Pedidos que só levam o e-mail (reenviar o código do cadastro, esqueci a senha). */
+export interface EmailRequest {
+  email: string
+}
+/** Confirma o cadastro por código (`email` + `codigo` de 6 dígitos) ou pelo link do e-mail (`token`). */
+export type ConfirmarCadastroRequest = { email: string; codigo: string } | { token: string }
+export interface RedefinirSenhaRequest {
+  email: string
+  codigo: string
+  senha: string
+}
 export interface GoogleLoginRequest {
   credential: string
 }

@@ -4,12 +4,15 @@ import type {
   CartoesResponse,
   CategoriaRequest,
   CategoriaResponse,
+  ConfirmarCadastroRequest,
   DefinirSenhaRequest,
+  EmailRequest,
   GoogleLoginRequest,
   ItemRequest,
   ItemResponse,
   LancamentoResponse,
   LoginRequest,
+  RedefinirSenhaRequest,
   RelatorioAnualResponse,
   ResumoResponse,
   SalvarLancamentoRequest,
@@ -24,7 +27,15 @@ export const endpoints = {
   auth: {
     me: () => api<UsuarioResponse>('/api/auth/me'),
     login: (req: LoginRequest) => api<UsuarioResponse>('/api/auth/login', { method: 'POST', ...json(req) }),
-    cadastro: (req: CadastroRequest) => api<UsuarioResponse>('/api/auth/cadastro', { method: 'POST', ...json(req) }),
+    // 202 sem corpo e sem sessão: a conta só nasce quando o e-mail é confirmado.
+    cadastro: (req: CadastroRequest) => api<void>('/api/auth/cadastro', { method: 'POST', ...json(req) }),
+    reenviarCadastro: (req: EmailRequest) =>
+      api<void>('/api/auth/cadastro/reenviar', { method: 'POST', ...json(req) }),
+    confirmarCadastro: (req: ConfirmarCadastroRequest) =>
+      api<UsuarioResponse>('/api/auth/cadastro/confirmar', { method: 'POST', ...json(req) }),
+    esqueciSenha: (req: EmailRequest) => api<void>('/api/auth/esqueci-senha', { method: 'POST', ...json(req) }),
+    redefinirSenha: (req: RedefinirSenhaRequest) =>
+      api<UsuarioResponse>('/api/auth/redefinir-senha', { method: 'POST', ...json(req) }),
     google: (req: GoogleLoginRequest) => api<UsuarioResponse>('/api/auth/google', { method: 'POST', ...json(req) }),
     logout: () => api<void>('/api/auth/logout', { method: 'POST' }),
     definirSenha: (req: DefinirSenhaRequest) => api<void>('/api/auth/senha', { method: 'PUT', ...json(req) }),
