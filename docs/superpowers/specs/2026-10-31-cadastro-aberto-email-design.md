@@ -106,7 +106,7 @@ Cadastro e esqueci-senha enviam sempre exatamente um e-mail, para resposta e tem
 
 Ordem no cadastro: validar, aplicar limites, decidir o e-mail, gravar, enviar. O pedido não gera BCrypt em nenhum dos dois casos.
 
-Reenvio: com cadastro pendente, gera novo código e novo link e mantém o nome. Sem pendência, responde `202` sem enviar. Esse caso revela só que não há cadastro pendente, nunca que há conta; o risco é aceito.
+Reenvio: com cadastro pendente, gera novo código e novo link e mantém o nome. Sem pendência, responde `202` sem enviar. Depois de um pedido de cadastro, o tempo desse caso pode revelar se o e-mail tem conta (ver Riscos aceitos).
 
 Limites, contados em `envio_email`:
 
@@ -195,6 +195,9 @@ A senha de app vai direto para `.local/segredos.env`, nunca para o chat. O códi
 - **Remetente `@gmail.com`:** o e-mail pode cair no spam; a tela avisa.
 - **`LimiteTentativasLogin` em memória:** o Javadoc diz "uma única instância", mas os logs mostram várias, então o limite de login vale por instância. O problema já existe hoje e fica fora desta entrega; `melhorias.md` já o lista.
 - **IP por `X-Forwarded-For`:** o plano precisa confirmar que a Vercel não repassa valor forjado até o container.
+- **Enumeração por tempo no reenvio:** um pedido de cadastro seguido de reenvio responde mais rápido quando o e-mail tem conta. Cada sondagem manda um e-mail ao dono do endereço e consome os limites de envio. Aceito pelo dono em 2026-10-31.
+- **Teto global de envios:** poucos IPs conseguem esgotar os 300 envios de 24 h, parando cadastro e recuperação de senha nesse período. A cota do Gmail segue protegida; captcha fica para quando houver uso real. Aceito pelo dono em 2026-10-31.
+- **BCrypt em rotas públicas:** `/cadastro/confirmar` e `/redefinir-senha` geram BCrypt antes de conferir o código, sem limite por requisição, como o login. O abuso custa CPU, sem expor conta nem dados. Aceito pelo dono em 2026-10-31.
 
 ## Decisões do autor, para o dono conferir
 
