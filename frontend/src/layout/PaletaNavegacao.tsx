@@ -170,6 +170,14 @@ export function PaletaNavegacao({ aberta, aoFechar }: Props) {
                   role="option"
                   aria-selected={indice === indiceAtivo}
                   onClick={() => ir(indice)}
+                  // Os itens normalmente não recebem foco (o foco fica no campo, via aria-activedescendant);
+                  // este handler cobre o caso de algum item receber foco.
+                  onKeyDown={(evento) => {
+                    if (evento.key === 'Enter' || evento.key === ' ') {
+                      evento.preventDefault()
+                      ir(indice)
+                    }
+                  }}
                   onMouseMove={() => setAtivo(indice)}
                   className={
                     'flex min-h-11 cursor-pointer items-center rounded-xl px-3 text-sm ' +

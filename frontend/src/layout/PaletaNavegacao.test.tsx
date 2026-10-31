@@ -162,6 +162,22 @@ describe('PaletaNavegacao', () => {
     expect(screen.getByTestId('local')).toHaveTextContent('/cartoes?ano=2026&mes=10')
   })
 
+  it.each([
+    ['Enter', 'Enter'],
+    ['Espaço', ' '],
+  ])('%s numa opção com foco navega e fecha, como o clique', async (_nome, tecla) => {
+    renderizar()
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true, cancelable: true }))
+    })
+    const opcao = await screen.findByRole('option', { name: 'Cartões' })
+
+    fireEvent.keyDown(opcao, { key: tecla })
+
+    expect(paleta()).not.toBeInTheDocument()
+    expect(screen.getByTestId('local')).toHaveTextContent('/cartoes?ano=2026&mes=10')
+  })
+
   it('Esc fecha e devolve o foco a quem estava focado antes', async () => {
     const user = userEvent.setup()
     renderizar()
