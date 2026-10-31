@@ -6,6 +6,8 @@ interface HeaderPrincipalProps {
   nomeUsuario?: string
   aoSair?: () => void
   onAbrirBusca?: () => void
+  onAlternarPainelProdutividade?: () => void
+  painelProdutividadeAberto?: boolean
 }
 
 const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
@@ -16,7 +18,13 @@ const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visib
  * - Notificações (sino com indicador)
  * - Perfil do usuário (avatar, nome, papel Aprumo) com menu suspenso para tema, senha e sair.
  */
-export function HeaderPrincipal({ nomeUsuario, aoSair, onAbrirBusca }: HeaderPrincipalProps) {
+export function HeaderPrincipal({
+  nomeUsuario,
+  aoSair,
+  onAbrirBusca,
+  onAlternarPainelProdutividade,
+  painelProdutividadeAberto = false,
+}: HeaderPrincipalProps) {
   const [menuAberto, setMenuAberto] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const botaoRef = useRef<HTMLButtonElement>(null)
@@ -82,8 +90,38 @@ export function HeaderPrincipal({ nomeUsuario, aoSair, onAbrirBusca }: HeaderPri
         </button>
       </div>
 
-      {/* Cluster à direita: Notificações + Perfil do Usuário */}
+      {/* Cluster à direita: Alternar Painel + Notificações + Perfil do Usuário */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Alternar Painel de Produtividade */}
+        {onAlternarPainelProdutividade && (
+          <button
+            type="button"
+            aria-label="Alternar painel de produtividade"
+            aria-pressed={painelProdutividadeAberto}
+            onClick={onAlternarPainelProdutividade}
+            className={`grid size-10 place-items-center rounded-full text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] 2xl:hidden ${
+              painelProdutividadeAberto ? 'bg-[var(--cor-principal-clara)] text-[var(--cor-principal)] font-bold' : ''
+            } ${foco}`}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </button>
+        )}
+
         {/* Notificações */}
         <button
           type="button"

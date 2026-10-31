@@ -3,6 +3,7 @@ import { Outlet } from 'react-router'
 import { AvisoServidor } from './AvisoServidor'
 import { HeaderPrincipal } from './HeaderPrincipal'
 import { Logo } from './Logo'
+import { PainelLateralDireito } from './PainelLateralDireito'
 import { PaletaContext } from './paleta'
 import { PaletaNavegacao } from './PaletaNavegacao'
 import { Sidebar } from './Sidebar'
@@ -28,6 +29,7 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const ehDesktop = useEhDesktop()
   const [aberto, setAberto] = useState(false)
   const [paletaAberta, setPaletaAberta] = useState(false)
+  const [painelProdutividadeAberto, setPainelProdutividadeAberto] = useState(false)
   const botao = useRef<HTMLButtonElement>(null)
   const painel = useRef<HTMLDivElement>(null)
   const principal = useRef<HTMLElement>(null)
@@ -156,7 +158,13 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
     <PaletaContext value={paleta}>
       <div className="min-h-dvh bg-[var(--cor-fundo)]">
         <AvisoServidor />
-        <div className={ehDesktop ? 'grid min-h-dvh grid-cols-[240px_1fr]' : undefined}>
+        <div
+          className={
+            ehDesktop
+              ? 'grid min-h-dvh grid-cols-[240px_1fr] 2xl:grid-cols-[240px_1fr_320px]'
+              : undefined
+          }
+        >
           {ehDesktop ? sidebarFixa : barraSuperior}
           <div className="flex min-w-0 flex-1 flex-col">
             {ehDesktop && (
@@ -164,12 +172,24 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
                 nomeUsuario={nomeUsuario}
                 aoSair={aoSair}
                 onAbrirBusca={paleta.abrir}
+                onAlternarPainelProdutividade={() => setPainelProdutividadeAberto((v) => !v)}
+                painelProdutividadeAberto={painelProdutividadeAberto}
               />
             )}
             <main ref={principal} tabIndex={-1} className="mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6">
               <Outlet />
             </main>
           </div>
+          {ehDesktop && (
+            <PainelLateralDireito
+              className={
+                painelProdutividadeAberto
+                  ? 'w-80 shrink-0'
+                  : 'hidden 2xl:flex 2xl:w-80 2xl:shrink-0'
+              }
+              aoFechar={() => setPainelProdutividadeAberto(false)}
+            />
+          )}
         </div>
 
         {painelAberto && (
