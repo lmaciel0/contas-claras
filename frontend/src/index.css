@@ -33,6 +33,8 @@
   /* Card das telas de auth: borda e fim do degradê (o começo é --cor-card). */
   --cor-auth-borda: #fff;
   --cor-auth-fundo-fim: #f4f7fb;
+  /* Borda dos campos de auth: transparente no claro (visual inalterado); no escuro ver o bloco abaixo. */
+  --cor-auth-campo-borda: transparent;
   --cor-grafico-receitas: #27187e;
   --cor-grafico-despesas: #a49ddb;
   --cor-grafico-receitas-previstas: #7d73c4;
@@ -64,6 +66,8 @@
   --cor-principal-fim: #8579e8;
   --cor-auth-borda: #2c2565;
   --cor-auth-fundo-fim: #150f3a;
+  /* Contorno do campo de auth: 3:1 sobre --cor-card e --cor-auth-fundo-fim (WCAG 1.4.11, ver estilos.test.ts). */
+  --cor-auth-campo-borda: #6559bb;
   --cor-grafico-receitas: #9d92f5;
   --cor-grafico-despesas: #5c4fb3;
   --cor-grafico-receitas-previstas: #4a3fa0;
@@ -132,7 +136,7 @@ body {
 
 .auth-card input {
   border: 0;
-  border-inline: 2px solid transparent;
+  border-inline: 2px solid var(--cor-auth-campo-borda);
   border-radius: 20px;
   padding: 15px 20px;
   box-shadow: rgb(39 24 126 / 12%) 0 10px 10px -5px;
@@ -140,6 +144,15 @@ body {
 
 .auth-card input:focus {
   border-inline-color: var(--cor-principal);
+}
+
+/* No escuro o campo tem a mesma cor do card, então ganha contorno de 2 px nos quatro lados (o claro não muda). */
+:root[data-tema='escuro'] .auth-card input {
+  border: 2px solid var(--cor-auth-campo-borda);
+}
+
+:root[data-tema='escuro'] .auth-card input:focus {
+  border-color: var(--cor-principal);
 }
 
 .auth-card button[type='submit'] {

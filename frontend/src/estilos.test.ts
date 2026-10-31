@@ -118,6 +118,37 @@ describe('cores fixas', () => {
   })
 })
 
+describe('campos das telas de auth: contraste não textual (WCAG 1.4.11, 3:1)', () => {
+  const bloco = /:root\[data-tema='escuro'\]\s*\{([^}]*)\}/.exec(css)?.[1] ?? ''
+  const hex = (nome: string): string => {
+    const valor = new RegExp(`--${nome}:\\s*(#[0-9a-fA-F]{6})\\s*;`).exec(bloco)?.[1]
+    if (!valor) throw new Error(`token --${nome} ausente no tema escuro`)
+    return valor
+  }
+  const lum = (h: string): number => {
+    const [r, g, b] = [1, 3, 5].map((i) => {
+      const c = parseInt(h.slice(i, i + 2), 16) / 255
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    }) as [number, number, number]
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  const ratio = (a: string, b: string): number => {
+    const [mx, mn] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]
+    return (mx + 0.05) / (mn + 0.05)
+  }
+
+  it('no escuro, a borda do campo passa de 3:1 sobre o início e o fim do degradê do card', () => {
+    for (const fundo of ['cor-card', 'cor-auth-fundo-fim']) {
+      expect(ratio(hex('cor-auth-campo-borda'), hex(fundo)), `cor-auth-campo-borda sobre ${fundo}`).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('o tema claro mantém a borda do campo transparente e o escuro aplica o token', () => {
+    expect(token('cor-auth-campo-borda')).toBe('transparent')
+    expect(css).toMatch(/:root\[data-tema='escuro'\] \.auth-card input\s*\{[^}]*var\(--cor-auth-campo-borda\)/)
+  })
+})
+
 describe('botão de tema: contraste não textual (WCAG 1.4.11, 3:1)', () => {
   const botao = readFileSync(resolve(process.cwd(), 'src/tema/botao-tema.css'), 'utf8')
   const lum = (h: string): number => {

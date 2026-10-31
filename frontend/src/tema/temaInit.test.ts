@@ -47,6 +47,14 @@ describe('index.html', () => {
     }
   })
 
+  it('o meta theme-color vem antes do script síncrono (senão o querySelector devolve null)', () => {
+    const head = /<head>([\s\S]*?)<\/head>/.exec(html)?.[1] ?? ''
+    const posMeta = head.indexOf('<meta name="theme-color"')
+    const posScript = head.indexOf('<script src="/tema-init.js"></script>')
+    expect(posMeta).toBeGreaterThanOrEqual(0)
+    expect(posScript).toBeGreaterThan(posMeta)
+  })
+
   it('theme-color padrão é o roxo da marca', () => {
     expect(html).toMatch(/<meta name="theme-color" content="#27187E"/i)
   })
