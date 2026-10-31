@@ -4,7 +4,6 @@ import { http, HttpResponse } from 'msw'
 import { Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import type { CartaoResponse, CartoesResponse } from '../../api/tipos'
-import { SeletorMes } from '../../layout/SeletorMes'
 import { renderComApp } from '../../teste/render'
 import { servidor } from '../../teste/servidor'
 import { CartoesPage } from './CartoesPage'
@@ -71,12 +70,7 @@ function renderizar(rota = '/cartoes?ano=2026&mes=10') {
     <Routes>
       <Route
         path="/cartoes"
-        element={
-          <>
-            <SeletorMes />
-            <CartoesPage />
-          </>
-        }
+        element={<CartoesPage />}
       />
       <Route path="/categorias" element={<h1>Tela de categorias</h1>} />
     </Routes>,

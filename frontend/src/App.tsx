@@ -83,7 +83,9 @@ export function App() {
       </Route>
       <Route element={<RotaProtegida />}>
         <Route element={<MolduraDoUsuario />}>
-          <Route path="/" element={<InicioPage />} />
+          {/* Provisório: a Task 6 troca pela tela inicial nova. */}
+          <Route path="/" element={<h1 className="m-0 text-[28px] font-bold tracking-tight">Início</h1>} />
+          <Route path="/financeiro" element={<InicioPage />} />
           <Route path="/lancamentos" element={<LancamentosPage />}>
             <Route path="novo" element={<LancamentoForm />} />
             <Route path=":id" element={<LancamentoForm />} />

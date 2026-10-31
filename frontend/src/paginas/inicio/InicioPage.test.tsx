@@ -4,7 +4,6 @@ import { http, HttpResponse } from 'msw'
 import { Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import type { PontoSerie, ResumoResponse } from '../../api/tipos'
-import { SeletorMes } from '../../layout/SeletorMes'
 import { renderComApp } from '../../teste/render'
 import { servidor } from '../../teste/servidor'
 import { InicioPage } from './InicioPage'
@@ -68,12 +67,7 @@ function renderizar(rota = '/?ano=2026&mes=10') {
     <Routes>
       <Route
         path="/"
-        element={
-          <>
-            <SeletorMes />
-            <InicioPage />
-          </>
-        }
+        element={<InicioPage />}
       />
     </Routes>,
     rota,
@@ -83,6 +77,14 @@ function renderizar(rota = '/?ano=2026&mes=10') {
 const bloco = (nome: string) => screen.findByRole('region', { name: nome })
 
 describe('InicioPage', () => {
+  it('titulo_da_tela_e_visao_geral_e_a_faixa_financeira_aparece', async () => {
+    responderResumo(resumo())
+    renderizar()
+
+    expect(await screen.findByRole('heading', { name: 'Visão geral' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '+ Lançar' })).toHaveAttribute('href', '/lancamentos/novo?ano=2026&mes=10')
+  })
+
   it('mostra_sobra_receitas_e_despesas_formatadas', async () => {
     responderResumo(resumo())
     renderizar()

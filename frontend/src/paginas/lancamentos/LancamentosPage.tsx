@@ -4,6 +4,7 @@ import { Outlet } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import type { LancamentoResponse, StatusLancamento } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
+import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { GrupoCategoria } from './GrupoCategoria'
 import { invalidarLancamentos } from './invalidar'
@@ -46,10 +47,13 @@ export function LancamentosPage() {
   })
 
   const titulo = (
-    <div className="mb-3 sr-only md:not-sr-only md:mb-5">
-      <h1 className="m-0 text-[28px] font-bold tracking-tight">Lançamentos</h1>
-      <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">Tudo o que entra e sai no mês, por categoria.</p>
-    </div>
+    <>
+      <FaixaFinanceira />
+      <div className="mb-3 sr-only md:not-sr-only md:mb-5">
+        <h1 className="m-0 text-[28px] font-bold tracking-tight">Lançamentos</h1>
+        <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">Tudo o que entra e sai no mês, por categoria.</p>
+      </div>
+    </>
   )
 
   let conteudo: ReactNode
