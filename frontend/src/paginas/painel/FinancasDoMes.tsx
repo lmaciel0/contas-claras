@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { ErroApi } from '../../api/cliente'
 import { endpoints } from '../../api/endpoints'
+import { Carregando } from '../../componentes/Carregando'
 import { mesAnterior, mesAtual, nomeMes } from '../../formato/mes'
 import { CardSobra } from '../inicio/CardSobra'
 import { CardsTotais } from '../inicio/CardsTotais'
@@ -19,12 +20,13 @@ export function FinancasDoMes() {
   const consulta = useQuery({
     queryKey: ['resumo', ano, mes],
     queryFn: () => endpoints.resumo(ano, mes),
+    placeholderData: keepPreviousData,
   })
 
   const nomeAnterior = minusculo(nomeMes(mesAnterior({ ano, mes }).mes))
 
   return (
-    <section aria-labelledby="titulo-financas" className="card">
+    <section aria-labelledby="titulo-financas" className="card item-entra">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 id="titulo-financas" className="m-0 text-[15px] font-bold">
           Finanças do mês
@@ -37,11 +39,7 @@ export function FinancasDoMes() {
         </Link>
       </div>
 
-      {consulta.isPending && (
-        <p role="status" className="m-0 text-sm text-[var(--cor-mutado)]">
-          Carregando as finanças…
-        </p>
-      )}
+      {consulta.isPending && <Carregando texto="Carregando as finanças…" />}
 
       {consulta.isError && (
         <div role="alert" className="flex flex-wrap items-center gap-3 text-sm">

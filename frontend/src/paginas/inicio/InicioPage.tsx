@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { ErroApi } from '../../api/cliente'
 import { endpoints } from '../../api/endpoints'
+import { Carregando } from '../../componentes/Carregando'
 import { mesAnterior, nomeMes } from '../../formato/mes'
 import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
@@ -21,6 +22,7 @@ export function InicioPage() {
   const consulta = useQuery({
     queryKey: ['resumo', ano, mes],
     queryFn: () => endpoints.resumo(ano, mes),
+    placeholderData: keepPreviousData,
   })
 
   const titulo = (
@@ -37,9 +39,7 @@ export function InicioPage() {
     return (
       <>
         {titulo}
-        <p role="status" className="m-0 text-sm text-[var(--cor-mutado)]">
-          Carregando o resumo…
-        </p>
+        <Carregando texto="Carregando o resumo…" />
       </>
     )
   }

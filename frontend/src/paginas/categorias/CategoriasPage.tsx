@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { endpoints } from '../../api/endpoints'
 import type { CategoriaResponse, ItemResponse, TipoCategoria } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
+import { Carregando } from '../../componentes/Carregando'
 import { formatarMoeda } from '../../formato/moeda'
 import { EditorCategoria } from './EditorCategoria'
 import { EditorItem } from './EditorItem'
@@ -224,11 +225,7 @@ export function CategoriasPage() {
 
   let conteudo: ReactNode
   if (consulta.isPending) {
-    conteudo = (
-      <p role="status" className="m-0 text-sm text-[var(--cor-mutado)]">
-        Carregando as categorias…
-      </p>
-    )
+    conteudo = <Carregando texto="Carregando as categorias…" />
   } else if (consulta.isError) {
     conteudo = (
       <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">

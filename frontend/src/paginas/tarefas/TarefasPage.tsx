@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import type { TarefaResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
+import { Carregando } from '../../componentes/Carregando'
 import { TarefaLinha } from './TarefaLinha'
 import { useConcluirTarefa, useCriarTarefa, useEditarTarefa, useExcluirTarefa, useTarefas } from './useTarefas'
 
@@ -287,11 +288,7 @@ export function TarefasPage() {
 
   let conteudo: ReactNode
   if (consulta.isPending) {
-    conteudo = (
-      <p role="status" className="m-0 text-sm text-[var(--cor-mutado)]">
-        Carregando as tarefas…
-      </p>
-    )
+    conteudo = <Carregando texto="Carregando as tarefas…" />
   } else if (consulta.data === undefined) {
     conteudo = (
       <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">
