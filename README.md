@@ -48,7 +48,7 @@ Front e API ficam no **mesmo domínio**, então o cookie de sessão é de primei
 ### Decisões técnicas
 
 - **Sessão:** JWT HS256 assinado pela própria API, em cookie `HttpOnly`, `Secure`, `SameSite=Strict`. Nada fica em `localStorage`. Cada token carrega a versão de sessão do usuário: trocar a senha ou vincular o Google invalida todos os tokens antigos.
-- **Cadastro restrito:** só e-mails em `ALLOWED_EMAILS`. E-mail fora da lista e e-mail já cadastrado recebem a mesma resposta, para não revelar quem está cadastrado. Login tem limite de 5 tentativas por e-mail a cada 15 minutos, com reserva atômica.
+- **Cadastro aberto com e-mail confirmado:** a conta só nasce depois da confirmação por código de 6 dígitos ou link enviado por e-mail. E-mail novo e e-mail já cadastrado recebem a mesma resposta e um e-mail cada, para não revelar quem está cadastrado. A recuperação de senha segue a mesma regra. Os envios têm limite no banco: 1 a cada 60 s e 3 por hora por e-mail, 10 por hora por IP e 300 em 24 h. Login tem limite de 5 tentativas por e-mail a cada 15 minutos, com reserva atômica.
 - **Google:** o ID token é validado no backend (audience, `email_verified`). O vínculo por e-mail só acontece em conta sem Google; ele apaga a senha antiga, o que impede alguém de pré-cadastrar o e-mail de outra pessoa.
 - **Isolamento:** toda consulta filtra pelo usuário autenticado; recurso de outro usuário responde **404**, nunca 403.
 - **Dinheiro:** `BigDecimal` no Java, `numeric(12,2)` no banco e string no JSON (`"1234.56"`). Nada de ponto flutuante.
@@ -98,7 +98,7 @@ A saída mostra, por ano, receitas, despesas e diferença, para conferir com as 
 
 O `vercel.json` da raiz define os services `web` (`frontend/`) e `api` (`backend/Dockerfile`), as rotas e os headers de segurança. Variáveis de ambiente do projeto na Vercel (modelo em `.env.example`):
 
-`DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET` (≥ 32 bytes), `ALLOWED_EMAILS`, `GOOGLE_CLIENT_ID`, `PORT=8080` e, para o front, `VITE_GOOGLE_CLIENT_ID`.
+`DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET` (≥ 32 bytes), `MAIL_USERNAME`, `MAIL_PASSWORD`, `APP_URL`, `GOOGLE_CLIENT_ID`, `PORT=8080` e, para o front, `VITE_GOOGLE_CLIENT_ID`.
 
 ```bash
 vercel deploy --prod
