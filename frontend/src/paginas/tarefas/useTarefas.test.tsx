@@ -1,5 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { renderHook, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import type { ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
@@ -28,7 +28,7 @@ const resposta: TarefasResponse = {
 
 function montar() {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false }, mutations: { retry: false } },
   })
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -45,6 +45,27 @@ describe('hooks de tarefas', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toEqual(resposta)
+  })
+
+  it('refazALeituraAoVoltarOFocoParaOHojeNaoFicarVelho', async () => {
+    let chamadas = 0
+    servidor.use(
+      http.get('/api/tarefas', () => {
+        chamadas += 1
+        return HttpResponse.json(chamadas === 1 ? resposta : { ...resposta, hoje: '2026-11-01' })
+      }),
+    )
+    const { wrapper } = montar()
+    const { result } = renderHook(() => useTarefas(), { wrapper })
+    await waitFor(() => expect(result.current.data?.hoje).toBe('2026-10-31'))
+
+    act(() => {
+      focusManager.setFocused(false)
+      focusManager.setFocused(true)
+    })
+
+    await waitFor(() => expect(result.current.data?.hoje).toBe('2026-11-01'))
+    expect(chamadas).toBe(2)
   })
 
   it('criarEnviaPostComTituloEData', async () => {

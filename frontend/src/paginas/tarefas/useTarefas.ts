@@ -3,8 +3,12 @@ import { endpoints } from '../../api/endpoints'
 import type { TarefaRequest } from '../../api/tipos'
 import { invalidarTarefas } from './invalidar'
 
+/**
+ * Refaz a leitura ao voltar o foco à janela (o padrão global é desligado): o `hoje` vem do servidor, e depois da
+ * meia-noite o cache de uma aba aberta deixaria tarefas novas do card caírem como atrasadas.
+ */
 export function useTarefas() {
-  return useQuery({ queryKey: ['tarefas'], queryFn: endpoints.tarefas.listar })
+  return useQuery({ queryKey: ['tarefas'], queryFn: endpoints.tarefas.listar, refetchOnWindowFocus: true })
 }
 
 export function useCriarTarefa() {

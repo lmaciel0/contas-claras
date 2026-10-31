@@ -22,10 +22,11 @@ interface LinhaProps {
   mostrarSemData: boolean
   aoAlternar: (tarefa: TarefaResponse) => void
   alternando: boolean
+  aoExcluida: (tarefa: TarefaResponse) => void
 }
 
 /** Linha com três estados: normal (com Editar e Excluir), edição de título e data, e confirmação de exclusão. */
-function LinhaDeTarefa({ tarefa, hoje, mostrarSemData, aoAlternar, alternando }: LinhaProps) {
+function LinhaDeTarefa({ tarefa, hoje, mostrarSemData, aoAlternar, alternando, aoExcluida }: LinhaProps) {
   const [modo, setModo] = useState<Modo>('ver')
   const [titulo, setTitulo] = useState(tarefa.titulo)
   const [data, setData] = useState(tarefa.data ?? '')
@@ -130,7 +131,13 @@ function LinhaDeTarefa({ tarefa, hoje, mostrarSemData, aoAlternar, alternando }:
           <button
             type="button"
             disabled={excluir.isPending}
-            onClick={() => excluir.mutate(tarefa.id)}
+            onClick={() => {
+              // mutateAsync: a linha some quando a lista é relida, então o callback de mutate() não chegaria a rodar.
+              excluir.mutateAsync(tarefa.id).then(
+                () => aoExcluida(tarefa),
+                () => undefined,
+              )
+            }}
             className="min-h-11 cursor-pointer rounded-full bg-[var(--cor-negativo)] px-4 text-sm font-semibold text-[var(--cor-sobre-negativo)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-negativo)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {excluir.isPending ? 'Excluindo…' : 'Sim, excluir'}
@@ -199,9 +206,10 @@ interface SecaoProps {
   mostrarSemData?: boolean
   aoAlternar: (tarefa: TarefaResponse) => void
   alternando: boolean
+  aoExcluida: (tarefa: TarefaResponse) => void
 }
 
-function Secao({ titulo, tarefas, hoje, mostrarSemData = false, aoAlternar, alternando }: SecaoProps) {
+function Secao({ titulo, tarefas, hoje, mostrarSemData = false, aoAlternar, alternando, aoExcluida }: SecaoProps) {
   const idTitulo = useId()
   if (tarefas.length === 0) return null
   return (
@@ -218,6 +226,7 @@ function Secao({ titulo, tarefas, hoje, mostrarSemData = false, aoAlternar, alte
             mostrarSemData={mostrarSemData}
             aoAlternar={aoAlternar}
             alternando={alternando}
+            aoExcluida={aoExcluida}
           />
         ))}
       </ul>
@@ -237,15 +246,44 @@ export function TarefasPage() {
   const [concluidasAbertas, setConcluidasAbertas] = useState(false)
   const idConcluidas = useId()
   const idLista = useId()
+  const campoNovaTarefa = useRef<HTMLInputElement>(null)
+  const tituloDaPagina = useRef<HTMLHeadingElement>(null)
+  const [aviso, setAviso] = useState('')
+
+  // Concluir move a linha para outra seção (ela remonta) e excluir a remove: o foco vai para o título da página,
+  // um destino fixo, e a região aria-live diz o que aconteceu. Não usamos o campo de texto para não abrir o teclado
+  // do celular a cada tarefa concluída.
+  function aoExcluida(tarefa: TarefaResponse) {
+    setAviso(`Tarefa excluída: ${tarefa.titulo}`)
+    tituloDaPagina.current?.focus()
+  }
 
   function aoEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     const limpo = titulo.trim()
     if (limpo === '' || criar.isPending) return
-    criar.mutate({ titulo: limpo, data: null }, { onSuccess: () => setTitulo('') })
+    criar.mutate(
+      { titulo: limpo, data: null },
+      {
+        onSuccess: () => {
+          setTitulo('')
+          setAviso(`Tarefa criada: ${limpo}`)
+          campoNovaTarefa.current?.focus()
+        },
+      },
+    )
   }
 
-  const alternar = (tarefa: TarefaResponse) => concluir.mutate({ id: tarefa.id, concluida: !tarefa.concluida })
+  const alternar = (tarefa: TarefaResponse) =>
+    concluir.mutate(
+      { id: tarefa.id, concluida: !tarefa.concluida },
+      {
+        onSuccess: () => {
+          setAviso(`${tarefa.concluida ? 'Tarefa reaberta' : 'Tarefa concluída'}: ${tarefa.titulo}`)
+          tituloDaPagina.current?.focus()
+        },
+      },
+    )
 
   let conteudo: ReactNode
   if (consulta.isPending) {
@@ -266,7 +304,7 @@ export function TarefasPage() {
   } else {
     const dados = consulta.data
     const semAbertas = dados.atrasadas.length + dados.deHoje.length + dados.proximas.length === 0
-    const comum = { hoje: dados.hoje, aoAlternar: alternar, alternando: concluir.isPending }
+    const comum = { hoje: dados.hoje, aoAlternar: alternar, alternando: concluir.isPending, aoExcluida }
     conteudo = (
       <>
         {consulta.isError && (
@@ -323,6 +361,7 @@ export function TarefasPage() {
                     mostrarSemData={false}
                     aoAlternar={alternar}
                     alternando={concluir.isPending}
+                    aoExcluida={aoExcluida}
                   />
                 ))}
               </ul>
@@ -336,8 +375,13 @@ export function TarefasPage() {
   return (
     <>
       <div className="mb-3 sr-only md:not-sr-only md:mb-5">
-        <h1 className="m-0 text-[28px] font-bold tracking-tight">Tarefas</h1>
+        <h1 ref={tituloDaPagina} tabIndex={-1} className="m-0 text-[28px] font-bold tracking-tight outline-none">
+          Tarefas
+        </h1>
         <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">O que precisa ser feito, do mais urgente ao mais distante.</p>
+      </div>
+      <div role="status" aria-live="polite" className="sr-only">
+        {aviso}
       </div>
       <form onSubmit={aoEnviar} className="mb-4 flex items-center gap-2">
         <label htmlFor="nova-tarefa" className="sr-only">
@@ -345,6 +389,7 @@ export function TarefasPage() {
         </label>
         <input
           id="nova-tarefa"
+          ref={campoNovaTarefa}
           type="text"
           value={titulo}
           maxLength={200}

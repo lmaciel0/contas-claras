@@ -248,6 +248,55 @@ describe('TarefasPage', () => {
     expect(chamadas).toBe(0)
   })
 
+  it('concluirAnunciaEMandaOFocoParaOTituloDaPagina', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Aberta' })] }))
+    servidor.use(http.patch('/api/tarefas/7/concluida', () => HttpResponse.json(tarefa(7, { concluida: true }))))
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Marcar como feita: Aberta' }))
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Tarefa concluída: Aberta'))
+    expect(screen.getByRole('heading', { level: 1, name: 'Tarefas' })).toHaveFocus()
+  })
+
+  it('reabrirAnunciaTarefaReaberta', async () => {
+    responder(resposta({ concluidas: [tarefa(8, { titulo: 'Feita', concluida: true })], totalConcluidas: 1 }))
+    servidor.use(http.patch('/api/tarefas/8/concluida', () => HttpResponse.json(tarefa(8))))
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: /Concluídas \(1\)/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Reabrir tarefa: Feita' }))
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Tarefa reaberta: Feita'))
+  })
+
+  it('excluirAnunciaEMandaOFocoParaOTituloDaPagina', async () => {
+    responder(resposta({ deHoje: [tarefa(7, { titulo: 'Ligar' })] }))
+    servidor.use(http.delete('/api/tarefas/7', () => new HttpResponse(null, { status: 204 })))
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Excluir tarefa Ligar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Sim, excluir' }))
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Tarefa excluída: Ligar'))
+    expect(screen.getByRole('heading', { level: 1, name: 'Tarefas' })).toHaveFocus()
+  })
+
+  it('criarAnunciaEDevolveOFocoAoCampo', async () => {
+    responder(resposta())
+    servidor.use(
+      http.post('/api/tarefas', () => HttpResponse.json(tarefa(9, { titulo: 'Comprar pão', data: null }), { status: 201 })),
+    )
+    renderizar()
+
+    const campo = await screen.findByRole('textbox', { name: 'Adicionar uma tarefa' })
+    await userEvent.type(campo, 'Comprar pão')
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar' }))
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Tarefa criada: Comprar pão'))
+    expect(campo).toHaveFocus()
+  })
+
   it('concluirEReabrirEnviamPatch', async () => {
     responder(
       resposta({

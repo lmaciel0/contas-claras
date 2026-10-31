@@ -13,8 +13,8 @@ const classeLink =
   'inline-flex min-h-11 items-center px-1 text-sm font-semibold text-[var(--cor-principal)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
 
 /**
- * Card "Hoje" da tela inicial: tarefas atrasadas e de hoje, seguidas das concluídas hoje (as 5 primeiras, com "+N" para
- * o resto), contador "X de Y feitas" e campo para criar uma tarefa já com a data de hoje. O carregamento e o erro ficam
+ * Card "Hoje" da tela inicial: tarefas atrasadas e de hoje, seguidas das concluídas hoje (o corte de 5 vale só para as
+ * abertas, com "+N" para o resto; as concluídas hoje ficam sempre visíveis para poder reabrir), contador "X de Y feitas" e campo para criar uma tarefa já com a data de hoje. O carregamento e o erro ficam
  * só dentro do card. Compartilha a chave de cache `['tarefas']` com a página de tarefas.
  */
 export function TarefasDeHoje() {
@@ -40,9 +40,10 @@ export function TarefasDeHoje() {
   const dados = consulta.data
   const abertas = dados ? dados.atrasadas.length + dados.deHoje.length : 0
   const total = dados ? abertas + dados.concluidasHoje.length : 0
-  const itens = dados ? [...dados.atrasadas, ...dados.deHoje, ...dados.concluidasHoje] : []
-  const visiveis = itens.slice(0, LIMITE_DE_ITENS)
-  const restantes = itens.length - visiveis.length
+  const listaAberta = dados ? [...dados.atrasadas, ...dados.deHoje] : []
+  const abertasVisiveis = listaAberta.slice(0, LIMITE_DE_ITENS)
+  const restantes = listaAberta.length - abertasVisiveis.length
+  const visiveis = dados ? [...abertasVisiveis, ...dados.concluidasHoje] : []
 
   return (
     <section aria-labelledby="titulo-tarefas-hoje" className="card">

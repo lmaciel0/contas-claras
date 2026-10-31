@@ -85,6 +85,33 @@ describe('TarefasDeHoje', () => {
     expect(link).toHaveTextContent('+3')
   })
 
+  it('concluidasHojeNaoEntramNoCorteDeCincoParaPoderReabrir', async () => {
+    responder(
+      resposta({
+        deHoje: Array.from({ length: 7 }, (_, i) => tarefa(i + 1)),
+        concluidasHoje: [tarefa(20, { titulo: 'Feita agora', concluida: true })],
+      }),
+    )
+    renderizar()
+
+    expect(await screen.findAllByRole('listitem')).toHaveLength(6)
+    expect(screen.getByRole('button', { name: 'Reabrir tarefa: Feita agora' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver mais 2 tarefas' })).toHaveTextContent('+2')
+  })
+
+  it('cincoAbertasMaisConcluidaMostraTudoSemMais', async () => {
+    responder(
+      resposta({
+        deHoje: Array.from({ length: 5 }, (_, i) => tarefa(i + 1)),
+        concluidasHoje: [tarefa(20, { concluida: true })],
+      }),
+    )
+    renderizar()
+
+    expect(await screen.findAllByRole('listitem')).toHaveLength(6)
+    expect(screen.queryByRole('link', { name: /^Ver mais/ })).not.toBeInTheDocument()
+  })
+
   it('cincoItensExatosNaoMostramMais', async () => {
     responder(resposta({ deHoje: Array.from({ length: 5 }, (_, i) => tarefa(i + 1)) }))
     renderizar()
