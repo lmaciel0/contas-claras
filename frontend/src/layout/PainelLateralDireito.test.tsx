@@ -2,33 +2,12 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
-import type { TarefaResponse, TarefasResponse } from '../api/tipos'
+import type { TarefasResponse } from '../api/tipos'
 import { comSessao } from '../teste/auth'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
+import { tarefaFicticia as tarefa, tarefasRespostaFicticia as resposta } from '../teste/tarefas'
 import { PainelLateralDireito } from './PainelLateralDireito'
-
-const HOJE = '2026-10-31'
-
-const tarefa = (id: number, parcial: Partial<TarefaResponse> = {}): TarefaResponse => ({
-  id,
-  titulo: `Tarefa ${id}`,
-  data: HOJE,
-  concluida: false,
-  concluidaEm: null,
-  ...parcial,
-})
-
-const resposta = (parcial: Partial<TarefasResponse> = {}): TarefasResponse => ({
-  hoje: HOJE,
-  atrasadas: [],
-  deHoje: [],
-  proximas: [],
-  concluidasHoje: [],
-  concluidas: [],
-  totalConcluidas: 0,
-  ...parcial,
-})
 
 function responder(corpo: TarefasResponse) {
   servidor.use(http.get('/api/tarefas', () => HttpResponse.json(corpo)))
