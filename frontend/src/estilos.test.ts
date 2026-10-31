@@ -1,6 +1,6 @@
 /// <reference types="node" />
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 // O Vitest roda com `css: false`, que esvazia `import '...css?raw'`; por isso o arquivo é lido direto.
@@ -51,6 +51,73 @@ describe('tokens de cor', () => {
       for (const fundo of ['cor-card', 'cor-fundo']) {
         expect(contraste(escuro(texto), escuro(fundo)), `${texto} sobre ${fundo}`).toBeGreaterThanOrEqual(4.5)
       }
+    }
+  })
+})
+
+/** Todos os `.tsx` de produção sob `src/` (caminhos relativos a `src/`, sem testes). */
+function tsxDeProducao(pasta = ''): string[] {
+  const base = resolve(process.cwd(), 'src', pasta)
+  return readdirSync(base, { withFileTypes: true }).flatMap((entrada) => {
+    const caminho = join(pasta, entrada.name)
+    if (entrada.isDirectory()) return tsxDeProducao(caminho)
+    return caminho.endsWith('.tsx') && !caminho.endsWith('.test.tsx') ? [caminho] : []
+  })
+}
+
+// Saem na Task 4 (menu lateral); até lá ficam fora da varredura.
+const ARQUIVOS_DA_TASK_4 = ['layout/AbasTopo.tsx', 'layout/NavbarInferior.tsx', 'layout/MenuUsuario.tsx', 'layout/AppShell.tsx']
+
+describe('cores fixas', () => {
+  it('nenhum TSX de produção usa bg-white, hex fixo em bg/text nem text-white', () => {
+    const proibido = /bg-white|bg-\[#|text-\[#|text-white/
+    const infratores = tsxDeProducao()
+      .filter((arquivo) => !ARQUIVOS_DA_TASK_4.includes(arquivo))
+      .filter((arquivo) => proibido.test(readFileSync(resolve(process.cwd(), 'src', arquivo), 'utf8')))
+    expect(infratores).toEqual([])
+  })
+
+  it('as cores do gráfico do ano vêm dos tokens de tema', () => {
+    const cores = readFileSync(resolve(process.cwd(), 'src/paginas/inicio/cores.ts'), 'utf8')
+    expect(cores).toContain("COR_RECEITAS = 'var(--cor-grafico-receitas)'")
+    expect(cores).toContain("COR_DESPESAS = 'var(--cor-grafico-despesas)'")
+    expect(cores).toContain("FUNDO_RECEITAS_PREVISTAS = 'var(--cor-grafico-receitas-previstas)'")
+    expect(cores).toContain("FUNDO_DESPESAS_PREVISTAS = 'var(--cor-grafico-despesas-previstas)'")
+  })
+
+  it('o card de auth e o botão principal não têm cor fixa fora dos tokens', () => {
+    const auth = /\.auth-card\s*\{[^}]*\}/.exec(css)?.[0] ?? ''
+    expect(auth).not.toMatch(/#[0-9a-fA-F]{3,6}|rgb\(244/)
+    const botao = /\.auth-card button\[type='submit'\]\s*\{[^}]*\}/.exec(css)?.[0] ?? ''
+    expect(botao).not.toMatch(/#[0-9a-fA-F]{3,6}/)
+  })
+
+  it('no tema escuro, texto sobre o principal e sobre o negativo passa de 4,5:1', () => {
+    const bloco = /:root\[data-tema='escuro'\]\s*\{([^}]*)\}/.exec(css)?.[1] ?? ''
+    const hex = (nome: string): string => {
+      const valor = new RegExp(`--${nome}:\\s*(#[0-9a-fA-F]{6})\\s*;`).exec(bloco)?.[1]
+      if (!valor) throw new Error(`token --${nome} ausente no tema escuro`)
+      return valor
+    }
+    const lum = (h: string): number => {
+      const [r, g, b] = [1, 3, 5].map((i) => {
+        const c = parseInt(h.slice(i, i + 2), 16) / 255
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      }) as [number, number, number]
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+    const ratio = (a: string, b: string): number => {
+      const [mx, mn] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]
+      return (mx + 0.05) / (mn + 0.05)
+    }
+    const pares: Array<[string, string]> = [
+      ['cor-sobre-principal', 'cor-principal'],
+      ['cor-sobre-principal', 'cor-principal-fim'],
+      ['cor-sobre-principal-suave', 'cor-principal'],
+      ['cor-sobre-negativo', 'cor-negativo'],
+    ]
+    for (const [texto, fundo] of pares) {
+      expect(ratio(hex(texto), hex(fundo)), `${texto} sobre ${fundo}`).toBeGreaterThanOrEqual(4.5)
     }
   })
 })

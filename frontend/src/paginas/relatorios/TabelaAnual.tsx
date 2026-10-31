@@ -47,7 +47,7 @@ function LinhaDaCategoria({ categoria }: { categoria: CategoriaRelatorio }) {
       </tr>
       {categoria.itens.map((item) => (
         <tr key={item.itemId}>
-          <th scope="row" className={`${PRIMEIRA} bg-white pl-6 font-normal`}>
+          <th scope="row" className={`${PRIMEIRA} bg-[var(--cor-card)] pl-6 font-normal`}>
             {item.nome}
           </th>
           {MESES.map((mes) => (
@@ -104,13 +104,13 @@ export function TabelaAnual({ relatorio }: { relatorio: RelatorioAnualResponse }
       role="region"
       aria-label={`Relatório anual de ${ano}`}
       tabIndex={0}
-      className="relative overflow-x-auto rounded-[var(--raio-card)] bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+      className="relative overflow-x-auto rounded-[var(--raio-card)] bg-[var(--cor-card)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
     >
       <table className="w-max min-w-full border-separate border-spacing-0 text-xs md:text-[13px]">
         <caption className="sr-only">Valor de cada item por mês em {ano}, em reais</caption>
         <thead>
           <tr className="text-[11px] font-semibold text-[var(--cor-mutado)] uppercase">
-            <th scope="col" className={`${PRIMEIRA} bg-white`}>
+            <th scope="col" className={`${PRIMEIRA} bg-[var(--cor-card)]`}>
               Item
             </th>
             {MESES.map((mes) => (
@@ -143,7 +143,7 @@ export function TabelaAnual({ relatorio }: { relatorio: RelatorioAnualResponse }
             porMes={relatorio.diferencaMes}
             ano={relatorio.diferencaAno}
             vermelhoSeNegativo
-            fundo="bg-white"
+            fundo="bg-[var(--cor-card)]"
           />
         </tfoot>
       </table>

@@ -226,8 +226,8 @@ describe('InicioPage', () => {
     const altura = (barra: Element | null | undefined) => Number(barra?.getAttribute('height'))
 
     // Cores: cheia na parte paga, padrão listrado (SVG <pattern>) na prevista.
-    expect(receitasPagas).toHaveAttribute('fill', '#27187E')
-    expect(despesasPagas).toHaveAttribute('fill', '#A49DDB')
+    expect(receitasPagas).toHaveAttribute('fill', 'var(--cor-grafico-receitas)')
+    expect(despesasPagas).toHaveAttribute('fill', 'var(--cor-grafico-despesas)')
     const padroes = [...grafico.querySelectorAll('pattern')].map((padrao) => `url(#${padrao.id})`)
     expect(padroes).toHaveLength(2)
     expect(padroes).toContain(receitasPrevistas?.getAttribute('fill'))

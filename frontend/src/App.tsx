@@ -46,18 +46,18 @@ function MolduraDoUsuario() {
     <>
       <AppShell nomeUsuario={usuario?.nome} aoSair={aoSair} />
       {(saindo || erroAoSair !== null) && (
-        <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 xl:bottom-6">
+        <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
           {saindo ? (
             <p
               role="status"
-              className="m-0 rounded-xl border border-[var(--cor-linha)] bg-white px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
+              className="m-0 rounded-xl border border-[var(--cor-linha)] bg-[var(--cor-card)] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
             >
               Saindo…
             </p>
           ) : (
             <p
               role="alert"
-              className="m-0 rounded-xl border border-[var(--cor-negativo)] bg-[#fdecec] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
+              className="m-0 rounded-xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
             >
               {erroAoSair}
             </p>

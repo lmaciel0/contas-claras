@@ -22,8 +22,16 @@
   --cor-ok-fundo: #e9f6ee;
   --cor-aviso-fundo: #fff2cb;
   --cor-aviso-texto: #7a5f00;
+  /* Texto sobre fundo principal (card de sobra, botões) e sobre o vermelho de ações destrutivas. */
+  --cor-sobre-principal: #fff;
+  --cor-sobre-negativo: #fff;
   /* Texto secundário sobre fundo principal (ex.: card de sobra). */
   --cor-sobre-principal-suave: #cfcbf2;
+  /* Fim do degradê do botão das telas de auth (o começo é --cor-principal). */
+  --cor-principal-fim: #4a36c4;
+  /* Card das telas de auth: borda e fim do degradê (o começo é --cor-card). */
+  --cor-auth-borda: #fff;
+  --cor-auth-fundo-fim: #f4f7fb;
   --cor-grafico-receitas: #27187e;
   --cor-grafico-despesas: #a49ddb;
   --cor-grafico-receitas-previstas: #7d73c4;
@@ -50,6 +58,11 @@
   --cor-aviso-fundo: #3a2e08;
   --cor-aviso-texto: #f5d97a;
   --cor-sobre-principal-suave: #2b2270;
+  --cor-sobre-principal: #0f0b2b;
+  --cor-sobre-negativo: #0f0b2b;
+  --cor-principal-fim: #8579e8;
+  --cor-auth-borda: #2c2565;
+  --cor-auth-fundo-fim: #150f3a;
   --cor-grafico-receitas: #9d92f5;
   --cor-grafico-despesas: #5c4fb3;
   --cor-grafico-receitas-previstas: #4a3fa0;
@@ -103,8 +116,8 @@ body {
 .auth-card {
   border-radius: 40px;
   padding: 25px 35px;
-  border: 5px solid #fff;
-  background: linear-gradient(0deg, #fff 0%, rgb(244 247 251) 100%);
+  border: 5px solid var(--cor-auth-borda);
+  background: linear-gradient(0deg, var(--cor-card) 0%, var(--cor-auth-fundo-fim) 100%);
   box-shadow: rgb(39 24 126 / 25%) 0 30px 30px -20px;
 }
 
@@ -129,7 +142,7 @@ body {
 }
 
 .auth-card button[type='submit'] {
-  background: linear-gradient(45deg, var(--cor-principal) 0%, #4a36c4 100%);
+  background: linear-gradient(45deg, var(--cor-principal) 0%, var(--cor-principal-fim) 100%);
   border-radius: 20px;
   padding-block: 15px;
   transition: transform 0.2s ease;

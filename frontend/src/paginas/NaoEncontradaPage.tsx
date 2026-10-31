@@ -8,7 +8,7 @@ export function NaoEncontradaPage() {
       <p className="m-0 text-sm text-[var(--cor-mutado)]">O endereço que você abriu não existe ou foi movido.</p>
       <Link
         to="/"
-        className="mt-2 rounded-full bg-[var(--cor-principal)] px-5 py-2.5 text-sm font-semibold text-white no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+        className="mt-2 rounded-full bg-[var(--cor-principal)] px-5 py-2.5 text-sm font-semibold text-[var(--cor-sobre-principal)] no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
       >
         Voltar para o início
       </Link>

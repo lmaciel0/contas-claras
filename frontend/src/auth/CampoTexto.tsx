@@ -14,7 +14,7 @@ export function CampoTexto({ rotulo, ...resto }: Props) {
       <input
         id={id}
         {...resto}
-        className="min-h-11 rounded-xl border border-[var(--cor-linha)] bg-white px-3 text-base focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--cor-principal)]"
+        className="min-h-11 rounded-xl border border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 text-base text-[var(--cor-texto)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--cor-principal)]"
       />
     </div>
   )
@@ -26,14 +26,14 @@ export function MensagemDeErro({ texto }: { texto: string | null }) {
     return null
   }
   return (
-    <p role="alert" className="m-0 rounded-xl border border-[var(--cor-negativo)] bg-[#fdecec] px-3 py-2 text-sm text-[var(--cor-texto)]">
+    <p role="alert" className="m-0 rounded-xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] px-3 py-2 text-sm text-[var(--cor-texto)]">
       {texto}
     </p>
   )
 }
 
 export const classeBotaoPrimario =
-  'min-h-11 rounded-full bg-[var(--cor-principal)] px-5 text-base font-semibold text-white ' +
+  'min-h-11 rounded-full bg-[var(--cor-principal)] px-5 text-base font-semibold text-[var(--cor-sobre-principal)] ' +
   'disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
 
 /** Botão de ação secundária (ex.: "Reenviar"), sem preenchimento. Use com `type="button"`. */

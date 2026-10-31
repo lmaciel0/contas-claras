@@ -25,7 +25,7 @@ function SeletorAno({ ano, irParaAno }: SeletorAnoProps) {
     <div
       role="group"
       aria-label="Ano"
-      className="flex items-center gap-1 rounded-full bg-white px-1 py-0.5 text-sm font-semibold shadow-sm"
+      className="flex items-center gap-1 rounded-full bg-[var(--cor-card)] px-1 py-0.5 text-sm font-semibold shadow-sm"
     >
       <button
         type="button"
@@ -77,7 +77,7 @@ export function RelatoriosPage() {
         <button
           type="button"
           onClick={() => void consulta.refetch()}
-          className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+          className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-[var(--cor-sobre-principal)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
         >
           Tentar de novo
         </button>

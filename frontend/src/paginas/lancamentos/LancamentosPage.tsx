@@ -66,7 +66,7 @@ export function LancamentosPage() {
         <button
           type="button"
           onClick={() => void consulta.refetch()}
-          className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+          className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-[var(--cor-sobre-principal)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
         >
           Tentar de novo
         </button>
@@ -95,7 +95,7 @@ export function LancamentosPage() {
     <>
       {titulo}
       {status.isError && (
-        <p role="alert" className="mb-3 rounded-xl border border-[var(--cor-negativo)] bg-[#fdecec] px-3 py-2 text-sm">
+        <p role="alert" className="mb-3 rounded-xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] px-3 py-2 text-sm">
           {mensagemDoErro(status.error)}
         </p>
       )}
