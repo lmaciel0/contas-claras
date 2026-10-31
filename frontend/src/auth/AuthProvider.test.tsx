@@ -142,10 +142,10 @@ describe('AuthProvider: cadastro por e-mail e recuperação de senha', () => {
     return (
       <>
         <p data-testid="quem">{usuario?.nome ?? 'ninguém'}</p>
-        <button type="button" onClick={() => void cadastrar('Ana', 'ana@exemplo.com', 'senha-segura')}>
+        <button type="button" onClick={() => void cadastrar('Ana', 'ana@exemplo.com')}>
           cadastrar
         </button>
-        <button type="button" onClick={() => void confirmarCadastro({ token: 'abc' })}>
+        <button type="button" onClick={() => void confirmarCadastro({ token: 'abc', senha: 'senha-segura' })}>
           confirmar
         </button>
         <button

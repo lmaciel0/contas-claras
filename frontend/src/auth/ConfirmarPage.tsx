@@ -6,6 +6,7 @@ import type { ConfirmarCadastroRequest } from '../api/tipos'
 import { BotaoReenviar } from './BotaoReenviar'
 import { CampoTexto, classeBotaoPrimario, MensagemDeErro } from './CampoTexto'
 import { mensagemDoErro } from './mensagemDoErro'
+import { MENSAGEM_SENHA_FORA_DO_TAMANHO, MENSAGEM_SENHAS_DIFERENTES, senhaValida } from './senha'
 import { TelaAuth } from './TelaAuth'
 import { useAuth } from './useAuth'
 import { useContagem } from './useContagem'
@@ -25,7 +26,8 @@ function emailDoEstado(estado: unknown): string {
 }
 
 /**
- * `/confirmar`. Confirma o e-mail do cadastro de duas formas, e as duas já abrem a sessão:
+ * `/confirmar`. Confirma o e-mail do cadastro de duas formas, e as duas definem a senha e já abrem a sessão
+ * (a senha só entra aqui, depois da prova de posse do e-mail):
  * - por código: e-mail + 6 dígitos digitados (o e-mail vem preenchido do cadastro, mas pode ser editado);
  * - por link: `?token=` do e-mail. O token é lido uma vez e sai da URL na hora, para não ficar no histórico nem vazar
  *   em captura de tela; a API só é chamada quando a pessoa clica (um robô que abre o link não gasta o token).
@@ -38,6 +40,8 @@ export function ConfirmarPage() {
   const emailDaRota = emailDoEstado(state)
   const [email, setEmail] = useState(emailDaRota)
   const [codigo, setCodigo] = useState('')
+  const [senha, setSenha] = useState('')
+  const [repetir, setRepetir] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
@@ -55,6 +59,19 @@ export function ConfirmarPage() {
     return <Navigate to="/" replace />
   }
 
+  /** Confere a senha antes de gastar uma tentativa do código; devolve `false` e mostra o erro se não servir. */
+  function validarSenhas(): boolean {
+    if (!senhaValida(senha)) {
+      setErro(MENSAGEM_SENHA_FORA_DO_TAMANHO)
+      return false
+    }
+    if (senha !== repetir) {
+      setErro(MENSAGEM_SENHAS_DIFERENTES)
+      return false
+    }
+    return true
+  }
+
   async function confirmar(evento: SubmitEvent<HTMLFormElement>) {
     evento.preventDefault()
     if (enviando) {
@@ -64,7 +81,10 @@ export function ConfirmarPage() {
     setAviso(null)
     let pedido: ConfirmarCadastroRequest
     if (token !== null) {
-      pedido = { token }
+      if (!validarSenhas()) {
+        return
+      }
+      pedido = { token, senha }
     } else {
       if (email.trim() === '') {
         setErro(MENSAGEM_SEM_EMAIL)
@@ -76,7 +96,10 @@ export function ConfirmarPage() {
         setErro(MENSAGEM_CODIGO_INCOMPLETO)
         return
       }
-      pedido = { email: email.trim(), codigo: digitos }
+      if (!validarSenhas()) {
+        return
+      }
+      pedido = { email: email.trim(), codigo: digitos, senha }
     }
     setEnviando(true)
     try {
@@ -110,6 +133,26 @@ export function ConfirmarPage() {
     }
   }
 
+  const camposDeSenha = (
+    <>
+      <CampoTexto
+        rotulo="Senha"
+        type="password"
+        autoComplete="new-password"
+        value={senha}
+        onChange={(evento) => setSenha(evento.target.value)}
+      />
+      <p className="m-0 -mt-2 text-xs">De 8 a 72 caracteres.</p>
+      <CampoTexto
+        rotulo="Repetir senha"
+        type="password"
+        autoComplete="new-password"
+        value={repetir}
+        onChange={(evento) => setRepetir(evento.target.value)}
+      />
+    </>
+  )
+
   const mensagens = (
     <>
       <MensagemDeErro texto={erro} />
@@ -125,7 +168,8 @@ export function ConfirmarPage() {
     <TelaAuth titulo="Confirme seu e-mail">
       {token !== null ? (
         <form onSubmit={confirmar} noValidate className="flex flex-col gap-4">
-          <p className="m-0 text-center text-sm">Falta pouco: confirme para entrar na sua conta.</p>
+          <p className="m-0 text-center text-sm">Falta pouco: crie sua senha e confirme para entrar na sua conta.</p>
+          {camposDeSenha}
           {mensagens}
           <button type="submit" disabled={enviando} className={classeBotaoPrimario}>
             {enviando ? 'Confirmando…' : 'Confirmar minha conta'}
@@ -155,6 +199,7 @@ export function ConfirmarPage() {
               value={codigo}
               onChange={(evento) => setCodigo(evento.target.value)}
             />
+            {camposDeSenha}
             {mensagens}
             <button type="submit" disabled={enviando} className={classeBotaoPrimario}>
               {enviando ? 'Confirmando…' : 'Confirmar'}

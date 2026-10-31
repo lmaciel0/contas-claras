@@ -7,6 +7,7 @@ import { comSessao, semSessao, usuarioFicticio } from '../teste/auth'
 import { renderComApp, renderComBrowserRouter } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
+import { MENSAGEM_SENHA_FORA_DO_TAMANHO } from './senha'
 
 const INVALIDO = 'Código inválido ou expirado.'
 const AVISO_REENVIO =
@@ -48,7 +49,16 @@ function recusarConfirmacao() {
   )
 }
 
+const SENHA = 'senha-segura'
 const campoCodigo = () => screen.getByLabelText('Código')
+const campoSenha = () => screen.getByLabelText('Senha')
+const campoRepetir = () => screen.getByLabelText('Repetir senha')
+
+/** Preenche "Senha" e "Repetir senha"; sem `repetir`, as duas ficam iguais. */
+async function preencherSenhas(senha = SENHA, repetir = senha) {
+  await userEvent.type(await screen.findByLabelText('Senha'), senha)
+  await userEvent.type(campoRepetir(), repetir)
+}
 const botaoConfirmar = () => screen.getByRole('button', { name: 'Confirmar' })
 
 describe('ConfirmarPage com código', () => {
@@ -58,10 +68,92 @@ describe('ConfirmarPage com código', () => {
     renderizarComEmail()
 
     await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
     expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
-    expect(recebido.corpo).toEqual({ email: 'ana@exemplo.com', codigo: '123456' })
+    expect(recebido.corpo).toStrictEqual({ email: 'ana@exemplo.com', codigo: '123456', senha: SENHA })
+  })
+
+  it('confirmar_envia_a_senha_junto_do_codigo', async () => {
+    semSessao()
+    const recebido = aceitarConfirmacao()
+    renderizarComEmail()
+
+    await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await preencherSenhas('outra-senha-1')
+    await userEvent.click(botaoConfirmar())
+
+    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(recebido.corpo).toStrictEqual({ email: 'ana@exemplo.com', codigo: '123456', senha: 'outra-senha-1' })
+  })
+
+  it('os_campos_de_senha_pedem_senha_nova_ao_navegador', async () => {
+    semSessao()
+    renderizarComEmail()
+
+    expect(await screen.findByLabelText('Senha')).toHaveAttribute('autocomplete', 'new-password')
+    expect(campoSenha()).toHaveAttribute('type', 'password')
+    expect(campoRepetir()).toHaveAttribute('autocomplete', 'new-password')
+    expect(campoRepetir()).toHaveAttribute('type', 'password')
+  })
+
+  it('senhas_diferentes_bloqueiam_o_envio', async () => {
+    semSessao()
+    const recebido = aceitarConfirmacao()
+    renderizarComEmail()
+
+    await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await preencherSenhas(SENHA, 'senha-segurA')
+    await userEvent.click(botaoConfirmar())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('As senhas não são iguais.')
+    expect(recebido.chamadas).toBe(0)
+    expect(botaoConfirmar()).toBeEnabled()
+  })
+
+  it('senha_curta_avisa_sem_chamar_a_api', async () => {
+    semSessao()
+    const recebido = aceitarConfirmacao()
+    renderizarComEmail()
+
+    await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await preencherSenhas('curta')
+    await userEvent.click(botaoConfirmar())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_SENHA_FORA_DO_TAMANHO)
+    expect(recebido.chamadas).toBe(0)
+  })
+
+  it('senha_longa_demais_avisa_sem_chamar_a_api', async () => {
+    semSessao()
+    const recebido = aceitarConfirmacao()
+    renderizarComEmail()
+
+    await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await preencherSenhas('a'.repeat(73))
+    await userEvent.click(botaoConfirmar())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_SENHA_FORA_DO_TAMANHO)
+    expect(recebido.chamadas).toBe(0)
+  })
+
+  it('senha_recusada_pela_api_mostra_a_mensagem_e_mantem_o_codigo', async () => {
+    semSessao()
+    servidor.use(
+      http.post('/api/auth/cadastro/confirmar', () =>
+        HttpResponse.json({ erro: 'A senha deve ter entre 8 e 72 caracteres.' }, { status: 400 }),
+      ),
+    )
+    renderizarComEmail()
+
+    await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await preencherSenhas()
+    await userEvent.click(botaoConfirmar())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('A senha deve ter entre 8 e 72 caracteres.')
+    expect(campoCodigo()).toHaveValue('123456')
+    expect(botaoConfirmar()).toBeEnabled()
   })
 
   it('codigo_colado_com_espacos_envia_so_os_digitos', async () => {
@@ -71,10 +163,11 @@ describe('ConfirmarPage com código', () => {
 
     await userEvent.click(await screen.findByLabelText('Código'))
     await userEvent.paste('123 456')
+    await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
     expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
-    expect(recebido.corpo).toEqual({ email: 'ana@exemplo.com', codigo: '123456' })
+    expect(recebido.corpo).toStrictEqual({ email: 'ana@exemplo.com', codigo: '123456', senha: SENHA })
   })
 
   it('codigo_incompleto_avisa_sem_chamar_a_api', async () => {
@@ -82,6 +175,7 @@ describe('ConfirmarPage com código', () => {
     renderizarComEmail()
 
     await userEvent.type(await screen.findByLabelText('Código'), '12345')
+    await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Digite os 6 dígitos do código.')
@@ -93,6 +187,7 @@ describe('ConfirmarPage com código', () => {
     renderizarComEmail()
 
     await userEvent.type(await screen.findByLabelText('Código'), '000000')
+    await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
     expect(await screen.findByRole('alert')).toHaveTextContent(INVALIDO)
@@ -110,6 +205,7 @@ describe('ConfirmarPage com código', () => {
     renderizarComEmail()
 
     await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível enviar o e-mail. Tente de novo.')
@@ -151,6 +247,7 @@ describe('ConfirmarPage com código', () => {
     renderizarComEmail()
 
     await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
     const confirmando = await screen.findByRole('button', { name: 'Confirmando…' })
@@ -174,10 +271,11 @@ describe('ConfirmarPage com código', () => {
 
     await userEvent.type(email, 'ana@exemplo.com')
     await userEvent.type(campoCodigo(), '654321')
+    await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
     expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
-    expect(recebido.corpo).toEqual({ email: 'ana@exemplo.com', codigo: '654321' })
+    expect(recebido.corpo).toStrictEqual({ email: 'ana@exemplo.com', codigo: '654321', senha: SENHA })
   })
 
   it('sem_email_avisa_sem_chamar_a_api', async () => {
@@ -185,6 +283,7 @@ describe('ConfirmarPage com código', () => {
     renderComApp(app(), '/confirmar')
 
     await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Informe seu e-mail.')
@@ -284,13 +383,50 @@ describe('ConfirmarPage com link (?token=)', () => {
     const botao = await screen.findByRole('button', { name: 'Confirmar minha conta' })
     expect(screen.queryByLabelText('Código')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('E-mail')).not.toBeInTheDocument()
+    await preencherSenhas()
     await new Promise((resolver) => setTimeout(resolver, 50))
     expect(recebido.chamadas).toBe(0)
 
     await userEvent.click(botao)
 
     expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
-    expect(recebido.corpo).toEqual({ token: 'abc123' })
+    expect(recebido.corpo).toStrictEqual({ token: 'abc123', senha: SENHA })
+  })
+
+  it('confirmar_com_token_envia_a_senha_junto_do_token', async () => {
+    semSessao()
+    const recebido = aceitarConfirmacao()
+    renderComApp(app(), '/confirmar?token=abc123')
+
+    await preencherSenhas('outra-senha-1')
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar minha conta' }))
+
+    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(recebido.corpo).toStrictEqual({ token: 'abc123', senha: 'outra-senha-1' })
+  })
+
+  it('com_token_senhas_diferentes_bloqueiam_o_envio', async () => {
+    semSessao()
+    const recebido = aceitarConfirmacao()
+    renderComApp(app(), '/confirmar?token=abc123')
+
+    await preencherSenhas(SENHA, 'senha-segurA')
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar minha conta' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('As senhas não são iguais.')
+    expect(recebido.chamadas).toBe(0)
+  })
+
+  it('com_token_senha_curta_avisa_sem_chamar_a_api', async () => {
+    semSessao()
+    const recebido = aceitarConfirmacao()
+    renderComApp(app(), '/confirmar?token=abc123')
+
+    await preencherSenhas('curta')
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar minha conta' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_SENHA_FORA_DO_TAMANHO)
+    expect(recebido.chamadas).toBe(0)
   })
 
   it('token_sai_da_url_ao_abrir', async () => {
@@ -302,11 +438,12 @@ describe('ConfirmarPage com link (?token=)', () => {
     await waitFor(() => expect(window.location.search).toBe(''))
     expect(window.location.pathname).toBe('/confirmar')
     expect(window.location.href).not.toContain('abc123')
+    await preencherSenhas()
 
     await userEvent.click(botao) // o token continua na memória da tela, mesmo fora da URL
 
     expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
-    expect(recebido.corpo).toEqual({ token: 'abc123' })
+    expect(recebido.corpo).toStrictEqual({ token: 'abc123', senha: SENHA })
   })
 
   it('token_invalido_mostra_erro_e_link_para_refazer_o_cadastro', async () => {
@@ -314,6 +451,7 @@ describe('ConfirmarPage com link (?token=)', () => {
     recusarConfirmacao()
     renderComApp(app(), '/confirmar?token=ja-usado')
 
+    await preencherSenhas()
     await userEvent.click(await screen.findByRole('button', { name: 'Confirmar minha conta' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(INVALIDO)
@@ -341,6 +479,7 @@ describe('ConfirmarPage com link (?token=)', () => {
     )
     renderComApp(app(), '/confirmar?token=abc123')
 
+    await preencherSenhas()
     await userEvent.click(await screen.findByRole('button', { name: 'Confirmar minha conta' }))
 
     const confirmando = await screen.findByRole('button', { name: 'Confirmando…' })

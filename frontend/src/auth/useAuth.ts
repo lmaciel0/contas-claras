@@ -10,7 +10,7 @@ export interface Auth {
   entrar: (email: string, senha: string) => Promise<void>
   entrarComGoogle: (credential: string) => Promise<void>
   /** Só pede o cadastro: a API manda o código por e-mail e não abre sessão, então `usuario` não muda. */
-  cadastrar: (nome: string, email: string, senha: string) => Promise<void>
+  cadastrar: (nome: string, email: string) => Promise<void>
   /** Confirma o e-mail (código ou link) e já entra na conta. */
   confirmarCadastro: (req: ConfirmarCadastroRequest) => Promise<void>
   /** Troca a senha com o código recebido por e-mail e já entra na conta. */

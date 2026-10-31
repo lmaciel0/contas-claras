@@ -17,11 +17,9 @@ function renderizar() {
   )
 }
 
-async function preencher(nome: string, email: string, senha: string, repetir = senha) {
+async function preencher(nome: string, email: string) {
   await userEvent.type(await screen.findByLabelText('Nome'), nome)
   await userEvent.type(screen.getByLabelText('E-mail'), email)
-  await userEvent.type(screen.getByLabelText('Senha'), senha)
-  await userEvent.type(screen.getByLabelText('Repetir senha'), repetir)
 }
 
 const botaoCriar = () => screen.getByRole('button', { name: 'Criar conta' })
@@ -36,7 +34,7 @@ describe('CadastroPage', () => {
     )
     renderizar()
 
-    await preencher('Ana', 'ana@exemplo.com', 'senha-segura')
+    await preencher('Ana', 'ana@exemplo.com')
     await userEvent.click(botaoCriar())
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Muitos pedidos agora. Tente de novo mais tarde.')
@@ -56,11 +54,11 @@ describe('CadastroPage', () => {
     )
     renderizar()
 
-    await preencher('Ana', 'ana@exemplo.com', 'senha-segura')
+    await preencher('Ana', 'ana@exemplo.com')
     await userEvent.click(botaoCriar())
 
     expect(await screen.findByRole('heading', { name: 'Confirme seu e-mail' })).toBeInTheDocument()
-    expect(corpo).toEqual({ nome: 'Ana', email: 'ana@exemplo.com', senha: 'senha-segura' })
+    expect(corpo).toEqual({ nome: 'Ana', email: 'ana@exemplo.com' })
     expect(screen.getByLabelText('E-mail')).toHaveValue('ana@exemplo.com')
     expect(screen.getByText(/Enviamos um e-mail para ana@exemplo\.com\./)).toBeInTheDocument()
     expect(window.location.pathname).toBe('/confirmar')
@@ -68,25 +66,34 @@ describe('CadastroPage', () => {
     expect(window.location.href).not.toContain('exemplo')
   })
 
-  it('senhas_diferentes_bloqueiam_o_envio', async () => {
+  it('cadastro_nao_pede_senha', async () => {
+    semSessao()
+    let corpo: unknown
+    servidor.use(
+      http.post('/api/auth/cadastro', async ({ request }) => {
+        corpo = await request.json()
+        return new HttpResponse(null, { status: 202 })
+      }),
+    )
+    renderizar()
+
+    await preencher('Ana', 'ana@exemplo.com')
+    expect(screen.queryByLabelText('Senha')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Repetir senha')).not.toBeInTheDocument()
+    await userEvent.click(botaoCriar())
+
+    expect(await screen.findByRole('heading', { name: 'Confirme seu e-mail' })).toBeInTheDocument()
+    expect(corpo).toStrictEqual({ nome: 'Ana', email: 'ana@exemplo.com' })
+  })
+
+  it('nome_ou_email_vazio_avisa_sem_chamar_a_api', async () => {
     semSessao() // sem handler de cadastro: qualquer chamada falharia o teste
     renderizar()
 
-    await preencher('Ana', 'ana@exemplo.com', 'senha-segura', 'senha-segurA')
+    await userEvent.type(await screen.findByLabelText('E-mail'), 'ana@exemplo.com')
     await userEvent.click(botaoCriar())
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('As senhas não são iguais.')
-    expect(screen.getByRole('heading', { name: 'Criar conta' })).toBeInTheDocument()
-  })
-
-  it('senha_curta_e_recusada_sem_chamar_a_api', async () => {
-    semSessao()
-    renderizar()
-
-    await preencher('Ana', 'ana@exemplo.com', 'curta')
-    await userEvent.click(botaoCriar())
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('A senha deve ter de 8 a 72 caracteres.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Informe seu nome e seu e-mail.')
   })
 
   it('botao_mostra_espera_e_nao_envia_de_novo', async () => {
@@ -104,14 +111,14 @@ describe('CadastroPage', () => {
       }),
     )
     renderizar()
-    await preencher('Ana', 'ana@exemplo.com', 'senha-segura')
+    await preencher('Ana', 'ana@exemplo.com')
 
     await userEvent.click(botaoCriar())
 
     const enviando = await screen.findByRole('button', { name: 'Enviando…' })
     expect(enviando).toBeDisabled()
     await userEvent.click(enviando)
-    await userEvent.type(screen.getByLabelText('Repetir senha'), '{Enter}')
+    await userEvent.type(screen.getByLabelText('E-mail'), '{Enter}')
     liberar()
     expect(await screen.findByRole('heading', { name: 'Confirme seu e-mail' })).toBeInTheDocument()
     expect(chamadas).toBe(1)
