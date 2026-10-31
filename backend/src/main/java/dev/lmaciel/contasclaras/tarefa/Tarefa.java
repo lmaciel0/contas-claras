@@ -76,8 +76,11 @@ public class Tarefa {
         this.data = data;
     }
 
+    /** Concluir de novo não muda o momento original. */
     public void concluir(Instant quando) {
-        this.concluidaEm = quando;
+        if (this.concluidaEm == null) {
+            this.concluidaEm = quando;
+        }
     }
 
     public void reabrir() {

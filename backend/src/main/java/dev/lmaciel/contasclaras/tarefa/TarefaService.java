@@ -55,6 +55,31 @@ public class TarefaService {
         return TarefaResponse.de(nova);
     }
 
+    @Transactional
+    public TarefaResponse editar(long id, TarefaRequest req, UsuarioLogado u) {
+        Tarefa tarefa = buscarDoUsuario(id, u);
+        tarefa.editar(req.titulo(), req.data());
+        tarefas.saveAndFlush(tarefa);
+        return TarefaResponse.de(tarefa);
+    }
+
+    @Transactional
+    public TarefaResponse concluir(long id, boolean concluida, UsuarioLogado u) {
+        Tarefa tarefa = buscarDoUsuario(id, u);
+        if (concluida) {
+            tarefa.concluir(Instant.now(clock));
+        } else {
+            tarefa.reabrir();
+        }
+        tarefas.saveAndFlush(tarefa);
+        return TarefaResponse.de(tarefa);
+    }
+
+    @Transactional
+    public void excluir(long id, UsuarioLogado u) {
+        tarefas.delete(buscarDoUsuario(id, u));
+    }
+
     @Transactional(readOnly = true)
     public TarefasResponse listar(UsuarioLogado u) {
         LocalDate hoje = LocalDate.now(clock);
