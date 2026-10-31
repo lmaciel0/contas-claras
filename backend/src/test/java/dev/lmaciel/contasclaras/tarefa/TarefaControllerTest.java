@@ -104,6 +104,45 @@ class TarefaControllerTest extends IntegracaoTest {
     }
 
     @Test
+    void rejeitaNulNoTitulo() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long id = criarComId(sessao, """
+                {"titulo":"ok"}""");
+        // "\\u0000" no fonte Java vira o escape JSON \u0000, que o Jackson decodifica para NUL.
+        String corpo = "{\"titulo\":\"abc\\u0000def\"}";
+
+        mvc.perform(post("/api/tarefas").cookie(sessao).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("O título da tarefa contém caracteres inválidos."));
+        mvc.perform(put("/api/tarefas/" + id).cookie(sessao).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("O título da tarefa contém caracteres inválidos."));
+    }
+
+    @Test
+    void rejeitaDataForaDoIntervalo() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long id = criarComId(sessao, """
+                {"titulo":"ok"}""");
+
+        for (String data : new String[] { "+999999999-01-01", "1899-12-31", "2201-01-01" }) {
+            String corpo = "{\"titulo\":\"x\",\"data\":\"" + data + "\"}";
+            mvc.perform(post("/api/tarefas").cookie(sessao).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.erro").value("A data deve estar entre os anos 1900 e 2200."));
+            mvc.perform(put("/api/tarefas/" + id).cookie(sessao).contentType(MediaType.APPLICATION_JSON)
+                    .content(corpo))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.erro").value("A data deve estar entre os anos 1900 e 2200."));
+        }
+        for (String data : new String[] { "1900-01-01", "2200-12-31" }) {
+            mvc.perform(post("/api/tarefas").cookie(sessao).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"titulo\":\"x\",\"data\":\"" + data + "\"}"))
+                    .andExpect(status().isCreated());
+        }
+    }
+
+    @Test
     void agrupaPorDataComRelogioFixo() throws Exception {
         Cookie sessao = cadastrarEEntrar(DONO);
         criar(sessao, """
