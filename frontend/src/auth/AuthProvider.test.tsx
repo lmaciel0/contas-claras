@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import { ErroApi } from '../api/cliente'
 import { endpoints } from '../api/endpoints'
-import { comSessao, semSessao, usuarioFicticio } from '../teste/auth'
+import { comSessao, saudacaoDaTelaInicial, semSessao, usuarioFicticio } from '../teste/auth'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
@@ -40,8 +40,8 @@ describe('AuthProvider', () => {
     comSessao()
     renderizar()
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
-    expect(screen.getByText('Ana')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
+    expect(screen.getByTitle('Ana')).toBeInTheDocument()
   })
 
   it('sair_chama_logout_e_volta_para_o_login', async () => {
@@ -81,9 +81,9 @@ describe('AuthProvider', () => {
     await clicarEmSair()
 
     expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_NAO_SAIU)
-    expect(screen.getByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
-    expect(screen.getByText('Ana')).toBeInTheDocument()
+    expect(screen.getByTitle('Ana')).toBeInTheDocument()
   })
 
   it('sair_sem_resposta_do_servidor_mantem_logado_e_avisa', async () => {
@@ -95,7 +95,7 @@ describe('AuthProvider', () => {
     await clicarEmSair()
 
     expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_NAO_SAIU)
-    expect(screen.getByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
   })
 
@@ -132,7 +132,7 @@ describe('AuthProvider', () => {
     comSessao()
     renderizar('/login')
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
   })
 })
 

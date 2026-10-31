@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
-import { comSessao, semSessao, usuarioFicticio } from '../teste/auth'
+import { comSessao, saudacaoDaTelaInicial, semSessao, usuarioFicticio } from '../teste/auth'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
@@ -148,7 +148,7 @@ describe('EsqueciSenhaPage', () => {
     await userEvent.type(screen.getByLabelText('Repetir nova senha'), 'senha-nova-1')
     await userEvent.click(botaoRedefinir())
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(corpo).toEqual({ email: 'ana@exemplo.com', codigo: '123456', senha: 'senha-nova-1' })
   })
 
@@ -171,7 +171,7 @@ describe('EsqueciSenhaPage', () => {
     comSessao()
     renderizar()
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
   })
 
   it('tem_link_para_voltar_ao_login', async () => {
@@ -271,7 +271,7 @@ describe('EsqueciSenhaPage: reenviar e espera', () => {
     await userEvent.click(redefinindo)
     liberarPasso2()
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(chamadasDoPasso1).toBe(1)
     expect(chamadasDoPasso2).toBe(1)
   })
