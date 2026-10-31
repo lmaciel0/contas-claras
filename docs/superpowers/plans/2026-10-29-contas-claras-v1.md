@@ -11,7 +11,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-29-contas-claras-design.md`
 
-> **Atualização 2026-10-30 (durante a execução):** o deploy passou a ser um único projeto Vercel com Services (`web` = front Vite, `api` = backend em container) e banco Supabase. Onde este plano cita Render, Neon, `render.yaml` ou rewrite externo em `frontend/vercel.json`, vale o `vercel.json` da raiz (Tasks 16a/16b) e a seção 9 do spec.
+> **Atualização 2026-10-30 (durante a execução):** o deploy passou a ser um único projeto Vercel com Services (`web` = front Vite, `api` = backend em container) e banco Supabase. Onde este plano cita Render, Neon, `render.yaml` ou rewrite externo em `frontend/vercel.json`, vale o `vercel.json` da raiz (Tasks 16a/16b) e a seção 9 do spec. Na revisão final, a navegação de desktop (abas no topo) passou a valer a partir de 1280 px; abaixo disso vale a navbar inferior (onde o plano diz 768 px).
 
 **Branch:** todo o trabalho em `feat/v1`, com um commit por task e PR para `main` no fim (o dono liberou branch, push, PR e merge neste repo).
 
