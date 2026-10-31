@@ -1,0 +1,10 @@
+# Profile do comando de importação única (ver ImportacaoRunner): sem servidor web, o processo roda e sai.
+# Banner e logs de INFO ficam de fora para a tabela de resultado aparecer limpa no terminal.
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+
+logging:
+  level:
+    root: warn

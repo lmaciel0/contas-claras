@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --cor-fundo: #f7f7ff;
+  --cor-principal: #27187e;
+  --cor-principal-clara: #a49ddb;
+  --cor-positivo: #2e9e5b;
+  --cor-negativo: #d64545;
+  /* Verde e vermelho da paleta servem para barras e fundos. Texto pequeno usa estes tons mais escuros,
+     que chegam a 4,5:1 (WCAG AA) sobre branco e sobre os fundos claros dos chips. */
+  --cor-positivo-texto: #1f7a45;
+  --cor-negativo-texto: #b73333;
+  --cor-texto: #16123a;
+  --cor-mutado: #7d7a99;
+  --cor-linha: #e9e8f5;
+  --raio-card: 22px;
+}
+
+html {
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+@layer components {
+  /* Card branco padrão das telas (mockups: cantos de 20 a 24 px). */
+  .card {
+    background: #fff;
+    border-radius: var(--raio-card);
+    padding: 1rem;
+  }
+
+  /* Valores monetários alinhados em coluna. */
+  .valor {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Relatório anual: lançamento já pago (verde) e diferença de caixa negativa (vermelho), em tons de texto. */
+  .celula-paga {
+    color: var(--cor-positivo-texto);
+  }
+  .diferenca-negativa {
+    color: var(--cor-negativo-texto);
+  }
+}

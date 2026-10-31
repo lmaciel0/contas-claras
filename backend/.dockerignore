@@ -1,0 +1,20 @@
+# Build e dependências locais
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# Segredos e material local
+.env
+.env.*
+.local/
+
+# Git, IDE e SO
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# O contexto é só o backend: nada de Docker/docs dentro da imagem
+Dockerfile
+.dockerignore

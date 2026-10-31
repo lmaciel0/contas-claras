@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/contasclaras
+    username: contas
+    password: contas
+
+app:
+  jwt:
+    # Segredo falso, só para dev local (>= 32 bytes). Produção não tem valor padrão: vem do ambiente.
+    secret: ${JWT_SECRET:dev-only-segredo-falso-nao-use-em-producao-0123456789}
+  cookie:
+    secure: false

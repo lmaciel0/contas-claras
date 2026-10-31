@@ -132,24 +132,23 @@ Regras:
 - **Troca única**: a importação só roda numa conta sem nenhum lançamento; se houver algum, recusa com mensagem clara. Antes de importar, apaga as categorias padrão vazias da conta para não duplicar. *Decisão minha.*
 
 Testes:
-- Testes automatizados usam uma planilha **fictícia** em `src/test/resources`, construída com a mesma estrutura (blocos, `(NN)`, verde/preto/vermelho, nomes repetidos, alias de categoria, anotação abaixo de TOTAIS, aba não-ano).
-- **Critério de aceite com a planilha real** (passo manual, na máquina do dono): as somas importadas por ano batem com as linhas TOTAL de cada aba, com diferença ≤ R$ 0,01. Os valores esperados estão em `.local/conferencia-importacao.md`.
+- Testes automatizados usam uma planilha **fictícia**, gerada por código de teste (Apache POI) com a mesma estrutura: blocos, `(NN)`, verde/preto/vermelho, nomes repetidos, alias de categoria, anotação abaixo de TOTAIS e aba não-ano.
+- **Critério de aceite com a planilha real** (passo manual, na máquina do dono): as somas importadas por ano batem com as linhas TOTAL de cada aba, com diferença ≤ R$ 0,05. Arredondar célula a célula para centavos já gera até R$ 0,03 de diferença num ano. Os valores esperados estão em `.local/conferencia-importacao.md`.
 
 ## 9. Arquitetura e stack (decidido)
 
 - **Backend**: Java 21 e Spring Boot (versão estável atual), com Spring Web, Spring Security, Spring Data JPA, Bean Validation, Flyway e PostgreSQL. Build Maven com wrapper no repo. Testes com JUnit 5 + Mockito; integração com Testcontainers (Docker disponível na máquina).
 - **Frontend**: React + TypeScript (Vite), responsivo e mobile-first.
-- **Banco**: Neon Postgres (plano grátis).
-- **Hospedagem**: front na **Vercel**; API no **Render** (plano grátis, via Docker).
-  - O dono aceitou o cold start do Render grátis: depois de ~15 min parada, a primeira abertura leva ~30–60 s.
-  - Durante esse tempo, o front mostra o aviso "acordando o servidor…".
-  - Trocar por Railway (~US$5/mês) é opção futura.
+- **Banco**: Supabase Postgres (plano grátis, região sa-east-1, conexão pelo session pooler IPv4). *Atualizado em 2026-10-30: era Neon; o Supabase já estava conectado e evita depender de conta nova. O plano grátis pausa o projeto após 7 dias sem uso.*
+- **Hospedagem**: tudo num único projeto **Vercel** com Services (Beta): service `web` (front Vite) e service `api` (backend em container Docker, Container Runtime das Vercel Functions), na região `gru1`. *Atualizado em 2026-10-30: era front na Vercel + API no Render; a Vercel passou a rodar containers e o dono pediu "use vercel mesmo".*
+  - A API escala para zero após 5 min sem tráfego; a primeira abertura depois disso sobe a JVM (~segundos). O front mostra o aviso "acordando o servidor…".
+  - Plano B, se o Beta falhar: API no Render com o mesmo Dockerfile e rewrite externo.
 - **Monorepo**: `backend/` e `frontend/` no mesmo repositório.
 - **Cadastro restrito**: variável de ambiente `ALLOWED_EMAILS` (lista separada por vírgula) na API. Cadastro por senha e primeiro login Google só funcionam para e-mail da lista; fora dela, a resposta é uma mensagem genérica. *Decisão minha.*
 - **Autenticação**:
   - A API emite a própria sessão/token depois do login por senha ou Google. O Google é validado pelo ID token no backend, exigindo `email_verified`.
   - Sessão em cookie `HttpOnly` + `Secure`; nada de token em `localStorage`.
-  - Para o cookie ser de primeira parte, o front chama a API pelo próprio domínio da Vercel (rewrite `/api/*` → Render). *Decisão minha.*
+  - Para o cookie ser de primeira parte, front e API ficam no mesmo domínio da Vercel (rewrite `/api/*` → service `api`). *Decisão minha.*
 - **Google + conta com senha do mesmo e-mail**: o login Google vincula as contas e **apaga a senha existente**. Como o app não confirma e-mail, isso impede que alguém que cadastrou o e-mail antes mantenha acesso. Depois, o usuário pode definir nova senha logado. *Decisão minha.*
 - **Segredos** (URL do banco, segredo de assinatura, client ID do Google, `ALLOWED_EMAILS`) ficam só em variáveis de ambiente da Vercel/Render, nunca no repositório. O repo tem `.env.example` sem valores reais.
 - **Repositório público**:
@@ -157,7 +156,7 @@ Testes:
   - Prints do README usam conta com dados fictícios.
   - Antes de mudar a visibilidade para público, conferir o histórico do git em busca de dados pessoais.
 
-**Ações que dependem do dono** (contas/credenciais): criar o projeto no Neon, o serviço no Render e o OAuth Client no Google Cloud Console; vincular o repo na Vercel; definir `ALLOWED_EMAILS`. O builder prepara tudo e indica o passo exato.
+**Ações que dependem do dono**: criar o OAuth Client no Google Cloud Console (sem ele, o botão "Entrar com Google" fica oculto e o login por senha funciona). Banco (Supabase) e hospedagem (Vercel) são criados pelas contas já conectadas.
 
 ## 10. Deixado para o builder
 
