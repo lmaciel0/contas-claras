@@ -53,7 +53,7 @@ Front e API ficam no **mesmo domínio**, então o cookie de sessão é de primei
 - **Isolamento:** toda consulta filtra pelo usuário autenticado; recurso de outro usuário responde **404**, nunca 403.
 - **Dinheiro:** `BigDecimal` no Java, `numeric(12,2)` no banco e string no JSON (`"1234.56"`). Nada de ponto flutuante.
 - **Banco:** migrations Flyway; a FK de lançamento é `ON DELETE RESTRICT`, então apagar categoria nunca apaga lançamento por cascata. Em produção a API usa um role e um schema próprios (`contas`), fora da API REST pública do Supabase.
-- **Cold start:** a API escala para zero; o front mostra "Acordando o servidor…" e repete 502/503/504 dentro de uma janela de 90 s.
+- **Cold start:** a API escala para zero; o front mostra "Acordando o servidor…" e repete 502/503/504 dentro de uma janela de 90 s. Um 503 com corpo `{erro}` vem da própria API (falha de envio de e-mail) e aparece na hora, sem repetir.
 - **Front:** CSP restrita (só Google Identity Services como origem externa), `X-Frame-Options: DENY`, `nosniff`, redirecionamento pós-login validado contra open redirect.
 
 ## Rodar localmente
@@ -87,7 +87,7 @@ A planilha precisa seguir o formato anual: abas com o nome do ano, blocos que co
 
 ```bash
 cd backend && ./mvnw -q -DskipTests package
-DATABASE_URL=... DATABASE_USERNAME=... DATABASE_PASSWORD=... JWT_SECRET=... \
+DATABASE_URL=... DATABASE_USERNAME=... DATABASE_PASSWORD=... JWT_SECRET=... APP_URL=... \
 java -jar target/contas-claras-0.0.1-SNAPSHOT.jar --spring.profiles.active=importar \
   "--importar.arquivo=/caminho/da/planilha.xlsx" --importar.email=voce@exemplo.com
 ```
