@@ -107,4 +107,21 @@ public class CodigoEmail {
     public Instant getCriadoEm() {
         return criadoEm;
     }
+
+    /** Conta uma tentativa errada. Quem chama apaga a linha na quinta. */
+    public void registrarTentativa() {
+        tentativas++;
+    }
+
+    /** Novo pedido para o mesmo tipo e e-mail: troca código e token, zera as tentativas e renova o prazo. */
+    public void substituir(String nome, String senhaHash, String codigoHmac, String tokenHash, Instant criadoEm,
+            Instant expiraEm) {
+        this.nome = nome;
+        this.senhaHash = senhaHash;
+        this.codigoHmac = codigoHmac;
+        this.tokenHash = tokenHash;
+        this.tentativas = 0;
+        this.criadoEm = criadoEm;
+        this.expiraEm = expiraEm;
+    }
 }

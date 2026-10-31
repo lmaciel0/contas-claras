@@ -49,15 +49,15 @@ public class ModelosEmail {
         String texto = """
                 Alguém pediu para criar uma conta no Contas Claras com este e-mail, mas ele já tem conta.
 
-                Entre em %s. Se não lembra a senha, use "Esqueci a senha" na tela de entrada.
+                Entre com a sua senha. Se não lembra, use "Esqueci a senha": %s
 
                 %s
-                """.formatted(appUrl, AVISO);
+                """.formatted(appUrl + "/esqueci-senha", AVISO);
         String html = pagina("""
                 <p>Alguém pediu para criar uma conta no Contas Claras com este e-mail, mas ele já tem conta.</p>
-                <p>Entre em <a href="%s">%s</a>. Se não lembra a senha, use "Esqueci a senha" na tela de entrada.</p>
+                <p>Entre com a sua senha. Se não lembra, use <a href="%s">"Esqueci a senha"</a>.</p>
                 <p>%s</p>
-                """.formatted(appUrl, appUrl, AVISO));
+                """.formatted(appUrl + "/esqueci-senha", AVISO));
         return new MensagemEmail(para, "Você já tem conta no Contas Claras", texto, html);
     }
 
@@ -82,15 +82,15 @@ public class ModelosEmail {
         String texto = """
                 Alguém pediu para redefinir a senha do Contas Claras com este e-mail, mas não há conta com ele.
 
-                Para criar uma conta, acesse %s.
+                Para criar uma conta, acesse %s
 
                 %s
-                """.formatted(appUrl, AVISO);
+                """.formatted(appUrl + "/cadastro", AVISO);
         String html = pagina("""
                 <p>Alguém pediu para redefinir a senha do Contas Claras com este e-mail, mas não há conta com ele.</p>
                 <p>Para criar uma conta, acesse <a href="%s">%s</a>.</p>
                 <p>%s</p>
-                """.formatted(appUrl, appUrl, AVISO));
+                """.formatted(appUrl + "/cadastro", appUrl + "/cadastro", AVISO));
         return new MensagemEmail(para, "Redefinição de senha no Contas Claras", texto, html);
     }
 

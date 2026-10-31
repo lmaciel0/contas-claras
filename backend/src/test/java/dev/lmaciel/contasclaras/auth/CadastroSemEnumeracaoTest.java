@@ -1,14 +1,17 @@
 package dev.lmaciel.contasclaras.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,16 +21,18 @@ import org.springframework.test.web.servlet.ResultActions;
 import dev.lmaciel.contasclaras.IntegracaoTest;
 
 /**
- * O cadastro não pode revelar quais e-mails têm conta: e-mail fora da lista e e-mail já cadastrado
- * respondem igual, e os dois gastam o mesmo BCrypt (o tempo não denuncia o caminho).
+ * O cadastro não pode revelar quais e-mails têm conta: com ou sem conta, a resposta é a mesma, o BCrypt roda
+ * nos dois casos (o tempo não denuncia o caminho) e sai exatamente um e-mail.
  */
 class CadastroSemEnumeracaoTest extends IntegracaoTest {
 
-    private static final String MENSAGEM = "Não foi possível criar a conta com este e-mail.";
     private static final String SENHA = "senha-segura-1";
 
     @MockitoSpyBean
     PasswordEncoder encoder;
+
+    @Autowired
+    AuthService auth;
 
     @Autowired
     JdbcTemplate jdbc;
@@ -43,23 +48,21 @@ class CadastroSemEnumeracaoTest extends IntegracaoTest {
     }
 
     @Test
-    void email_nao_liberado_gasta_bcrypt_e_responde_403_generico() throws Exception {
-        cadastrar("intruso@exemplo.com")
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.erro").value(MENSAGEM));
+    void com_ou_sem_conta_gasta_bcrypt_responde_igual_e_envia_um_email() throws Exception {
+        auth.criarUsuario("Dono", "dono@exemplo.com", encoder.encode("outra-senha-9"), null);
 
-        verify(encoder).encode(SENHA);
-    }
+        for (String email : new String[] { "novo@exemplo.com", "dono@exemplo.com" }) {
+            cadastrar(email)
+                    .andExpect(status().isAccepted())
+                    .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+                    .andExpect(content().string(""));
+        }
 
-    @Test
-    void email_ja_cadastrado_gasta_bcrypt_e_responde_o_mesmo_403() throws Exception {
-        cadastrar("dono@exemplo.com").andExpect(status().isCreated());
-
-        cadastrar("dono@exemplo.com")
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.erro").value(MENSAGEM));
-
-        // uma vez no primeiro cadastro, outra no repetido
+        // uma vez para cada pedido, com ou sem conta
         verify(encoder, times(2)).encode(SENHA);
+        assertThat(emailFalso.enviadas()).hasSize(2);
+        assertThat(emailFalso.enviadas().stream().map(MensagemEmail::para).toList())
+                .containsExactly("novo@exemplo.com", "dono@exemplo.com");
+        assertThat(jdbc.queryForObject("select count(*) from usuario", Long.class)).isEqualTo(1);
     }
 }

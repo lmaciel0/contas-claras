@@ -48,7 +48,7 @@ class ModelosEmailTest {
         assertThat(m.para()).isEqualTo("ana@exemplo.com");
         assertThat(m.assunto()).isNotBlank();
         for (String corpo : new String[] { m.texto(), m.html() }) {
-            assertThat(corpo).contains("Esqueci a senha").contains(APP_URL).contains(AVISO);
+            assertThat(corpo).contains("Esqueci a senha").contains(APP_URL + "/esqueci-senha").contains(AVISO);
         }
     }
 
@@ -59,7 +59,7 @@ class ModelosEmailTest {
         assertThat(m.para()).isEqualTo("ana@exemplo.com");
         assertThat(m.assunto()).isNotBlank();
         for (String corpo : new String[] { m.texto(), m.html() }) {
-            assertThat(corpo).doesNotContainPattern("\\d{6}").contains(AVISO);
+            assertThat(corpo).doesNotContainPattern("\\d{6}").contains(APP_URL + "/cadastro").contains(AVISO);
         }
     }
 

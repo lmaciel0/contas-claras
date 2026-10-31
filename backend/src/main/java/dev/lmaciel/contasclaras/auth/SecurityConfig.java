@@ -91,6 +91,8 @@ public class SecurityConfig {
                 rota.matcher("/api/health"),
                 rota.matcher("/api/auth/login"),
                 rota.matcher("/api/auth/cadastro"),
+                rota.matcher("/api/auth/cadastro/reenviar"),
+                rota.matcher("/api/auth/cadastro/confirmar"),
                 rota.matcher("/api/auth/google"));
     }
 

@@ -35,7 +35,6 @@ import jakarta.servlet.http.Cookie;
 class GoogleLoginTest extends IntegracaoTest {
 
     private static final String LOGIN_INVALIDO = "Login Google inválido.";
-    private static final String NAO_PERMITIDO = "Não foi possível criar a conta com este e-mail.";
     private static final String SENHA = "senha-segura-1";
     private static final String TOKEN = "token-google-falso";
 
@@ -76,11 +75,7 @@ class GoogleLoginTest extends IntegracaoTest {
     }
 
     private Cookie cadastrarPorSenha(String email) throws Exception {
-        return cookieDe(mvc.perform(post("/api/auth/cadastro")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nome\":\"Dono Teste\",\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, SENHA)))
-                .andExpect(status().isCreated())
-                .andReturn());
+        return cadastrarEEntrar(email);
     }
 
     private long contarUsuarios() {
@@ -128,7 +123,7 @@ class GoogleLoginTest extends IntegracaoTest {
     // ---- primeiro login ------------------------------------------------------------------
 
     @Test
-    void google_primeiro_login_com_email_liberado_cria_usuario_sem_senha() throws Exception {
+    void google_primeiro_login_cria_usuario_sem_senha() throws Exception {
         tokenValido("sub-1", "dono@exemplo.com", true);
 
         google(TOKEN)
@@ -194,15 +189,16 @@ class GoogleLoginTest extends IntegracaoTest {
     }
 
     @Test
-    void google_email_nao_liberado_retorna_403() throws Exception {
-        tokenValido("sub-9", "intruso@exemplo.com", true);
+    void google_primeiro_login_com_qualquer_email_verificado_cria_conta() throws Exception {
+        tokenValido("sub-9", "qualquer.pessoa@exemplo.org", true);
 
         google(TOKEN)
-                .andExpect(status().isForbidden())
-                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
-                .andExpect(jsonPath("$.erro").value(NAO_PERMITIDO));
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("cc_session=")))
+                .andExpect(jsonPath("$.email").value("qualquer.pessoa@exemplo.org"))
+                .andExpect(jsonPath("$.temSenha").value(false));
 
-        assertThat(contarUsuarios()).isZero();
+        assertThat(contarUsuarios()).isEqualTo(1);
     }
 
     // ---- vínculo com conta existente -----------------------------------------------------
@@ -278,7 +274,7 @@ class GoogleLoginTest extends IntegracaoTest {
     }
 
     @Test
-    void google_sub_conhecido_entra_mesmo_com_email_fora_da_lista() throws Exception {
+    void google_sub_conhecido_entra_mesmo_com_outro_email_no_token() throws Exception {
         tokenValido("sub-1", "dono@exemplo.com", true);
         google(TOKEN).andExpect(status().isOk());
 

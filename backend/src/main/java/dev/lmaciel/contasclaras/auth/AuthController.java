@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -14,11 +15,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.lmaciel.contasclaras.auth.dto.CadastroRequest;
+import dev.lmaciel.contasclaras.auth.dto.ConfirmarCadastroRequest;
 import dev.lmaciel.contasclaras.auth.dto.DefinirSenhaRequest;
+import dev.lmaciel.contasclaras.auth.dto.EmailRequest;
 import dev.lmaciel.contasclaras.auth.dto.GoogleLoginRequest;
 import dev.lmaciel.contasclaras.auth.dto.LoginRequest;
 import dev.lmaciel.contasclaras.auth.dto.UsuarioResponse;
 import dev.lmaciel.contasclaras.usuario.Usuario;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -26,18 +30,42 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService auth;
+    private final FluxoEmailService fluxoEmail;
     private final TokenService tokens;
     private final SessaoCookie sessaoCookie;
 
-    public AuthController(AuthService auth, TokenService tokens, SessaoCookie sessaoCookie) {
+    public AuthController(AuthService auth, FluxoEmailService fluxoEmail, TokenService tokens,
+            SessaoCookie sessaoCookie) {
         this.auth = auth;
+        this.fluxoEmail = fluxoEmail;
         this.tokens = tokens;
         this.sessaoCookie = sessaoCookie;
     }
 
+    /** Sempre 202 sem corpo e sem cookie: a conta só nasce na confirmação por e-mail. */
     @PostMapping(path = "/cadastro", consumes = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<UsuarioResponse> cadastro(@Valid @RequestBody CadastroRequest req) {
-        Usuario usuario = auth.cadastrar(req.nome(), req.email(), req.senha());
+    ResponseEntity<Void> cadastro(@Valid @RequestBody CadastroRequest req, HttpServletRequest http) {
+        fluxoEmail.pedirCadastro(req.nome(), req.email(), req.senha(), http.getRemoteAddr());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping(path = "/cadastro/reenviar", consumes = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Void> reenviarCadastro(@Valid @RequestBody EmailRequest req, HttpServletRequest http) {
+        fluxoEmail.reenviarCadastro(req.email(), http.getRemoteAddr());
+        return ResponseEntity.accepted().build();
+    }
+
+    /** Confirma por {@code email} e {@code codigo}, ou só por {@code token} (o do link). */
+    @PostMapping(path = "/cadastro/confirmar", consumes = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<UsuarioResponse> confirmarCadastro(@Valid @RequestBody ConfirmarCadastroRequest req) {
+        Usuario usuario;
+        if (StringUtils.hasText(req.token())) {
+            usuario = fluxoEmail.confirmarCadastroPorToken(req.token());
+        } else if (StringUtils.hasText(req.email()) && req.codigo() != null) {
+            usuario = fluxoEmail.confirmarCadastro(req.email(), req.codigo());
+        } else {
+            throw FluxoEmailService.codigoInvalido();
+        }
         return comSessao(HttpStatus.CREATED, usuario);
     }
 

@@ -13,7 +13,6 @@ import dev.lmaciel.contasclaras.categoria.CategoriasPadrao;
 import dev.lmaciel.contasclaras.comum.ConflitoException;
 import dev.lmaciel.contasclaras.comum.MuitasTentativasException;
 import dev.lmaciel.contasclaras.comum.NaoAutenticadoException;
-import dev.lmaciel.contasclaras.comum.ProibidoException;
 import dev.lmaciel.contasclaras.comum.RequisicaoInvalidaException;
 import dev.lmaciel.contasclaras.usuario.Usuario;
 import dev.lmaciel.contasclaras.usuario.UsuarioRepository;
@@ -30,18 +29,16 @@ public class AuthService {
 
     private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
-    private final EmailsLiberados emailsLiberados;
     private final CategoriasPadrao categoriasPadrao;
     private final LimiteTentativasLogin limite;
     private final GoogleTokenVerifier googleVerificador;
     /** Hash de uma senha descartada: gasta o mesmo tempo de BCrypt quando o e-mail não existe. */
     private final String hashFalso;
 
-    public AuthService(UsuarioRepository usuarios, PasswordEncoder encoder, EmailsLiberados emailsLiberados,
+    public AuthService(UsuarioRepository usuarios, PasswordEncoder encoder,
             CategoriasPadrao categoriasPadrao, LimiteTentativasLogin limite, GoogleTokenVerifier googleVerificador) {
         this.usuarios = usuarios;
         this.encoder = encoder;
-        this.emailsLiberados = emailsLiberados;
         this.categoriasPadrao = categoriasPadrao;
         this.limite = limite;
         this.googleVerificador = googleVerificador;
@@ -49,24 +46,7 @@ public class AuthService {
     }
 
     /**
-     * E-mail fora da lista e e-mail já cadastrado recebem exatamente a mesma recusa, e o BCrypt roda antes
-     * de qualquer decisão, para que nem a resposta nem o tempo revelem quais e-mails têm conta.
-     */
-    @Transactional
-    public Usuario cadastrar(String nome, String email, String senha) {
-        String hash = hashDaSenha(senha);
-        if (!emailsLiberados.permite(email) || usuarios.existsByEmail(Emails.normalizar(email))) {
-            throw cadastroRecusado();
-        }
-        try {
-            return criarUsuario(nome, email, hash, null);
-        } catch (ConflitoException e) {
-            throw cadastroRecusado();
-        }
-    }
-
-    /**
-     * Único lugar que cria usuário (cadastro por senha e, depois, por Google): garante e-mail
+     * Único lugar que cria usuário (cadastro confirmado por e-mail e login por Google): garante e-mail
      * normalizado, e-mail único e as categorias padrão.
      */
     @Transactional
@@ -120,8 +100,8 @@ public class AuthService {
     /**
      * Entra com uma identidade Google já verificada, nesta ordem: conta com o mesmo {@code google_sub};
      * conta com o mesmo e-mail e sem Google ainda (vincula, apaga a senha e derruba as outras sessões;
-     * se já tem outro Google, recusa sem mudar nada); e-mail liberado (cria a conta, sem senha);
-     * senão recusa.
+     * se já tem outro Google, recusa sem mudar nada); senão cria a conta, sem senha, para qualquer e-mail
+     * que o Google verificou.
      */
     @Transactional
     public Usuario entrarComGoogle(IdentidadeGoogle identidade) {
@@ -141,9 +121,6 @@ public class AuthService {
             porEmail.setSenhaHash(null);
             porEmail.invalidarSessoes();
             return porEmail;
-        }
-        if (!emailsLiberados.permite(email)) {
-            throw cadastroRecusado();
         }
         return criarUsuario(nomeDaConta(identidade.nome(), email), email, null, identidade.sub());
     }
@@ -181,7 +158,8 @@ public class AuthService {
         return senhaAtual != null && cabeNoBcrypt(senhaAtual) && encoder.matches(senhaAtual, usuario.getSenhaHash());
     }
 
-    private String hashDaSenha(String senha) {
+    /** Valida o tamanho (400 se não couber no BCrypt) e gera o hash. Package-private: o fluxo de e-mail o usa. */
+    String hashDaSenha(String senha) {
         if (!cabeNoBcrypt(senha)) {
             throw new RequisicaoInvalidaException("A senha deve ter entre 8 e 72 caracteres.");
         }
@@ -190,10 +168,6 @@ public class AuthService {
 
     private static boolean cabeNoBcrypt(String senha) {
         return senha.getBytes(StandardCharsets.UTF_8).length <= MAX_BYTES_BCRYPT;
-    }
-
-    private static ProibidoException cadastroRecusado() {
-        return new ProibidoException("Não foi possível criar a conta com este e-mail.");
     }
 
     private static ConflitoException emailJaCadastrado() {

@@ -40,8 +40,8 @@ import dev.lmaciel.contasclaras.usuario.UsuarioRepository;
  * <p>Como a senha da conta é pública, o seed também se recusa a rodar (sem criar nada) se o banco não for local:
  * ver {@link GuardaBancoDemo}. Para rodar de propósito em outro host, defina {@code app.demo.permitir=true}.
  *
- * <p>A conta é criada direto no banco, sem passar pelo cadastro: o e-mail dela não precisa estar em
- * {@code ALLOWED_EMAILS}. Se a conta já existe, não faz nada.
+ * <p>A conta é criada direto no banco, sem passar pelo cadastro por e-mail (que exigiria confirmar um endereço
+ * que não existe). Se a conta já existe, não faz nada.
  *
  * <pre>
  * ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,demo

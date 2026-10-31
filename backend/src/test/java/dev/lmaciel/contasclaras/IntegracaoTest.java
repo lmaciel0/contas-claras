@@ -14,10 +14,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import dev.lmaciel.contasclaras.auth.AuthService;
 import dev.lmaciel.contasclaras.auth.EnvioEmailFalso;
 
 import jakarta.servlet.http.Cookie;
@@ -30,15 +32,12 @@ import jakarta.servlet.http.Cookie;
 @Import({ RelogioFixoConfig.class, EnvioEmailFalso.class })
 @TestPropertySource(properties = {
         "app.jwt.secret=" + IntegracaoTest.JWT_SECRET_TESTE,
-        "app.allowed-emails=" + IntegracaoTest.EMAILS_LIBERADOS_TESTE,
         "app.google.client-id=" + IntegracaoTest.GOOGLE_CLIENT_ID_TESTE
 })
 public abstract class IntegracaoTest {
 
     /** Segredo obviamente falso, só para os testes (HS256 exige pelo menos 32 bytes). */
     protected static final String JWT_SECRET_TESTE = "segredo-falso-so-para-testes-0123456789";
-
-    protected static final String EMAILS_LIBERADOS_TESTE = "dono@exemplo.com,outra@exemplo.com";
 
     /** Client ID obviamente falso: os testes nunca falam com o Google. */
     protected static final String GOOGLE_CLIENT_ID_TESTE = "client-id-falso.apps.exemplo.com";
@@ -60,6 +59,27 @@ public abstract class IntegracaoTest {
 
     @Autowired
     private JdbcTemplate jdbcDaBase;
+
+    @Autowired
+    private AuthService authDaBase;
+
+    @Autowired
+    private PasswordEncoder encoderDaBase;
+
+    @Autowired
+    protected EnvioEmailFalso emailFalso;
+
+    /** Senha das contas criadas por {@link #cadastrarEEntrar}. */
+    protected static final String SENHA_PADRAO_TESTE = "senha-segura-1";
+
+    /** Códigos, limites de envio e e-mails capturados não vazam de um teste para o outro. */
+    @BeforeEach
+    @AfterEach
+    void limparEmails() {
+        jdbcDaBase.update("delete from codigo_email");
+        jdbcDaBase.update("delete from envio_email");
+        emailFalso.limpar();
+    }
 
     /**
      * A chave de {@code lancamento.item_id} é RESTRICT: com lançamento sobrando, o {@code delete from usuario}
@@ -99,13 +119,17 @@ public abstract class IntegracaoTest {
                 Long.class, itemId, ano, mes, valor, status, vencimento);
     }
 
-    /** Cadastra o e-mail (precisa estar na lista liberada) e devolve o cookie {@code cc_session} da sessão. */
+    /**
+     * Cria a conta direto pelo serviço (o cadastro público agora exige confirmação por e-mail), com a senha
+     * {@link #SENHA_PADRAO_TESTE}, entra por {@code POST /api/auth/login} e devolve o cookie {@code cc_session}.
+     */
     protected Cookie cadastrarEEntrar(String email) throws Exception {
-        String setCookie = mvc.perform(post("/api/auth/cadastro")
+        authDaBase.criarUsuario("Usuario Teste", email, encoderDaBase.encode(SENHA_PADRAO_TESTE), null);
+        String setCookie = mvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                        {"nome":"Usuario Teste","email":"%s","senha":"senha-segura-1"}""".formatted(email)))
-                .andExpect(status().isCreated())
+                        {"email":"%s","senha":"%s"}""".formatted(email, SENHA_PADRAO_TESTE)))
+                .andExpect(status().isOk())
                 .andReturn().getResponse().getHeader(HttpHeaders.SET_COOKIE);
         assertThat(setCookie).startsWith("cc_session=");
         return new Cookie("cc_session", setCookie.substring("cc_session=".length(), setCookie.indexOf(';')));
