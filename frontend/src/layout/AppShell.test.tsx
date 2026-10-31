@@ -156,7 +156,7 @@ describe('moldura', () => {
     renderizar('/lancamentos?ano=2026&mes=10')
 
     expect(screen.getByRole('link', { name: 'Aprumo' })).toHaveAttribute('href', '/')
-    expect(screen.queryByText('Contas Claras')).not.toBeInTheDocument()
+    expect(screen.queryByText(/contas claras/i)).not.toBeInTheDocument()
   })
 
   it('o conteúdo da rota aparece dentro de main', () => {

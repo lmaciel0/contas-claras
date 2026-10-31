@@ -1,4 +1,4 @@
-# Contas Claras — front
+# Aprumo — front
 
 React 19 + TypeScript + Vite, Tailwind v4, React Router, TanStack Query, Recharts.
 

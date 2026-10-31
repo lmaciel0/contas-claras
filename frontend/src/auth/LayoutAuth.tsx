@@ -21,9 +21,9 @@ function Marca() {
         aria-hidden="true"
         className="grid size-8 place-items-center rounded-full bg-[var(--cor-principal)] font-extrabold text-[var(--cor-sobre-principal)]"
       >
-        C
+        A
       </span>
-      <span>Contas Claras</span>
+      <span>Aprumo</span>
     </div>
   )
 }

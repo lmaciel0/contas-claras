@@ -1,4 +1,4 @@
-# Contas Claras
+# Aprumo
 
 Controle financeiro pessoal que substitui uma planilha anual de Excel. Ao abrir, responde duas perguntas: **quanto sobra no mês** e **onde estou gastando mais**. Funciona no computador e no celular, com lançamento rápido, contas previstas e pagas, vencimentos, limites de cartão e uma visão anual no formato da planilha.
 
@@ -21,6 +21,11 @@ Controle financeiro pessoal que substitui uma planilha anual de Excel. Ao abrir,
 - **Relatórios:** ano inteiro em itens × meses, totais e diferença de caixa, células pagas em verde.
 - **Conta:** login por e-mail/senha e Google, cadastro só para e-mails liberados, dados isolados por usuário.
 - **Importação:** leitura única da planilha anual (`.xlsx`) para a conta do dono, preservando o status pago (texto verde) e o dia de vencimento `(NN)` dos nomes.
+
+## Menu lateral e tema
+
+- **Menu lateral:** no computador fica fixo à esquerda; no celular abre num painel pelo botão de menu. O grupo **Financeiro** reúne Visão geral, Lançamentos, Cartões, Categorias e Relatórios, e o logo leva ao Início. **Ctrl K** abre a paleta para ir direto a qualquer página.
+- **Tema claro e escuro:** o botão de sol e lua alterna o tema. Sem escolha salva, vale a preferência do sistema; a escolha fica no navegador e é aplicada antes da primeira pintura, sem piscar.
 
 ## Stack
 
