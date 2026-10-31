@@ -1,0 +1,119 @@
+<h2>Menu lateral + tela inicial do Aprumo</h2>
+<p class="subtitle">Rascunho inspirado na sua foto. Textos e números são de exemplo. Diga o que manter, tirar ou mudar.</p>
+
+<style>
+  .ap{display:flex;min-height:720px;background:#0d1020;color:#e8ebf7;border-radius:12px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:14px}
+  .ap *{box-sizing:border-box}
+  .ap .sb{width:230px;background:#101428;border-right:1px solid #1d2340;padding:16px 12px;display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+  .ap .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px}
+  .ap .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:grid;place-items:center;font-weight:700;color:#fff}
+  .ap .brand b{font-size:16px}
+  .ap .brand small{display:block;color:#7c86a8;font-size:11px}
+  .ap .grp{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5d6788;padding:14px 10px 6px}
+  .ap .it{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;color:#aeb6d3}
+  .ap .it i{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px;display:inline-block;opacity:.75}
+  .ap .it.on{background:#1d3a8a;color:#fff}
+  .ap .it .bd{margin-left:auto;background:#dc2626;color:#fff;border-radius:10px;font-size:11px;padding:1px 7px}
+  .ap .it .bd.b{background:#2a3566;color:#cfd7f5}
+  .ap .sp{flex:1}
+  .ap .main{flex:1;padding:24px 28px;display:flex;flex-direction:column;gap:18px;min-width:0}
+  .ap .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .ap h1{margin:0;font-size:34px;line-height:1.1;font-weight:800}
+  .ap h1 span{color:#3b82f6}
+  .ap .sub{color:#8b94b6;margin-top:6px}
+  .ap .srch{background:#151a33;border:1px solid #232a4d;border-radius:10px;padding:10px 14px;color:#6b759a;width:260px;display:flex;justify-content:space-between}
+  .ap .srch kbd{background:#232a4d;border-radius:5px;padding:0 6px;font-size:11px;color:#aeb6d3}
+  .ap .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .ap .st{background:#131830;border:1px solid #1f2648;border-radius:12px;padding:14px}
+  .ap .st b{font-size:26px;display:block}
+  .ap .st span{color:#8b94b6;font-size:12px}
+  .ap .st.hi{background:linear-gradient(135deg,#2563eb,#1d4ed8);border:0}
+  .ap .st.hi span{color:#dbe6ff}
+  .ap .st.warn b{color:#f59e0b}
+  .ap .cols{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
+  .ap .card{background:#131830;border:1px solid #1f2648;border-radius:12px;padding:16px}
+  .ap .card h3{margin:0 0 12px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#8b94b6;font-weight:600}
+  .ap .row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #1b2142}
+  .ap .row:first-of-type{border-top:0}
+  .ap .tm{width:48px;color:#8b94b6;font-size:12px}
+  .ap .tag{font-size:10px;border-radius:6px;padding:2px 7px;margin-left:auto}
+  .ap .tag.g{background:#10305a;color:#7db4ff}
+  .ap .tag.c{background:#4a1d1d;color:#ff9b9b}
+  .ap .tag.t{background:#1b3b2a;color:#7ee2a8}
+  .ap .chk{width:16px;height:16px;border:1.5px solid #4b5683;border-radius:5px;flex-shrink:0}
+  .ap .quote{color:#c9d2f2;font-style:italic;line-height:1.5}
+  .ap .quote small{display:block;margin-top:8px;font-style:normal;color:#7c86a8}
+  .ap .bar{height:6px;border-radius:4px;background:#1f2648;margin-top:6px}
+  .ap .bar i{display:block;height:100%;border-radius:4px;background:#3b82f6}
+  .ap .note{background:#1a2040;border-radius:8px;padding:9px 11px;margin-bottom:8px;color:#c9d2f2}
+  .ap .btn{display:inline-block;background:#2563eb;color:#fff;border-radius:8px;padding:8px 14px;margin-top:10px;font-size:13px}
+</style>
+
+<div class="ap">
+  <aside class="sb">
+    <div class="brand"><div class="logo">A</div><div><b>Aprumo</b><small>Lucas</small></div></div>
+    <div class="it on"><i></i>Início</div>
+    <div class="it"><i></i>Minhas tarefas<span class="bd b">4</span></div>
+    <div class="it"><i></i>Projetos</div>
+    <div class="it"><i></i>Calendário</div>
+    <div class="it"><i></i>Notas rápidas</div>
+    <div class="grp">Financeiro</div>
+    <div class="it"><i></i>Visão geral</div>
+    <div class="it"><i></i>Lançamentos</div>
+    <div class="it"><i></i>Orçamento</div>
+    <div class="it"><i></i>Contas a pagar<span class="bd">2</span></div>
+    <div class="sp"></div>
+    <div class="grp">Sistema</div>
+    <div class="it"><i></i>Configurações</div>
+    <div class="it"><i></i>Sair</div>
+  </aside>
+
+  <section class="main">
+    <div class="top">
+      <div>
+        <h1>Bom dia, <span>Lucas</span></h1>
+        <div class="sub">Vamos organizar suas prioridades? · sábado, 31 de outubro</div>
+      </div>
+      <div class="srch"><span>Pesquisar em tudo…</span><kbd>Ctrl K</kbd></div>
+    </div>
+
+    <div class="stats">
+      <div class="st hi"><b>4</b><span>Tarefas para hoje</span></div>
+      <div class="st"><b>1</b><span>Concluídas hoje</span></div>
+      <div class="st warn"><b>2</b><span>Atrasadas</span></div>
+      <div class="st"><b>R$ 412</b><span>Contas vencendo hoje</span></div>
+    </div>
+
+    <div class="cols">
+      <div class="card">
+        <h3>Agenda de hoje</h3>
+        <div class="row"><span class="tm">09:00</span>Reunião de alinhamento<span class="tag g">Google</span></div>
+        <div class="row"><span class="tm">12:00</span>Almoço com a família<span class="tag g">Google</span></div>
+        <div class="row"><span class="tm">dia todo</span>Internet · R$ 99,90<span class="tag c">Vence hoje</span></div>
+        <div class="row"><span class="tm">dia todo</span>Cartão · R$ 312,10<span class="tag c">Vence hoje</span></div>
+        <div class="row"><span class="tm">17:00</span>Estudar Spring Security<span class="tag t">Tarefa</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Minhas prioridades</h3>
+        <div class="row"><span class="chk"></span>Finalizar PR do Aprumo</div>
+        <div class="row"><span class="chk"></span>Enviar currículo (vaga Java)</div>
+        <div class="row"><span class="chk"></span>Pagar cartão</div>
+        <div class="btn">Planejar meu dia</div>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card">
+        <h3>Projetos em andamento</h3>
+        <div style="margin-bottom:12px">Aprumo · assistente pessoal<div class="bar"><i style="width:35%"></i></div></div>
+        <div>Portfólio Java<div class="bar"><i style="width:70%"></i></div></div>
+      </div>
+      <div class="card">
+        <h3>Notas rápidas</h3>
+        <div class="note">Ver curso de Docker na semana que vem</div>
+        <div class="note">Ideia: resumo semanal por e-mail</div>
+      </div>
+    </div>
+  </section>
+</div>
