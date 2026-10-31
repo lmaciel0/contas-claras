@@ -26,7 +26,7 @@ export const GRUPOS_MENU: GrupoMenu[] = [
     titulo: 'Financeiro',
     itens: [
       { rotulo: 'Visão geral', caminho: '/financeiro', comMes: true },
-      { rotulo: 'Lançamentos', caminho: '/lancamentos', comMes: true },
+      { rotulo: 'Orçamento', caminho: '/lancamentos', comMes: true },
       { rotulo: 'Cartões', caminho: '/cartoes', comMes: true },
       { rotulo: 'Categorias', caminho: '/categorias' },
       { rotulo: 'Relatórios', caminho: '/relatorios' },

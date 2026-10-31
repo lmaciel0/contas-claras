@@ -71,15 +71,15 @@ describe('PaletaNavegacao', () => {
     expect(dialogo).toHaveAttribute('aria-modal', 'true')
     expect(disparo.defaultPrevented).toBe(true)
     expect(screen.getByRole('combobox')).toHaveFocus()
-    expect(opcoes()).toEqual(['Início', 'Tarefas', 'Notas', 'Visão geral', 'Lançamentos', 'Cartões', 'Categorias', 'Relatórios'])
+    expect(opcoes()).toEqual(['Início', 'Tarefas', 'Notas', 'Visão geral', 'Orçamento', 'Cartões', 'Categorias', 'Relatórios'])
   })
 
-  it('digitar "lanc" filtra para Lançamentos, ignorando acento e caixa', async () => {
+  it('digitar "orc" filtra para Orçamento, ignorando acento e caixa', async () => {
     const user = userEvent.setup()
     renderizar()
     await user.keyboard('{Control>}k{/Control}')
-    await user.keyboard('LANC')
-    expect(opcoes()).toEqual(['Lançamentos'])
+    await user.keyboard('ORC')
+    expect(opcoes()).toEqual(['Orçamento'])
 
     await user.clear(screen.getByRole('combobox'))
     await user.keyboard('cartoes')

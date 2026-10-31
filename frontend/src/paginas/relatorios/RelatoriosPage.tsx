@@ -91,7 +91,7 @@ export function RelatoriosPage() {
           to={{ pathname: '/lancamentos', search: busca }}
           className="font-semibold text-[var(--cor-principal)]"
         >
-          Lançamentos
+          Orçamento
         </Link>
         , o ano aparece aqui.
       </p>
