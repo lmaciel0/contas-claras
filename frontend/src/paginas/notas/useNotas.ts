@@ -1,10 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { endpoints, type FiltroNotas } from '../../api/endpoints'
 import type { CategoriaNotaRequest, ConteudoNota, NotaRequest } from '../../api/tipos'
 import { invalidarCategoriasNota, invalidarNotas } from './invalidar'
 
 export function useNotas(filtro: FiltroNotas) {
-  return useQuery({ queryKey: ['notas', filtro], queryFn: () => endpoints.notas.listar(filtro) })
+  return useQuery({
+    queryKey: ['notas', filtro],
+    queryFn: () => endpoints.notas.listar(filtro),
+    // Trocar o filtro mantém a lista anterior na tela até a nova chegar (sem piscar).
+    placeholderData: keepPreviousData,
+  })
 }
 
 export function useNota(id: number) {

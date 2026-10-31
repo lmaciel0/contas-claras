@@ -71,7 +71,7 @@ describe('PaletaNavegacao', () => {
     expect(dialogo).toHaveAttribute('aria-modal', 'true')
     expect(disparo.defaultPrevented).toBe(true)
     expect(screen.getByRole('combobox')).toHaveFocus()
-    expect(opcoes()).toEqual(['Início', 'Tarefas', 'Visão geral', 'Lançamentos', 'Cartões', 'Categorias', 'Relatórios'])
+    expect(opcoes()).toEqual(['Início', 'Tarefas', 'Notas', 'Visão geral', 'Lançamentos', 'Cartões', 'Categorias', 'Relatórios'])
   })
 
   it('digitar "lanc" filtra para Lançamentos, ignorando acento e caixa', async () => {
@@ -84,6 +84,23 @@ describe('PaletaNavegacao', () => {
     await user.clear(screen.getByRole('combobox'))
     await user.keyboard('cartoes')
     expect(opcoes()).toEqual(['Cartões'])
+  })
+
+  it('menuLateralTemNotasEPaletaEncontraNotas', async () => {
+    const user = userEvent.setup()
+    renderizar('/categorias')
+    expect(within(screen.getByRole('navigation', { name: 'Menu principal' })).getByRole('link', { name: 'Notas' })).toHaveAttribute(
+      'href',
+      '/notas',
+    )
+
+    await user.keyboard('{Control>}k{/Control}')
+    await user.keyboard('nota')
+    expect(opcoes()).toEqual(['Notas'])
+
+    await user.keyboard('{Enter}')
+    expect(paleta()).not.toBeInTheDocument()
+    expect(screen.getByTestId('local')).toHaveTextContent('/notas')
   })
 
   it('menuLateralTemTarefasEPaletaEncontraTarefas', async () => {
@@ -119,7 +136,7 @@ describe('PaletaNavegacao', () => {
     await user.keyboard('{ArrowUp}{ArrowUp}')
     expect(screen.getAllByRole('option').at(-1)).toHaveAttribute('aria-selected', 'true')
 
-    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{Enter}')
+    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{Enter}')
     expect(paleta()).not.toBeInTheDocument()
     expect(screen.getByTestId('local')).toHaveTextContent('/financeiro?ano=2026&mes=7')
   })
