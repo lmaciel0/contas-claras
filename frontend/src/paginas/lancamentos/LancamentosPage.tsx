@@ -50,7 +50,7 @@ export function LancamentosPage() {
     <>
       <FaixaFinanceira />
       <div className="mb-3 sr-only md:not-sr-only md:mb-5">
-        <h1 className="m-0 text-[28px] font-bold tracking-tight">Lançamentos</h1>
+        <h1 className="m-0 text-[28px] font-bold tracking-tight">Orçamento</h1>
         <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">Tudo o que entra e sai no mês, por categoria.</p>
       </div>
     </>

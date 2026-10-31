@@ -15,7 +15,7 @@ function renderizar(rota = '/?ano=2026&mes=10', nome = 'Ana', aoSair = vi.fn()) 
 }
 
 describe('Sidebar', () => {
-  it('lista os itens na ordem Início, Tarefas, Notas, Visão geral, Lançamentos, Cartões, Categorias, Relatórios', () => {
+  it('lista os itens na ordem Início, Tarefas, Notas, Visão geral, Orçamento, Cartões, Categorias, Relatórios', () => {
     renderizar()
 
     const nav = screen.getByRole('navigation', { name: 'Menu principal' })
@@ -25,7 +25,7 @@ describe('Sidebar', () => {
       'Tarefas',
       'Notas',
       'Visão geral',
-      'Lançamentos',
+      'Orçamento',
       'Cartões',
       'Categorias',
       'Relatórios',
@@ -52,7 +52,7 @@ describe('Sidebar', () => {
   it('links financeiros preservam o mês da URL', () => {
     renderizar('/?ano=2026&mes=10')
 
-    expect(screen.getByRole('link', { name: 'Lançamentos' })).toHaveAttribute('href', '/lancamentos?ano=2026&mes=10')
+    expect(screen.getByRole('link', { name: 'Orçamento' })).toHaveAttribute('href', '/lancamentos?ano=2026&mes=10')
     expect(screen.getByRole('link', { name: 'Visão geral' })).toHaveAttribute('href', '/financeiro?ano=2026&mes=10')
     expect(screen.getByRole('link', { name: 'Cartões' })).toHaveAttribute('href', '/cartoes?ano=2026&mes=10')
     expect(screen.getByRole('link', { name: 'Início' })).toHaveAttribute('href', '/')

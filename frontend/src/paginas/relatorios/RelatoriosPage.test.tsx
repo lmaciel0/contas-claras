@@ -337,7 +337,7 @@ describe('RelatoriosPage', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
     // O seletor continua à mão para olhar outro ano.
     expect(screen.getByRole('button', { name: 'Ano anterior' })).toBeEnabled()
-    expect(screen.getByRole('link', { name: 'Lançamentos' })).toHaveAttribute('href', '/lancamentos?ano=2026&mes=10')
+    expect(screen.getByRole('link', { name: 'Orçamento' })).toHaveAttribute('href', '/lancamentos?ano=2026&mes=10')
   })
 
   it('mostra_carregando_enquanto_busca', async () => {

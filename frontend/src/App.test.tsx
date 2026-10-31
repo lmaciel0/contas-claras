@@ -98,7 +98,7 @@ describe('rotas financeiras', () => {
     responderTudo()
     const { unmount } = renderizar('/lancamentos?ano=2026&mes=10')
 
-    expect(await screen.findByRole('heading', { name: 'Lançamentos' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Orçamento' })).toBeInTheDocument()
     expect(seletorDeMes()).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '+ Lançar' })).toBeInTheDocument()
     unmount()
@@ -134,9 +134,9 @@ describe('rotas financeiras', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Mês anterior' }))
     expect(screen.getByText('Setembro 2026')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('link', { name: 'Lançamentos' }))
+    await userEvent.click(screen.getByRole('link', { name: 'Orçamento' }))
 
-    expect(await screen.findByRole('heading', { name: 'Lançamentos' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Orçamento' })).toBeInTheDocument()
     expect(screen.getByText('Setembro 2026')).toBeInTheDocument()
   })
 })
