@@ -1,9 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { Outlet } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import type { LancamentoResponse, StatusLancamento } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
+import { Carregando } from '../../componentes/Carregando'
 import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { GrupoCategoria } from './GrupoCategoria'
@@ -40,6 +41,7 @@ export function LancamentosPage() {
   const consulta = useQuery({
     queryKey: ['lancamentos', ano, mes],
     queryFn: () => endpoints.lancamentos.listar(ano, mes),
+    placeholderData: keepPreviousData,
   })
   const status = useMutation({
     mutationFn: ({ id, novo }: { id: number; novo: StatusLancamento }) => endpoints.lancamentos.mudarStatus(id, novo),
@@ -58,11 +60,7 @@ export function LancamentosPage() {
 
   let conteudo: ReactNode
   if (consulta.isPending) {
-    conteudo = (
-      <p role="status" className="m-0 text-sm text-[var(--cor-mutado)]">
-        Carregando os lançamentos…
-      </p>
-    )
+    conteudo = <Carregando texto="Carregando os lançamentos…" />
   } else if (consulta.isError) {
     conteudo = (
       <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">
@@ -80,7 +78,7 @@ export function LancamentosPage() {
     conteudo = <p className="card m-0 text-sm text-[var(--cor-mutado)]">Nenhum lançamento neste mês.</p>
   } else {
     conteudo = (
-      <div className="grid gap-2.5 md:grid-cols-2 md:gap-3.5">
+      <div className="item-entra grid gap-2.5 md:grid-cols-2 md:gap-3.5">
         {agrupar(consulta.data).map((grupo) => (
           <GrupoCategoria
             key={grupo.categoriaId}

@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useId } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
+import { Carregando } from '../../componentes/Carregando'
 import { formatarMoeda } from '../../formato/moeda'
 import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
@@ -36,6 +37,7 @@ export function CartoesPage() {
   const consulta = useQuery({
     queryKey: ['cartoes', ano, mes],
     queryFn: () => endpoints.cartoes.listar(ano, mes),
+    placeholderData: keepPreviousData,
   })
 
   const titulo = (
@@ -52,11 +54,7 @@ export function CartoesPage() {
 
   let conteudo: ReactNode
   if (consulta.isPending) {
-    conteudo = (
-      <p role="status" className="m-0 text-sm text-[var(--cor-mutado)]">
-        Carregando os cartões…
-      </p>
-    )
+    conteudo = <Carregando texto="Carregando os cartões…" />
   } else if (consulta.isError) {
     conteudo = (
       <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">
@@ -88,7 +86,7 @@ export function CartoesPage() {
             , edite um item e marque &quot;É cartão de crédito&quot;.
           </p>
         ) : (
-          <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 md:gap-3.5">
+          <div className="item-entra grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 md:gap-3.5">
             {cartoes.map((cartao) => (
               <CardCartao key={cartao.itemId} cartao={cartao} />
             ))}

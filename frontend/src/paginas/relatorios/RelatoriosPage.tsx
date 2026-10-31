@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
+import { Carregando } from '../../componentes/Carregando'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { TabelaAnual } from './TabelaAnual'
 
@@ -61,15 +62,12 @@ export function RelatoriosPage() {
   const consulta = useQuery({
     queryKey: ['relatorio', ano],
     queryFn: () => endpoints.relatorios.ano(ano),
+    placeholderData: keepPreviousData,
   })
 
   let conteudo: ReactNode
   if (consulta.isPending) {
-    conteudo = (
-      <p role="status" className="m-0 text-sm text-[var(--cor-mutado)]">
-        Carregando o relatório…
-      </p>
-    )
+    conteudo = <Carregando texto="Carregando o relatório…" />
   } else if (consulta.isError) {
     conteudo = (
       <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">

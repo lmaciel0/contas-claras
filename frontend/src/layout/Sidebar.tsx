@@ -64,7 +64,7 @@ interface Props {
 
 const foco =
   'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
-const linhaBase = `flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm no-underline ${foco}`
+const linhaBase = `flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm no-underline transition-colors duration-150 ease-out ${foco}`
 
 /** Menu lateral: itens agrupados e, no pé, o bloco do usuário (inicial, nome, tema, Alterar senha, Sair). */
 export function Sidebar({ nomeUsuario, aoSair, aoNavegar }: Props) {
