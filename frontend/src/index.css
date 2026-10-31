@@ -39,6 +39,15 @@
   --cor-grafico-despesas: #a49ddb;
   --cor-grafico-receitas-previstas: #7d73c4;
   --cor-grafico-despesas-previstas: #e6e4f7;
+  /* Cores das categorias de nota: destaque com 4,5:1 sobre --cor-card (ver coresCategoria.test.ts). */
+  --cor-nota-vermelho: #c0392b;
+  --cor-nota-laranja: #b45309;
+  --cor-nota-amarelo: #8a6500;
+  --cor-nota-verde: #1f7a45;
+  --cor-nota-azul: #1d5fbf;
+  --cor-nota-roxo: #7c3aed;
+  --cor-nota-rosa: #be185d;
+  --cor-nota-cinza: #5b5876;
   --raio-card: 22px;
 }
 
@@ -72,6 +81,14 @@
   --cor-grafico-despesas: #5c4fb3;
   --cor-grafico-receitas-previstas: #4a3fa0;
   --cor-grafico-despesas-previstas: #2a2260;
+  --cor-nota-vermelho: #ff8a8a;
+  --cor-nota-laranja: #fb9a4b;
+  --cor-nota-amarelo: #f2c94c;
+  --cor-nota-verde: #5fd68f;
+  --cor-nota-azul: #6cb2ff;
+  --cor-nota-roxo: #b69bff;
+  --cor-nota-rosa: #ff8fc0;
+  --cor-nota-cinza: #b4b0d4;
 }
 
 html {

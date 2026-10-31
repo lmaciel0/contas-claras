@@ -2,9 +2,12 @@ import { api } from './cliente'
 import type {
   CadastroRequest,
   CartoesResponse,
+  CategoriaNotaRequest,
+  CategoriaNotaResponse,
   CategoriaRequest,
   CategoriaResponse,
   ConfirmarCadastroRequest,
+  ConteudoNota,
   DefinirSenhaRequest,
   EmailRequest,
   GoogleLoginRequest,
@@ -12,6 +15,10 @@ import type {
   ItemResponse,
   LancamentoResponse,
   LoginRequest,
+  NotaFixadaResponse,
+  NotaRequest,
+  NotaResponse,
+  NotaResumoResponse,
   RedefinirSenhaRequest,
   RelatorioAnualResponse,
   ResumoResponse,
@@ -24,6 +31,20 @@ import type {
 } from './tipos'
 
 const json = (corpo: unknown): RequestInit => ({ body: JSON.stringify(corpo) })
+/** Filtros da lista de notas; só os campos preenchidos viram query string. */
+export interface FiltroNotas {
+  busca?: string
+  categoriaId?: number
+  semCategoria?: boolean
+}
+const filtroNotas = (filtro: FiltroNotas): string => {
+  const params = new URLSearchParams()
+  if (filtro.busca) params.set('busca', filtro.busca)
+  if (filtro.categoriaId !== undefined) params.set('categoriaId', String(filtro.categoriaId))
+  if (filtro.semCategoria) params.set('semCategoria', 'true')
+  const texto = params.toString()
+  return texto ? `?${texto}` : ''
+}
 const consulta = (ano: number, mes: number) => `ano=${ano}&mes=${mes}`
 
 export const endpoints = {
@@ -67,6 +88,29 @@ export const endpoints = {
     mudarStatus: (id: number, status: StatusLancamento) =>
       api<LancamentoResponse>(`/api/lancamentos/${id}/status`, { method: 'PATCH', ...json({ status }) }),
     excluir: (id: number) => api<void>(`/api/lancamentos/${id}`, { method: 'DELETE' }),
+  },
+  categoriasNota: {
+    listar: () => api<CategoriaNotaResponse[]>('/api/categorias-nota'),
+    criar: (req: CategoriaNotaRequest) =>
+      api<CategoriaNotaResponse>('/api/categorias-nota', { method: 'POST', ...json(req) }),
+    editar: (id: number, req: CategoriaNotaRequest) =>
+      api<CategoriaNotaResponse>(`/api/categorias-nota/${id}`, { method: 'PUT', ...json(req) }),
+    excluir: (id: number) => api<void>(`/api/categorias-nota/${id}`, { method: 'DELETE' }),
+  },
+  notas: {
+    listar: (filtro: FiltroNotas) => api<NotaResumoResponse[]>(`/api/notas${filtroNotas(filtro)}`),
+    buscar: (id: number) => api<NotaResponse>(`/api/notas/${id}`),
+    criar: (categoriaId: number | null) =>
+      api<NotaResponse>('/api/notas', { method: 'POST', ...json({ categoriaId }) }),
+    /** `opcoes` deixa o autosave pedir `keepalive` ao salvar na saída da página. */
+    editar: (id: number, req: NotaRequest, opcoes: RequestInit = {}) =>
+      api<NotaResponse>(`/api/notas/${id}`, { method: 'PUT', ...json(req), ...opcoes }),
+    excluir: (id: number) => api<void>(`/api/notas/${id}`, { method: 'DELETE' }),
+    fixada: () => api<NotaFixadaResponse>('/api/notas/fixada'),
+    fixar: (id: number, fixada: boolean) =>
+      api<NotaResponse>(`/api/notas/${id}/fixada`, { method: 'PATCH', ...json({ fixada }) }),
+    salvarConteudo: (id: number, conteudo: ConteudoNota) =>
+      api<NotaResponse>(`/api/notas/${id}/conteudo`, { method: 'PATCH', ...json({ conteudo }) }),
   },
   tarefas: {
     listar: () => api<TarefasResponse>('/api/tarefas'),

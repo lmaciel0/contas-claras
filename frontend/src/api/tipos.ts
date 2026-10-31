@@ -225,3 +225,43 @@ export interface TarefaRequest {
   titulo: string
   data: string | null
 }
+
+// Notas (momentos em ISO-8601). O conteúdo é o JSON do Tiptap (ProseMirror), validado pelo backend.
+export type ConteudoNota = { type: string; [chave: string]: unknown }
+export interface CategoriaNotaResponse {
+  id: number
+  nome: string
+  /** Chave da paleta fixa (vermelho, laranja, amarelo, verde, azul, roxo, rosa, cinza). */
+  cor: string
+  totalNotas: number
+}
+export interface CategoriaNotaRequest {
+  nome: string
+  cor: string
+}
+export interface NotaResumoResponse {
+  id: number
+  titulo: string
+  /** Texto simples, até 160 caracteres. */
+  previa: string
+  categoriaId: number | null
+  fixada: boolean
+  atualizadoEm: string
+}
+export interface NotaResponse {
+  id: number
+  titulo: string
+  conteudo: ConteudoNota
+  categoriaId: number | null
+  fixada: boolean
+  criadoEm: string
+  atualizadoEm: string
+}
+export interface NotaRequest {
+  titulo: string
+  conteudo: ConteudoNota
+  categoriaId: number | null
+}
+export interface NotaFixadaResponse {
+  nota: NotaResponse | null
+}
