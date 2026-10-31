@@ -1,9 +1,13 @@
 import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { App } from './App'
 import { AuthProvider } from './auth/AuthProvider'
 import { comSessao, semSessao } from './teste/auth'
 import { renderComApp } from './teste/render'
+
+beforeEach(() => {
+  Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 1280 })
+})
 
 function renderizar(rota: string) {
   return renderComApp(
@@ -20,7 +24,7 @@ describe('rota inexistente', () => {
     renderizar('/rota-que-nao-existe')
 
     expect(await screen.findByRole('heading', { name: 'Página não encontrada' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Menu do usuário/ })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
   })
 
   it('o_link_voltar_para_o_inicio_leva_para_a_raiz', async () => {

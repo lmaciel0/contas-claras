@@ -198,3 +198,37 @@ body {
     transition: none;
   }
 }
+
+/* Painel do menu no celular: desliza da esquerda e o fundo escurecido aparece. */
+@keyframes menu-painel-entra {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes menu-fundo-entra {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.menu-painel {
+  animation: menu-painel-entra 200ms ease-out;
+}
+
+.menu-fundo {
+  animation: menu-fundo-entra 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-painel,
+  .menu-fundo {
+    animation: none;
+  }
+}

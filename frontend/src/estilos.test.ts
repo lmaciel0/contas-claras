@@ -65,14 +65,10 @@ function tsxDeProducao(pasta = ''): string[] {
   })
 }
 
-// Saem na Task 4 (menu lateral); até lá ficam fora da varredura.
-const ARQUIVOS_DA_TASK_4 = ['layout/AbasTopo.tsx', 'layout/NavbarInferior.tsx', 'layout/MenuUsuario.tsx', 'layout/AppShell.tsx']
-
 describe('cores fixas', () => {
   it('nenhum TSX de produção usa bg-white, hex fixo em bg/text nem text-white', () => {
     const proibido = /bg-white|bg-\[#|text-\[#|text-white/
     const infratores = tsxDeProducao()
-      .filter((arquivo) => !ARQUIVOS_DA_TASK_4.includes(arquivo))
       .filter((arquivo) => proibido.test(readFileSync(resolve(process.cwd(), 'src', arquivo), 'utf8')))
     expect(infratores).toEqual([])
   })

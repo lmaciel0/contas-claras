@@ -2,11 +2,17 @@ import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
 import { Route, Routes } from 'react-router'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../api/cliente'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AppShell } from './AppShell'
+
+// O jsdom não tem `matchMedia`; o BotaoTema (dentro da sidebar) trata a falta como sistema claro.
+beforeEach(() => {
+  localStorage.clear()
+  vi.stubGlobal('matchMedia', undefined)
+})
 
 function definirLargura(largura: number) {
   Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: largura })
@@ -29,196 +35,136 @@ function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn()) {
   return { aoSair }
 }
 
-const nomesDosLinks = (nav: HTMLElement) =>
-  within(nav)
-    .getAllByRole('link')
-    .map((link) => link.getAttribute('aria-label') ?? link.textContent)
-
-describe('AppShell no celular (390 px)', () => {
-  it('mostra a navbar inferior com 5 itens na ordem Início, Lançamentos, Novo lançamento, Cartões, Relatórios', () => {
-    definirLargura(390)
-    renderizar()
-
-    const nav = screen.getByRole('navigation', { name: 'Navegação principal' })
-
-    expect(nomesDosLinks(nav)).toEqual(['Início', 'Lançamentos', 'Novo lançamento', 'Cartões', 'Relatórios'])
-    expect(screen.queryByRole('navigation', { name: 'Abas' })).not.toBeInTheDocument()
-  })
-
-  it('o (+) central leva para /lancamentos/novo mantendo o mês', () => {
-    definirLargura(390)
-    renderizar()
-
-    const novo = screen.getByRole('link', { name: 'Novo lançamento' })
-
-    expect(novo).toHaveAttribute('href', '/lancamentos/novo?ano=2026&mes=10')
-  })
-
-  it('Categorias e Sair ficam no menu do perfil, no topo', async () => {
-    definirLargura(390)
-    const { aoSair } = renderizar()
-    const nav = screen.getByRole('navigation', { name: 'Navegação principal' })
-    expect(within(nav).queryByText('Categorias')).not.toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: /Menu do usuário/ }))
-
-    const opcoes = screen.getByRole('group', { name: 'Opções da conta' })
-    expect(within(opcoes).getByRole('link', { name: 'Categorias' })).toHaveAttribute('href', '/categorias?ano=2026&mes=10')
-    await userEvent.click(within(opcoes).getByRole('button', { name: 'Sair' }))
-    expect(aoSair).toHaveBeenCalledTimes(1)
-  })
-})
-
-describe('ponto de troca entre celular e computador (1280 px)', () => {
-  it.each([768, 1024, 1279])('em %i px usa a navbar inferior e o topo compacto', (largura) => {
+describe('AppShell no computador (1280 px ou mais)', () => {
+  it.each([1280, 1440])('em %i px mostra a sidebar e nenhum botão de menu', (largura) => {
     definirLargura(largura)
     renderizar()
 
-    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
-    expect(screen.queryByRole('navigation', { name: 'Abas' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: '+ Lançar' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Abrir menu' })).not.toBeInTheDocument()
+    expect(screen.getByText('Conteúdo do Início')).toBeInTheDocument()
   })
+})
 
-  it.each([1280, 1440])('em %i px usa as abas do topo', (largura) => {
+describe('AppShell abaixo de 1280 px', () => {
+  it.each([390, 768, 1279])('em %i px mostra "Abrir menu" fechado e esconde a sidebar', (largura) => {
     definirLargura(largura)
     renderizar()
 
-    expect(screen.getByRole('navigation', { name: 'Abas' })).toBeInTheDocument()
-    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '+ Lançar' })).toBeInTheDocument()
+    const botao = screen.getByRole('button', { name: 'Abrir menu' })
+
+    expect(botao).toHaveAttribute('aria-expanded', 'false')
+    expect(botao).toHaveAttribute('aria-controls')
+    expect(botao).toHaveClass('min-h-11', 'min-w-11')
+    expect(screen.queryByRole('navigation', { name: 'Menu principal' })).not.toBeInTheDocument()
   })
 
-  it('troca de layout ao redimensionar a janela', () => {
-    definirLargura(1279)
+  it('abrir o menu mostra o painel; Esc fecha e devolve o foco ao botão', async () => {
+    definirLargura(390)
     renderizar()
-    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
-
-    act(() => definirLargura(1280))
-
-    expect(screen.getByRole('navigation', { name: 'Abas' })).toBeInTheDocument()
-    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
-  })
-})
-
-describe('AppShell no computador (1280 px)', () => {
-  it('mostra as abas do topo com Categorias e esconde a navbar inferior', () => {
-    definirLargura(1280)
-    renderizar()
-
-    const abas = screen.getByRole('navigation', { name: 'Abas' })
-
-    expect(nomesDosLinks(abas)).toEqual(['Início', 'Lançamentos', 'Cartões', 'Categorias', 'Relatórios'])
-    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
-  })
-
-  it('mostra o botão + Lançar e o menu do usuário sem Categorias', async () => {
-    definirLargura(1280)
-    renderizar()
-
-    expect(screen.getByRole('link', { name: '+ Lançar' })).toHaveAttribute('href', '/lancamentos/novo?ano=2026&mes=10')
-
-    await userEvent.click(screen.getByRole('button', { name: /Menu do usuário/ }))
-
-    const opcoes = screen.getByRole('group', { name: 'Opções da conta' })
-    expect(within(opcoes).getByRole('link', { name: 'Alterar senha' })).toHaveAttribute('href', '/conta/senha')
-    expect(within(opcoes).getByRole('button', { name: 'Sair' })).toBeInTheDocument()
-    expect(within(opcoes).queryByRole('link', { name: 'Categorias' })).not.toBeInTheDocument()
-  })
-
-  it('marca a aba da rota atual', () => {
-    definirLargura(1280)
-    renderizar('/lancamentos?ano=2026&mes=10')
-
-    expect(screen.getByRole('link', { name: 'Lançamentos' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current')
-  })
-})
-
-describe('cabeçalho sem quebra de linha no computador', () => {
-  // O jsdom não calcula layout (css: false): a garantia visual é medida no navegador; aqui fixamos as classes que a produzem.
-  it('logo, + Lançar e menu do usuário não encolhem nem quebram o texto', () => {
-    definirLargura(1280)
-    renderizar()
-
-    const itens = [
-      screen.getByRole('link', { name: 'Contas Claras' }),
-      screen.getByRole('link', { name: '+ Lançar' }),
-      screen.getByRole('button', { name: /Menu do usuário/ }),
-    ]
-
-    for (const item of itens) {
-      expect(item).toHaveClass('whitespace-nowrap', 'shrink-0')
-    }
-  })
-
-  it('o botão do usuário mostra só a inicial; o nome fica no rótulo acessível e dentro do painel', async () => {
-    definirLargura(1280)
-    renderizar()
-
-    const botao = screen.getByRole('button', { name: 'Menu do usuário, Ana' })
-
-    expect(botao).toHaveTextContent('A▾')
-    expect(botao).toHaveAttribute('title', 'Ana')
+    const botao = screen.getByRole('button', { name: 'Abrir menu' })
 
     await userEvent.click(botao)
 
-    expect(within(screen.getByRole('group', { name: 'Opções da conta' })).getByText('Ana')).toBeVisible()
+    expect(botao).toHaveAttribute('aria-expanded', 'true')
+    const painel = screen.getByRole('dialog', { name: 'Menu' })
+    expect(within(painel).getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
+    expect(painel.contains(document.activeElement)).toBe(true)
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
+    expect(botao).toHaveAttribute('aria-expanded', 'false')
+    expect(botao).toHaveFocus()
+  })
+
+  it('clicar no fundo escurecido fecha o painel', async () => {
+    definirLargura(390)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    await userEvent.click(screen.getByTestId('fundo-do-menu'))
+
+    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
+  })
+
+  it('clicar num link do painel navega e fecha o painel', async () => {
+    definirLargura(390)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Menu' })).getByRole('link', { name: 'Cartões' }))
+
+    expect(screen.getByText('Conteúdo dos Cartões')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
+  })
+
+  it('Sair no painel chama aoSair', async () => {
+    definirLargura(390)
+    const { aoSair } = renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
+
+    expect(aoSair).toHaveBeenCalledTimes(1)
+  })
+
+  it('o Tab fica preso dentro do painel', async () => {
+    definirLargura(390)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+    const painel = screen.getByRole('dialog', { name: 'Menu' })
+
+    for (let i = 0; i < 30; i++) {
+      await userEvent.tab()
+      expect(painel.contains(document.activeElement)).toBe(true)
+    }
+    for (let i = 0; i < 30; i++) {
+      await userEvent.tab({ shift: true })
+      expect(painel.contains(document.activeElement)).toBe(true)
+    }
+  })
+
+  it('redimensionar para 1280 px ou mais com o painel aberto fecha o painel e mostra a sidebar fixa', async () => {
+    definirLargura(1279)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    act(() => definirLargura(1280))
+
+    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Abrir menu' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('navigation', { name: 'Menu principal' })).toHaveLength(1)
+
+    act(() => definirLargura(1279))
+
+    expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
   })
 })
 
-describe('seletor de mês', () => {
-  it('mostra o mês da URL e navega para o seguinte e o anterior', async () => {
-    definirLargura(1280)
-    renderizar('/?ano=2026&mes=12')
-    expect(screen.getByText('Dezembro 2026')).toBeInTheDocument()
+describe('moldura', () => {
+  it.each([390, 1280])('não existe navegação inferior em %i px', (largura) => {
+    definirLargura(largura)
+    renderizar()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Mês seguinte' }))
-    expect(screen.getByText('Janeiro 2027')).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: 'Mês anterior' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Mês anterior' }))
-    expect(screen.getByText('Novembro 2026')).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Abas' })).not.toBeInTheDocument()
   })
 
-  it('o mês escolhido acompanha a navegação entre abas', async () => {
-    definirLargura(1280)
-    renderizar('/?ano=2026&mes=10')
+  it.each([390, 1280])('o logo diz Aprumo e leva a / em %i px', (largura) => {
+    definirLargura(largura)
+    renderizar('/lancamentos?ano=2026&mes=10')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Mês seguinte' }))
-
-    expect(screen.getByRole('link', { name: 'Lançamentos' })).toHaveAttribute('href', '/lancamentos?ano=2026&mes=11')
+    expect(screen.getByRole('link', { name: 'Aprumo' })).toHaveAttribute('href', '/')
+    expect(screen.queryByText('Contas Claras')).not.toBeInTheDocument()
   })
-})
 
-describe('seletor de mês só onde o mês importa', () => {
-  const larguras = [390, 1280]
+  it('o conteúdo da rota aparece dentro de main', () => {
+    definirLargura(1280)
+    renderizar('/lancamentos?ano=2026&mes=10')
 
-  it.each(larguras.flatMap((largura) => ['/', '/lancamentos', '/cartoes'].map((rota) => [largura, rota] as const)))(
-    'aparece em %i px em %s',
-    (largura, rota) => {
-      definirLargura(largura)
-      renderizar(`${rota}?ano=2026&mes=10`)
-
-      expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Mês seguinte' })).toBeInTheDocument()
-      expect(screen.getByText('Outubro 2026')).toBeInTheDocument()
-    },
-  )
-
-  it.each(larguras.flatMap((largura) => ['/relatorios', '/categorias'].map((rota) => [largura, rota] as const)))(
-    'não aparece em %i px em %s',
-    (largura, rota) => {
-      definirLargura(largura)
-      renderizar(`${rota}?ano=2026&mes=10`)
-
-      expect(screen.queryByRole('button', { name: 'Mês anterior' })).not.toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: 'Mês seguinte' })).not.toBeInTheDocument()
-      expect(screen.queryByText('Outubro 2026')).not.toBeInTheDocument()
-      // O resto do topo continua lá.
-      expect(screen.getByRole('button', { name: /Menu do usuário/ })).toBeInTheDocument()
-    },
-  )
+    expect(within(screen.getByRole('main')).getByText('Conteúdo dos Lançamentos')).toBeInTheDocument()
+  })
 })
 
 describe('aviso de servidor acordando', () => {
