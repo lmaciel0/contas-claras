@@ -17,7 +17,7 @@ import dev.lmaciel.contasclaras.usuario.Usuario;
 import dev.lmaciel.contasclaras.usuario.UsuarioRepository;
 
 /**
- * Fluxos que dependem de e-mail: cadastro confirmado por código ou link. Não é transacional de propósito: o SMTP
+ * Fluxos que dependem de e-mail: cadastro confirmado por código ou link e recuperação de senha por código. Não é transacional de propósito: o SMTP
  * roda dentro da requisição, mas fora de qualquer transação, para não segurar uma das 2 conexões do pool nem
  * um lock enquanto espera a rede. Os trechos de banco usam {@link TransactionTemplate}.
  */
@@ -175,6 +175,68 @@ public class FluxoEmailService {
             }
             throw codigoInvalido();
         }
+        if (resultado == null || resultado.usuario() == null) {
+            throw codigoInvalido();
+        }
+        return resultado.usuario();
+    }
+
+    // ---- esqueci a senha ---------------------------------------------------------------
+
+    /**
+     * Pede o código de redefinição: com ou sem conta, envia exatamente um e-mail (o código, ou o aviso de que não
+     * há conta). Dentro dos 60 s do último envio, responde sem enviar e mantém o código anterior.
+     */
+    public void esqueciSenha(String email, String ip) {
+        String emailNormalizado = Emails.normalizar(email);
+        Optional<Long> reserva = limite.reservar(emailNormalizado, ip);
+        if (reserva.isEmpty()) {
+            return;
+        }
+        String codigo = codigos.gerarCodigo();
+        enviarOuLiberar(reserva.get(), () -> {
+            Boolean comConta = tx.execute(status -> {
+                apagarVencidos();
+                if (!usuarios.existsByEmail(emailNormalizado)) {
+                    return false;
+                }
+                gravar(TipoCodigo.SENHA, emailNormalizado, null, null, codigo, null);
+                return true;
+            });
+            return Boolean.TRUE.equals(comConta)
+                    ? modelos.codigoSenha(emailNormalizado, codigo)
+                    : modelos.semConta(emailNormalizado);
+        });
+    }
+
+    /**
+     * Troca a senha pelo código recebido e devolve o usuário, já com as sessões antigas invalidadas. O BCrypt (e a
+     * checagem do tamanho da senha, que não gasta tentativa) acontece antes da transação, para não segurar
+     * conexão nem lock durante o hash.
+     */
+    public Usuario redefinirSenha(String email, String codigo, String senha) {
+        String emailNormalizado = Emails.normalizar(email);
+        String hash = auth.hashDaSenha(senha);
+        String esperado = codigos.hmacCodigo(TipoCodigo.SENHA, emailNormalizado, codigo);
+        Resultado resultado = tx.execute(status -> {
+            apagarVencidos();
+            CodigoEmail c = codigoRepo.buscarParaConferir(TipoCodigo.SENHA, emailNormalizado).orElse(null);
+            if (c == null) {
+                return Resultado.RECUSADO;
+            }
+            if (!codigos.iguais(c.getCodigoHmac(), esperado)) {
+                errouTentativa(c);
+                return Resultado.RECUSADO;
+            }
+            codigoRepo.delete(c);
+            Usuario usuario = usuarios.findByEmail(emailNormalizado).orElse(null);
+            if (usuario == null) {
+                return Resultado.RECUSADO;
+            }
+            usuario.setSenhaHash(hash);
+            usuario.invalidarSessoes();
+            return new Resultado(usuario);
+        });
         if (resultado == null || resultado.usuario() == null) {
             throw codigoInvalido();
         }

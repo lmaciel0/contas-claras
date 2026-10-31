@@ -93,6 +93,8 @@ public class SecurityConfig {
                 rota.matcher("/api/auth/cadastro"),
                 rota.matcher("/api/auth/cadastro/reenviar"),
                 rota.matcher("/api/auth/cadastro/confirmar"),
+                rota.matcher("/api/auth/esqueci-senha"),
+                rota.matcher("/api/auth/redefinir-senha"),
                 rota.matcher("/api/auth/google"));
     }
 

@@ -20,6 +20,7 @@ import dev.lmaciel.contasclaras.auth.dto.DefinirSenhaRequest;
 import dev.lmaciel.contasclaras.auth.dto.EmailRequest;
 import dev.lmaciel.contasclaras.auth.dto.GoogleLoginRequest;
 import dev.lmaciel.contasclaras.auth.dto.LoginRequest;
+import dev.lmaciel.contasclaras.auth.dto.RedefinirSenhaRequest;
 import dev.lmaciel.contasclaras.auth.dto.UsuarioResponse;
 import dev.lmaciel.contasclaras.usuario.Usuario;
 import jakarta.servlet.http.HttpServletRequest;
@@ -67,6 +68,19 @@ public class AuthController {
             throw FluxoEmailService.codigoInvalido();
         }
         return comSessao(HttpStatus.CREATED, usuario);
+    }
+
+    /** Sempre 202: com ou sem conta, sai um e-mail. */
+    @PostMapping(path = "/esqueci-senha", consumes = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Void> esqueciSenha(@Valid @RequestBody EmailRequest req, HttpServletRequest http) {
+        fluxoEmail.esqueciSenha(req.email(), http.getRemoteAddr());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping(path = "/redefinir-senha", consumes = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<UsuarioResponse> redefinirSenha(@Valid @RequestBody RedefinirSenhaRequest req) {
+        Usuario usuario = fluxoEmail.redefinirSenha(req.email(), req.codigo(), req.senha());
+        return comSessao(HttpStatus.OK, usuario);
     }
 
     @PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
