@@ -16,14 +16,14 @@ type Direcao = 'direita' | 'esquerda' | null
 /** Marca no topo das telas sem moldura (mesma pílula do app: bolinha índigo com "C" + nome). */
 function Marca() {
   return (
-    <div className="flex items-center gap-2 rounded-full bg-white py-1.5 pr-4 pl-1.5 font-bold text-[var(--cor-texto)] shadow-sm">
+    <div className="flex items-center gap-2 rounded-full bg-[var(--cor-card)] py-1.5 pr-4 pl-1.5 font-bold text-[var(--cor-texto)] shadow-sm">
       <span
         aria-hidden="true"
-        className="grid size-8 place-items-center rounded-full bg-[var(--cor-principal)] font-extrabold text-white"
+        className="grid size-8 place-items-center rounded-full bg-[var(--cor-principal)] font-extrabold text-[var(--cor-sobre-principal)]"
       >
-        C
+        A
       </span>
-      <span>Contas Claras</span>
+      <span>Aprumo</span>
     </div>
   )
 }

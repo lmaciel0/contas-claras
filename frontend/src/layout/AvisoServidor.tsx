@@ -10,7 +10,7 @@ export function AvisoServidor() {
       {acordando && (
         <p
           role="status"
-          className="m-0 bg-[var(--cor-principal)] px-4 py-2 text-center text-sm font-medium text-white"
+          className="m-0 bg-[var(--cor-principal)] px-4 py-2 text-center text-sm font-medium text-[var(--cor-sobre-principal)]"
         >
           Acordando o servidor… isso pode levar até 1 minuto
         </p>

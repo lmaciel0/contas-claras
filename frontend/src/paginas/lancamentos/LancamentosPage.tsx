@@ -4,6 +4,7 @@ import { Outlet } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import type { LancamentoResponse, StatusLancamento } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
+import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { GrupoCategoria } from './GrupoCategoria'
 import { invalidarLancamentos } from './invalidar'
@@ -46,10 +47,13 @@ export function LancamentosPage() {
   })
 
   const titulo = (
-    <div className="mb-3 sr-only md:not-sr-only md:mb-5">
-      <h1 className="m-0 text-[28px] font-bold tracking-tight">Lançamentos</h1>
-      <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">Tudo o que entra e sai no mês, por categoria.</p>
-    </div>
+    <>
+      <FaixaFinanceira />
+      <div className="mb-3 sr-only md:not-sr-only md:mb-5">
+        <h1 className="m-0 text-[28px] font-bold tracking-tight">Lançamentos</h1>
+        <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">Tudo o que entra e sai no mês, por categoria.</p>
+      </div>
+    </>
   )
 
   let conteudo: ReactNode
@@ -66,7 +70,7 @@ export function LancamentosPage() {
         <button
           type="button"
           onClick={() => void consulta.refetch()}
-          className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+          className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-[var(--cor-sobre-principal)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
         >
           Tentar de novo
         </button>
@@ -95,7 +99,7 @@ export function LancamentosPage() {
     <>
       {titulo}
       {status.isError && (
-        <p role="alert" className="mb-3 rounded-xl border border-[var(--cor-negativo)] bg-[#fdecec] px-3 py-2 text-sm">
+        <p role="alert" className="mb-3 rounded-xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] px-3 py-2 text-sm">
           {mensagemDoErro(status.error)}
         </p>
       )}

@@ -1,15 +1,20 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import { ErroApi } from '../api/cliente'
 import { endpoints } from '../api/endpoints'
-import { comSessao, semSessao, usuarioFicticio } from '../teste/auth'
+import { comSessao, saudacaoDaTelaInicial, semSessao, usuarioFicticio } from '../teste/auth'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
 import { useAuth } from './useAuth'
+
+// Em 1280 px ou mais a sidebar fica fixa e o "Sair" está sempre à mão (abaixo disso ele fica no painel do menu).
+beforeEach(() => {
+  Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 1280 })
+})
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -27,17 +32,16 @@ function renderizar(rota = '/') {
 }
 
 async function clicarEmSair() {
-  await userEvent.click(await screen.findByRole('button', { name: /Menu do usuário/ }))
-  await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Sair' }))
 }
 
 describe('AuthProvider', () => {
-  it('mostra_o_nome_do_usuario_no_menu_da_moldura', async () => {
+  it('mostra_o_nome_do_usuario_no_menu_lateral', async () => {
     comSessao()
     renderizar()
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Menu do usuário, Ana' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
+    expect(screen.getByTitle('Ana')).toBeInTheDocument()
   })
 
   it('sair_chama_logout_e_volta_para_o_login', async () => {
@@ -77,9 +81,9 @@ describe('AuthProvider', () => {
     await clicarEmSair()
 
     expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_NAO_SAIU)
-    expect(screen.getByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Menu do usuário, Ana' })).toBeInTheDocument()
+    expect(screen.getByTitle('Ana')).toBeInTheDocument()
   })
 
   it('sair_sem_resposta_do_servidor_mantem_logado_e_avisa', async () => {
@@ -91,7 +95,7 @@ describe('AuthProvider', () => {
     await clicarEmSair()
 
     expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_NAO_SAIU)
-    expect(screen.getByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
   })
 
@@ -128,7 +132,7 @@ describe('AuthProvider', () => {
     comSessao()
     renderizar('/login')
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
   })
 })
 

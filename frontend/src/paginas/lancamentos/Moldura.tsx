@@ -78,7 +78,7 @@ export function Moldura({ titulo, aoFechar, children }: Props) {
             type="button"
             onClick={aoFechar}
             aria-label="Fechar"
-            className="grid size-11 place-items-center rounded-full bg-white text-xl leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+            className="grid size-11 place-items-center rounded-full bg-[var(--cor-card)] text-xl leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
           >
             <span aria-hidden="true">×</span>
           </button>

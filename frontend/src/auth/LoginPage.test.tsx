@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { App } from '../App'
-import { semSessao, usuarioFicticio } from '../teste/auth'
+import { saudacaoDaTelaInicial, semSessao, usuarioFicticio } from '../teste/auth'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
@@ -37,7 +37,7 @@ describe('LoginPage', () => {
 
     await preencherEEnviar('ana@exemplo.com', 'senha-correta')
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(corpo).toEqual({ email: 'ana@exemplo.com', senha: 'senha-correta' })
     expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
   })
@@ -95,7 +95,7 @@ describe('LoginPage', () => {
 
     await preencherEEnviar('ana@exemplo.com', 'senha-correta')
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
   })
 
   it.each([
@@ -109,7 +109,7 @@ describe('LoginPage', () => {
 
     await preencherEEnviar('ana@exemplo.com', 'senha-correta')
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
   })
 
   it('desabilita_o_botao_enquanto_envia', async () => {
@@ -130,7 +130,7 @@ describe('LoginPage', () => {
 
     expect(await screen.findByRole('button', { name: 'Entrando…' })).toBeDisabled()
     liberar()
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Início' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument())
   })
 
   it('tem_link_para_criar_conta_e_o_botao_do_google_some_sem_client_id', async () => {

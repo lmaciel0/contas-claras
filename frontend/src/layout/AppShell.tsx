@@ -1,75 +1,210 @@
-import { Link, Outlet, useLocation } from 'react-router'
-import { AbasTopo } from './AbasTopo'
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { Outlet } from 'react-router'
 import { AvisoServidor } from './AvisoServidor'
-import { MenuUsuario } from './MenuUsuario'
-import { NavbarInferior } from './NavbarInferior'
-import { SeletorMes } from './SeletorMes'
+import { Logo } from './Logo'
+import { PaletaContext } from './paleta'
+import { PaletaNavegacao } from './PaletaNavegacao'
+import { Sidebar } from './Sidebar'
+import { travarRolagem } from './travaRolagem'
 import { useEhDesktop } from './useEhDesktop'
-import { useMesSelecionado } from './useMesSelecionado'
 
 interface Props {
   nomeUsuario?: string
   aoSair?: () => void
 }
 
-function Logo() {
-  return (
-    <Link
-      to="/"
-      className="flex shrink-0 items-center gap-2 rounded-full bg-white py-1.5 pr-4 pl-1.5 font-bold whitespace-nowrap text-[var(--cor-texto)] no-underline shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
-    >
-      <span
-        aria-hidden="true"
-        className="grid size-8 place-items-center rounded-full bg-[var(--cor-principal)] font-extrabold text-white"
-      >
-        C
-      </span>
-      <span className="hidden sm:inline">Contas Claras</span>
-    </Link>
-  )
-}
+const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
+const botaoIcone = `grid min-h-11 min-w-11 shrink-0 cursor-pointer place-items-center rounded-xl text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] ${foco}`
 
-/** Telas que não dependem do mês em foco: o relatório é do ano e as categorias não têm período. */
-const ROTAS_SEM_MES = ['/relatorios', '/categorias']
+const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
- * Moldura das telas logadas: abas no topo em ≥ 1280 px, navbar inferior fixa abaixo disso. O seletor de mês só aparece
- * onde o mês importa (nas rotas de `ROTAS_SEM_MES` ele some).
+ * Moldura das telas logadas. Em ≥ 1280 px a sidebar fica fixa à esquerda. Abaixo disso há uma barra fina no topo com o
+ * botão "Abrir menu"; o menu é a mesma `Sidebar`, num painel que desliza sobre um fundo escurecido (Esc, clique no
+ * fundo ou navegar fecham; ao virar desktop ele fecha sozinho).
  */
 export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const ehDesktop = useEhDesktop()
-  const { busca } = useMesSelecionado()
-  const { pathname } = useLocation()
-  const comMes = !ROTAS_SEM_MES.some((rota) => pathname === rota || pathname.startsWith(`${rota}/`))
+  const [aberto, setAberto] = useState(false)
+  const [paletaAberta, setPaletaAberta] = useState(false)
+  const botao = useRef<HTMLButtonElement>(null)
+  const painel = useRef<HTMLDivElement>(null)
+  const principal = useRef<HTMLElement>(null)
+  const painelEstavaAberto = useRef(false)
+  const idPainel = useId()
 
-  return (
-    <div className="min-h-dvh bg-[var(--cor-fundo)]">
-      <AvisoServidor />
-      <header className="mx-auto flex max-w-6xl items-center gap-3 px-4 pt-4 md:px-6">
+  const painelAberto = aberto && !ehDesktop
+
+  // Virou desktop com o painel aberto: zera o estado já na renderização (padrão do React para estado derivado).
+  if (ehDesktop && aberto) {
+    setAberto(false)
+  }
+
+  const fechar = useCallback(() => {
+    setAberto(false)
+    botao.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    if (!painelAberto) {
+      return
+    }
+    painel.current?.querySelector<HTMLElement>(FOCAVEIS)?.focus()
+    const soltarRolagem = travarRolagem()
+    const fecharComEsc = (evento: globalThis.KeyboardEvent) => {
+      if (evento.key === 'Escape') {
+        fechar()
+      }
+    }
+    document.addEventListener('keydown', fecharComEsc)
+    return () => {
+      soltarRolagem()
+      document.removeEventListener('keydown', fecharComEsc)
+    }
+  }, [painelAberto, fechar])
+
+  // Painel aberto que some porque a tela virou desktop: o foco (que estava nele) iria para o body; leva ao conteúdo.
+  useEffect(() => {
+    if (painelEstavaAberto.current && !painelAberto && ehDesktop) {
+      principal.current?.focus()
+    }
+    painelEstavaAberto.current = painelAberto
+  }, [painelAberto, ehDesktop])
+
+  // Atalho global da paleta "Ir para…". Com o painel do menu aberto (celular) só bloqueia o atalho do navegador.
+  useEffect(() => {
+    const abrirComAtalho = (evento: globalThis.KeyboardEvent) => {
+      if (
+        (evento.ctrlKey || evento.metaKey) &&
+        !evento.altKey &&
+        !evento.shiftKey &&
+        evento.key.toLowerCase() === 'k'
+      ) {
+        evento.preventDefault()
+        if (!painelAberto) {
+          setPaletaAberta(true)
+        }
+      }
+    }
+    document.addEventListener('keydown', abrirComAtalho)
+    return () => document.removeEventListener('keydown', abrirComAtalho)
+  }, [painelAberto])
+
+  const paleta = useMemo(() => ({ abrir: () => setPaletaAberta(true) }), [])
+  const fecharPaleta = useCallback(() => setPaletaAberta(false), [])
+
+  /** Mantém o Tab dentro do painel enquanto ele está aberto. */
+  const prenderFoco = (evento: KeyboardEvent<HTMLDivElement>) => {
+    if (evento.key !== 'Tab' || !painel.current) {
+      return
+    }
+    const itens = painel.current.querySelectorAll<HTMLElement>(FOCAVEIS)
+    const primeiro = itens[0]
+    const ultimo = itens[itens.length - 1]
+    if (evento.shiftKey && document.activeElement === primeiro) {
+      evento.preventDefault()
+      ultimo?.focus()
+    } else if (!evento.shiftKey && document.activeElement === ultimo) {
+      evento.preventDefault()
+      primeiro?.focus()
+    }
+  }
+
+  const barraSuperior = (
+    <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-2">
+      <button
+        ref={botao}
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded={painelAberto}
+        aria-controls={painelAberto ? idPainel : undefined}
+        onClick={() => setAberto(true)}
+        className={botaoIcone}
+      >
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <Logo />
+    </header>
+  )
+
+  const sidebarFixa = (
+    <aside className="sticky top-0 flex h-dvh flex-col gap-3 overflow-y-auto border-r border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-4">
+      <div className="px-1">
         <Logo />
-        {ehDesktop && (
-          <div className="mx-auto">
-            <AbasTopo />
+      </div>
+      <div className="min-h-0 flex-1">
+        <Sidebar nomeUsuario={nomeUsuario} aoSair={aoSair} />
+      </div>
+    </aside>
+  )
+
+  // O `<main>` (e a página dentro dele) fica sempre na mesma posição da árvore: só a sidebar fixa ou a barra do topo
+  // trocam, então cruzar 1280 px não remonta a rota nem perde o que foi digitado.
+  return (
+    <PaletaContext value={paleta}>
+      <div className="min-h-dvh bg-[var(--cor-fundo)]">
+        <AvisoServidor />
+        <div className={ehDesktop ? 'grid min-h-dvh grid-cols-[240px_1fr]' : undefined}>
+          {ehDesktop ? sidebarFixa : barraSuperior}
+          <main ref={principal} tabIndex={-1} className="mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6">
+            <Outlet />
+          </main>
+        </div>
+
+        {painelAberto && (
+          <div className="fixed inset-0 z-40">
+            <div
+              data-testid="fundo-do-menu"
+              aria-hidden="true"
+              onClick={fechar}
+              className="menu-fundo absolute inset-0 bg-[var(--cor-texto)]/50"
+            />
+            <div
+              ref={painel}
+              id={idPainel}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu"
+              onKeyDown={prenderFoco}
+              className="menu-painel absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] flex-col gap-3 overflow-y-auto border-r border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-3"
+            >
+              <div className="flex items-center justify-between gap-2 px-1">
+                <Logo />
+                <button type="button" aria-label="Fechar menu" onClick={fechar} className={botaoIcone}>
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              </div>
+              <div className="min-h-0 flex-1">
+                <Sidebar nomeUsuario={nomeUsuario} aoSair={aoSair} aoNavegar={fechar} />
+              </div>
+            </div>
           </div>
         )}
-        {!ehDesktop && <div className="ml-auto">{comMes && <SeletorMes />}</div>}
-        {ehDesktop && (
-          <>
-            {comMes && <SeletorMes />}
-            <Link
-              to={{ pathname: '/lancamentos/novo', search: busca }}
-              className="shrink-0 rounded-full bg-[var(--cor-principal)] px-4 py-2.5 text-sm font-semibold whitespace-nowrap text-white no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
-            >
-              + Lançar
-            </Link>
-          </>
-        )}
-        <MenuUsuario nomeUsuario={nomeUsuario} comCategorias={!ehDesktop} aoSair={aoSair} />
-      </header>
-      <main className={`mx-auto max-w-6xl px-4 py-5 md:px-6 ${ehDesktop ? '' : 'pb-28'}`}>
-        <Outlet />
-      </main>
-      {!ehDesktop && <NavbarInferior />}
-    </div>
+
+        <PaletaNavegacao aberta={paletaAberta} aoFechar={fecharPaleta} />
+      </div>
+    </PaletaContext>
   )
 }

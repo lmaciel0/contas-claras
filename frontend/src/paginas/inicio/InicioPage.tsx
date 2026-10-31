@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ErroApi } from '../../api/cliente'
 import { endpoints } from '../../api/endpoints'
 import { mesAnterior, nomeMes } from '../../formato/mes'
+import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { CardSobra } from './CardSobra'
 import { CardsTotais } from './CardsTotais'
@@ -12,7 +13,7 @@ import { ProximasContas } from './ProximasContas'
 const minusculo = (texto: string) => texto.toLocaleLowerCase('pt-BR')
 
 /**
- * Tela inicial: quanto sobra no mês e para onde vai o dinheiro. A ordem dos blocos no HTML é a do celular
+ * Visão geral do financeiro (`/financeiro`): quanto sobra no mês e para onde vai o dinheiro. A ordem dos blocos no HTML é a do celular
  * (sobra, totais, onde mais gastou, próximas contas, gráfico); no computador o gráfico sobe para a primeira linha.
  */
 export function InicioPage() {
@@ -23,10 +24,13 @@ export function InicioPage() {
   })
 
   const titulo = (
-    <div className="mb-3 sr-only md:not-sr-only md:mb-5">
-      <h1 className="m-0 text-[28px] font-bold tracking-tight">Início</h1>
-      <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">Quanto sobra e para onde vai o seu dinheiro.</p>
-    </div>
+    <>
+      <FaixaFinanceira />
+      <div className="mb-3 sr-only md:not-sr-only md:mb-5">
+        <h1 className="m-0 text-[28px] font-bold tracking-tight">Visão geral</h1>
+        <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">Quanto sobra e para onde vai o seu dinheiro.</p>
+      </div>
+    </>
   )
 
   if (consulta.isPending) {
@@ -50,7 +54,7 @@ export function InicioPage() {
           <button
             type="button"
             onClick={() => void consulta.refetch()}
-            className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+            className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-[var(--cor-sobre-principal)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
           >
             Tentar de novo
           </button>

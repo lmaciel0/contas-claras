@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
-import { comSessao, semSessao, usuarioFicticio } from '../teste/auth'
+import { comSessao, saudacaoDaTelaInicial, semSessao, usuarioFicticio } from '../teste/auth'
 import { renderComApp, renderComBrowserRouter } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
@@ -71,7 +71,7 @@ describe('ConfirmarPage com código', () => {
     await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(recebido.corpo).toStrictEqual({ email: 'ana@exemplo.com', codigo: '123456', senha: SENHA })
   })
 
@@ -84,7 +84,7 @@ describe('ConfirmarPage com código', () => {
     await preencherSenhas('outra-senha-1')
     await userEvent.click(botaoConfirmar())
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(recebido.corpo).toStrictEqual({ email: 'ana@exemplo.com', codigo: '123456', senha: 'outra-senha-1' })
   })
 
@@ -166,7 +166,7 @@ describe('ConfirmarPage com código', () => {
     await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(recebido.corpo).toStrictEqual({ email: 'ana@exemplo.com', codigo: '123456', senha: SENHA })
   })
 
@@ -254,7 +254,7 @@ describe('ConfirmarPage com código', () => {
     expect(confirmando).toBeDisabled()
     await userEvent.click(confirmando)
     liberar()
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(chamadas).toBe(1)
   })
 
@@ -274,7 +274,7 @@ describe('ConfirmarPage com código', () => {
     await preencherSenhas()
     await userEvent.click(botaoConfirmar())
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(recebido.corpo).toStrictEqual({ email: 'ana@exemplo.com', codigo: '654321', senha: SENHA })
   })
 
@@ -293,7 +293,7 @@ describe('ConfirmarPage com código', () => {
     comSessao()
     renderComApp(app(), '/confirmar')
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
   })
 
   it('tem_link_para_refazer_o_cadastro', async () => {
@@ -389,7 +389,7 @@ describe('ConfirmarPage com link (?token=)', () => {
 
     await userEvent.click(botao)
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(recebido.corpo).toStrictEqual({ token: 'abc123', senha: SENHA })
   })
 
@@ -401,7 +401,7 @@ describe('ConfirmarPage com link (?token=)', () => {
     await preencherSenhas('outra-senha-1')
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar minha conta' }))
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(recebido.corpo).toStrictEqual({ token: 'abc123', senha: 'outra-senha-1' })
   })
 
@@ -442,7 +442,7 @@ describe('ConfirmarPage com link (?token=)', () => {
 
     await userEvent.click(botao) // o token continua na memória da tela, mesmo fora da URL
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(recebido.corpo).toStrictEqual({ token: 'abc123', senha: SENHA })
   })
 
@@ -486,7 +486,7 @@ describe('ConfirmarPage com link (?token=)', () => {
     expect(confirmando).toBeDisabled()
     await userEvent.click(confirmando)
     liberar()
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(chamadas).toBe(1)
   })
 })

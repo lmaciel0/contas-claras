@@ -58,7 +58,7 @@ export function GrupoCategoria({ nome, lancamentos, busca, idMudandoStatus, aoMu
                 aria-label={`${l.itemNome}: ${rotulo}. Tocar para marcar como ${pago ? 'previsto' : 'pago'}`}
                 onClick={() => aoMudarStatus(l.id, pago ? 'PREVISTO' : 'PAGO')}
                 className={`min-h-8 min-w-[5.5rem] rounded-full px-3 text-[12px] font-semibold disabled:opacity-60 ${classeFoco} ${
-                  pago ? 'bg-[#e1f3e8] text-[var(--cor-positivo)]' : 'bg-[var(--cor-fundo)] text-[var(--cor-principal)]'
+                  pago ? 'bg-[var(--cor-ok-fundo)] text-[var(--cor-positivo)]' : 'bg-[var(--cor-fundo)] text-[var(--cor-principal)]'
                 }`}
               >
                 {pago ? '✓ Pago' : 'Previsto'}

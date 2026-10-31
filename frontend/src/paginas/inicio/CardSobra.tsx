@@ -29,16 +29,16 @@ export function CardSobra({ sobra, sobraAno, anterior, nomeMesAnterior }: Props)
   return (
     <section
       aria-labelledby="titulo-sobra"
-      className="flex flex-col rounded-[var(--raio-card)] bg-[var(--cor-principal)] p-4 text-white md:col-span-11"
+      className="flex flex-col rounded-[var(--raio-card)] bg-[var(--cor-principal)] p-4 text-[var(--cor-sobre-principal)] md:col-span-11"
     >
-      <h2 id="titulo-sobra" className="m-0 text-xs font-normal text-[#cfcbf2]">
+      <h2 id="titulo-sobra" className="m-0 text-xs font-normal text-[var(--cor-sobre-principal-suave)]">
         Sobra do mês
       </h2>
       <p className="valor m-0 my-1.5 text-[26px] font-bold tracking-tight md:text-[30px]">{formatarComSinal(sobra)}</p>
       {texto !== null && (
-        <p className="m-0 w-fit rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold">{texto}</p>
+        <p className="m-0 w-fit rounded-full bg-[var(--cor-sobre-principal)]/20 px-2 py-0.5 text-[11px] font-semibold">{texto}</p>
       )}
-      <p className="valor m-0 mt-auto pt-5 text-xs text-[#cfcbf2]">No ano: {formatarComSinal(sobraAno)}</p>
+      <p className="valor m-0 mt-auto pt-5 text-xs text-[var(--cor-sobre-principal-suave)]">No ano: {formatarComSinal(sobraAno)}</p>
     </section>
   )
 }

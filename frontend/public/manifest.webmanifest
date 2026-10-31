@@ -1,7 +1,7 @@
 {
-  "name": "Contas Claras",
-  "short_name": "Contas Claras",
-  "description": "Quanto sobra e para onde vai o seu dinheiro.",
+  "name": "Aprumo",
+  "short_name": "Aprumo",
+  "description": "Aprumo: suas finanças, e em breve tarefas e agenda, no mesmo lugar.",
   "lang": "pt-BR",
   "start_url": "/",
   "scope": "/",

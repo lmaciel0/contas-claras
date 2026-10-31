@@ -5,6 +5,7 @@ import { Link } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { formatarMoeda } from '../../formato/moeda'
+import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { formatarPercentual } from '../inicio/valores'
 import { CardCartao } from './CardCartao'
@@ -38,12 +39,15 @@ export function CartoesPage() {
   })
 
   const titulo = (
-    <div className="mb-3 sr-only md:not-sr-only md:mb-5">
-      <h1 className="m-0 text-[28px] font-bold tracking-tight">Cartões</h1>
-      <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">
-        Quanto da fatura do mês ocupa o limite de cada cartão.
-      </p>
-    </div>
+    <>
+      <FaixaFinanceira />
+      <div className="mb-3 sr-only md:not-sr-only md:mb-5">
+        <h1 className="m-0 text-[28px] font-bold tracking-tight">Cartões</h1>
+        <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">
+          Quanto da fatura do mês ocupa o limite de cada cartão.
+        </p>
+      </div>
+    </>
   )
 
   let conteudo: ReactNode
@@ -60,7 +64,7 @@ export function CartoesPage() {
         <button
           type="button"
           onClick={() => void consulta.refetch()}
-          className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+          className="rounded-full bg-[var(--cor-principal)] px-4 py-2 text-sm font-semibold text-[var(--cor-sobre-principal)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
         >
           Tentar de novo
         </button>

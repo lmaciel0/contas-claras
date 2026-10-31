@@ -101,7 +101,7 @@ export function EditorItem({ categoria, existente, aoFechar }: Props) {
             setErro(null)
           }}
         />
-        <div className="flex flex-col gap-3 rounded-2xl bg-white p-3">
+        <div className="flex flex-col gap-3 rounded-2xl bg-[var(--cor-card)] p-3">
           <label className={classeCaixa}>
             <span>É cartão de crédito</span>
             <input
@@ -132,7 +132,7 @@ export function EditorItem({ categoria, existente, aoFechar }: Props) {
           )}
         </div>
         {existente !== undefined && (
-          <div className="flex flex-col gap-1 rounded-2xl bg-white p-3">
+          <div className="flex flex-col gap-1 rounded-2xl bg-[var(--cor-card)] p-3">
             <label className={classeCaixa}>
               <span>Arquivar este item</span>
               <input

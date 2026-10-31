@@ -2,6 +2,9 @@ import { http, HttpResponse } from 'msw'
 import type { UsuarioResponse } from '../api/tipos'
 import { servidor } from './servidor'
 
+/** Título (h1) da tela inicial `/`: a saudação muda com a hora, então os testes só conferem o começo. */
+export const saudacaoDaTelaInicial = /^(Bom dia|Boa tarde|Boa noite)/
+
 export const usuarioFicticio: UsuarioResponse = { id: 1, nome: 'Ana', email: 'ana@exemplo.com', temSenha: true }
 
 /** Contador de chamadas a `GET /api/auth/me`, para provar que não há loop. */

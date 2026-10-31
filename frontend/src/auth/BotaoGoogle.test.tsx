@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
-import { semSessao, usuarioFicticio } from '../teste/auth'
+import { saudacaoDaTelaInicial, semSessao, usuarioFicticio } from '../teste/auth'
 import { instalarGoogleFalso, removerGoogleFalso } from '../teste/google'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
@@ -75,7 +75,7 @@ describe('BotaoGoogle', () => {
 
     inicializar.mock.calls[0]?.[0].callback({ credential: 'token-fictício' })
 
-    expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: saudacaoDaTelaInicial })).toBeInTheDocument()
     expect(corpo).toEqual({ credential: 'token-fictício' })
   })
 

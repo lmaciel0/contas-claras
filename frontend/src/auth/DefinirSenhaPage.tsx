@@ -84,7 +84,7 @@ export function DefinirSenhaPage() {
         />
         <MensagemDeErro texto={erro} />
         {aviso !== null && (
-          <p role="status" className="m-0 rounded-xl border border-[var(--cor-positivo)] bg-[#e9f6ee] px-3 py-2 text-sm text-[var(--cor-texto)]">
+          <p role="status" className="m-0 rounded-xl border border-[var(--cor-positivo)] bg-[var(--cor-ok-fundo)] px-3 py-2 text-sm text-[var(--cor-texto)]">
             {aviso}
           </p>
         )}
