@@ -50,6 +50,12 @@ export function LoginPage() {
           value={senha}
           onChange={(evento) => setSenha(evento.target.value)}
         />
+        <Link
+          to="/esqueci-senha"
+          className="-mt-2 inline-flex min-h-6 items-center self-end text-sm font-semibold text-[var(--cor-principal)]"
+        >
+          Esqueci a senha
+        </Link>
         <MensagemDeErro texto={erro} />
         <button type="submit" disabled={enviando} className={classeBotaoPrimario}>
           {enviando ? 'Entrando…' : 'Entrar'}

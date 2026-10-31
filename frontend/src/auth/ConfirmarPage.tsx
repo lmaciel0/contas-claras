@@ -3,7 +3,8 @@ import type { SubmitEvent } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { endpoints } from '../api/endpoints'
 import type { ConfirmarCadastroRequest } from '../api/tipos'
-import { CampoTexto, classeBotaoPrimario, classeBotaoSecundario, MensagemDeErro } from './CampoTexto'
+import { BotaoReenviar } from './BotaoReenviar'
+import { CampoTexto, classeBotaoPrimario, MensagemDeErro } from './CampoTexto'
 import { mensagemDoErro } from './mensagemDoErro'
 import { TelaAuth } from './TelaAuth'
 import { useAuth } from './useAuth'
@@ -156,16 +157,7 @@ export function ConfirmarPage() {
               {enviando ? 'Confirmando…' : 'Confirmar'}
             </button>
           </form>
-          <div className="mt-3 flex justify-center">
-            <button
-              type="button"
-              disabled={restante > 0 || reenviando || enviando}
-              onClick={reenviar}
-              className={classeBotaoSecundario}
-            >
-              {reenviando ? 'Reenviando…' : restante > 0 ? `Reenviar em ${restante} s` : 'Reenviar'}
-            </button>
-          </div>
+          <BotaoReenviar restante={restante} reenviando={reenviando} desabilitado={enviando} aoReenviar={reenviar} />
         </>
       )}
       <p className="m-0 mt-5 text-center text-sm">

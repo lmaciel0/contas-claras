@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router'
 import { CadastroPage } from './auth/CadastroPage'
 import { ConfirmarPage } from './auth/ConfirmarPage'
 import { DefinirSenhaPage } from './auth/DefinirSenhaPage'
+import { EsqueciSenhaPage } from './auth/EsqueciSenhaPage'
 import { LayoutAuth } from './auth/LayoutAuth'
 import { LoginPage } from './auth/LoginPage'
 import { RotaProtegida } from './auth/RotaProtegida'
@@ -78,6 +79,7 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<CadastroPage />} />
         <Route path="/confirmar" element={<ConfirmarPage />} />
+        <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
       </Route>
       <Route element={<RotaProtegida />}>
         <Route element={<MolduraDoUsuario />}>
