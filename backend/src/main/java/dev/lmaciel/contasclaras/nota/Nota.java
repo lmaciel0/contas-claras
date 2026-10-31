@@ -112,6 +112,13 @@ public class Nota {
         this.atualizadoEm = quando;
     }
 
+    /** Troca só o conteúdo e o texto; título e categoria ficam. */
+    public void editarConteudo(String conteudoJson, String texto, Instant quando) {
+        this.conteudo = conteudoJson;
+        this.texto = texto;
+        this.atualizadoEm = quando;
+    }
+
     public void fixar() {
         this.fixada = true;
     }

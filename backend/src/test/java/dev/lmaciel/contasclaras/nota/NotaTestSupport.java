@@ -1,5 +1,6 @@
 package dev.lmaciel.contasclaras.nota;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -61,6 +62,18 @@ abstract class NotaTestSupport extends IntegracaoTest {
 
     static String corpo(String titulo, String conteudo, Long categoriaId) {
         return "{\"titulo\":\"" + titulo + "\",\"conteudo\":" + conteudo + ",\"categoriaId\":" + categoriaId + "}";
+    }
+
+    /** PATCH /{id}/fixada; confere o status e devolve o corpo. */
+    String fixar(Cookie sessao, long id, boolean fixada, int esperado) throws Exception {
+        return mvc.perform(patch(URL + "/" + id + "/fixada").cookie(sessao)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"fixada\":" + fixada + "}"))
+                .andExpect(status().is(esperado))
+                .andReturn().getResponse().getContentAsString();
+    }
+
+    int contarFixadas() {
+        return jdbc.queryForObject("select count(*) from nota where fixada", Integer.class);
     }
 
     int contarNotas() {

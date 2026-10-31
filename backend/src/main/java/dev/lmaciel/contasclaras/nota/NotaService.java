@@ -5,12 +5,17 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.lmaciel.contasclaras.auth.UsuarioLogado;
+import dev.lmaciel.contasclaras.comum.ConflitoException;
 import dev.lmaciel.contasclaras.comum.NaoEncontradoException;
 import dev.lmaciel.contasclaras.comum.RequisicaoInvalidaException;
+import dev.lmaciel.contasclaras.comum.ViolacaoDeUnicidade;
+import dev.lmaciel.contasclaras.nota.dto.ConteudoRequest;
+import dev.lmaciel.contasclaras.nota.dto.NotaFixadaResponse;
 import dev.lmaciel.contasclaras.nota.dto.NotaRequest;
 import dev.lmaciel.contasclaras.nota.dto.NotaResponse;
 import dev.lmaciel.contasclaras.nota.dto.NotaResumoResponse;
@@ -24,6 +29,8 @@ public class NotaService {
     static final String TITULO_PADRAO = "Sem título";
     static final String FILTRO_DUPLO = "Use categoriaId ou semCategoria, não os dois.";
     static final String TEXTO_INVALIDO = "O texto da nota contém caracteres que não podem ser gravados.";
+
+    static final String FIXACAO_CONCORRENTE = "Outra nota foi fixada ao mesmo tempo. Tente de novo.";
 
     private final NotaRepository notas;
     private final UsuarioRepository usuarios;
@@ -63,9 +70,8 @@ public class NotaService {
     @Transactional
     public NotaResponse editar(long id, NotaRequest req, UsuarioLogado u) {
         Nota nota = buscarDoUsuario(id, u);
-        ConteudoNota.validar(req.conteudo());
-        String texto = ConteudoNota.textoSimples(req.conteudo());
-        if (!gravavel(texto) || !gravavel(req.titulo())) {
+        String texto = textoValidado(req.conteudo());
+        if (!gravavel(req.titulo())) {
             throw new RequisicaoInvalidaException(TEXTO_INVALIDO);
         }
         CategoriaNota categoria = req.categoriaId() == null ? null
@@ -73,6 +79,38 @@ public class NotaService {
         nota.editar(req.titulo(), json.writeValueAsString(req.conteudo()), texto, categoria, agora());
         notas.saveAndFlush(nota);
         return NotaResponse.de(nota, req.conteudo());
+    }
+
+    @Transactional
+    public NotaResponse editarConteudo(long id, ConteudoRequest req, UsuarioLogado u) {
+        Nota nota = buscarDoUsuario(id, u);
+        String texto = textoValidado(req.conteudo());
+        nota.editarConteudo(json.writeValueAsString(req.conteudo()), texto, agora());
+        notas.saveAndFlush(nota);
+        return NotaResponse.de(nota, req.conteudo());
+    }
+
+    @Transactional(readOnly = true)
+    public NotaFixadaResponse obterFixada(UsuarioLogado u) {
+        return new NotaFixadaResponse(notas.findByUsuarioIdAndFixadaTrue(u.id()).map(this::resposta).orElse(null));
+    }
+
+    /** Fixar tira a fixação da anterior na mesma transação; o índice único do banco decide as corridas. */
+    @Transactional
+    public NotaResponse fixar(long id, boolean fixada, UsuarioLogado u) {
+        Nota nota = buscarDoUsuario(id, u);
+        try {
+            if (fixada) {
+                notas.desfixarOutras(u.id(), id);
+                nota.fixar();
+            } else {
+                nota.desfixar();
+            }
+            notas.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw ViolacaoDeUnicidade.ocorreu(e) ? new ConflitoException(FIXACAO_CONCORRENTE) : e;
+        }
+        return resposta(nota);
     }
 
     @Transactional
@@ -100,6 +138,16 @@ public class NotaService {
         }
         String escapada = limpa.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
         return "%" + escapada + "%";
+    }
+
+    /** Valida o conteúdo e devolve o texto simples; texto que o Postgres recusaria vira 400, não 500. */
+    private static String textoValidado(JsonNode conteudo) {
+        ConteudoNota.validar(conteudo);
+        String texto = ConteudoNota.textoSimples(conteudo);
+        if (!gravavel(texto)) {
+            throw new RequisicaoInvalidaException(TEXTO_INVALIDO);
+        }
+        return texto;
     }
 
     private NotaResponse resposta(Nota nota) {

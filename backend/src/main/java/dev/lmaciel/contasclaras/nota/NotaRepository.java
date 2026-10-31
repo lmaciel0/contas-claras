@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -23,6 +24,13 @@ public interface NotaRepository extends JpaRepository<Nota, Long> {
     int SEM_CATEGORIA = 2;
 
     Optional<Nota> findByIdAndUsuarioId(long id, long usuarioId);
+
+    Optional<Nota> findByUsuarioIdAndFixadaTrue(long usuarioId);
+
+    /** Tira a fixação das outras notas do usuário; o flush antes grava o que a transação já mudou. */
+    @Modifying(flushAutomatically = true)
+    @Query("update Nota n set n.fixada = false where n.usuario.id = :usuarioId and n.fixada = true and n.id <> :id")
+    int desfixarOutras(@Param("usuarioId") long usuarioId, @Param("id") long id);
 
     /**
      * {@code padrao} já vem com {@code %} nas pontas e com {@code \}, {@code %} e {@code _} da busca escapados
