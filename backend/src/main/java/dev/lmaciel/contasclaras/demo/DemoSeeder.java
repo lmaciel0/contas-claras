@@ -12,7 +12,9 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.jdbc.autoconfigure.JdbcConnectionDetails;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -34,6 +36,9 @@ import dev.lmaciel.contasclaras.usuario.UsuarioRepository;
 /**
  * Dados de demonstração para dev local e para os prints do README: uma conta com os 12 meses de 2026 (valores
  * fictícios), parte paga e parte prevista. Só existe com o profile {@code demo}, então nunca roda em produção.
+ *
+ * <p>Como a senha da conta é pública, o seed também se recusa a rodar (sem criar nada) se o banco não for local:
+ * ver {@link GuardaBancoDemo}. Para rodar de propósito em outro host, defina {@code app.demo.permitir=true}.
  *
  * <p>A conta é criada direto no banco, sem passar pelo cadastro: o e-mail dela não precisa estar em
  * {@code ALLOWED_EMAILS}. Se a conta já existe, não faz nada.
@@ -97,10 +102,13 @@ public class DemoSeeder implements ApplicationRunner {
     private final LancamentoRepository lancamentos;
     private final Clock clock;
     private final TransactionTemplate transacao;
+    private final JdbcConnectionDetails banco;
+    private final boolean permitirBancoRemoto;
 
     public DemoSeeder(UsuarioRepository usuarios, AuthService auth, PasswordEncoder encoder,
             CategoriaRepository categorias, ItemRepository itens, LancamentoRepository lancamentos, Clock clock,
-            PlatformTransactionManager transacoes) {
+            PlatformTransactionManager transacoes, JdbcConnectionDetails banco,
+            @Value("${" + GuardaBancoDemo.PROPRIEDADE_PERMITIR + ":false}") boolean permitirBancoRemoto) {
         this.usuarios = usuarios;
         this.auth = auth;
         this.encoder = encoder;
@@ -109,6 +117,8 @@ public class DemoSeeder implements ApplicationRunner {
         this.lancamentos = lancamentos;
         this.clock = clock;
         this.transacao = new TransactionTemplate(transacoes);
+        this.banco = banco;
+        this.permitirBancoRemoto = permitirBancoRemoto;
     }
 
     @Override
@@ -122,10 +132,13 @@ public class DemoSeeder implements ApplicationRunner {
 
     /**
      * Cria a conta demo com categorias, itens e lançamentos, tudo numa transação: se algo falha, nada fica.
+     * Antes de tudo confere o banco: se não é local e não há {@code app.demo.permitir=true}, lança
+     * {@link IllegalStateException} sem tocar em nada.
      *
      * @return {@code true} se criou; {@code false} se a conta já existia (nada é alterado)
      */
     public boolean semear() {
+        GuardaBancoDemo.exigir(banco.getJdbcUrl(), permitirBancoRemoto);
         return Boolean.TRUE.equals(transacao.execute(status -> {
             if (usuarios.existsByEmail(EMAIL)) {
                 return false;
