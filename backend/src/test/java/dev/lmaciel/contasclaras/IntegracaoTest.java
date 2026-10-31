@@ -31,10 +31,14 @@ import jakarta.servlet.http.Cookie;
 @AutoConfigureMockMvc
 @Import({ RelogioFixoConfig.class, EnvioEmailFalso.class })
 @TestPropertySource(properties = {
+        "app.url=" + IntegracaoTest.APP_URL_TESTE,
         "app.jwt.secret=" + IntegracaoTest.JWT_SECRET_TESTE,
         "app.google.client-id=" + IntegracaoTest.GOOGLE_CLIENT_ID_TESTE
 })
 public abstract class IntegracaoTest {
+
+    /** Endereço do front-end nos links dos e-mails: não há valor padrão fora do perfil dev. */
+    protected static final String APP_URL_TESTE = "https://contas.exemplo.com";
 
     /** Segredo obviamente falso, só para os testes (HS256 exige pelo menos 32 bytes). */
     protected static final String JWT_SECRET_TESTE = "segredo-falso-so-para-testes-0123456789";

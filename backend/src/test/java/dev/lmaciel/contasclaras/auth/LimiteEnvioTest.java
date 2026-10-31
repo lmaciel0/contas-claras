@@ -8,8 +8,14 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -167,5 +173,36 @@ class LimiteEnvioTest extends IntegracaoTest {
         Instant maisAntigo = jdbc.queryForObject("select min(criado_em) from envio_email", Timestamp.class)
                 .toInstant();
         assertThat(maisAntigo).isAfter(clock.instant().minus(Duration.ofHours(24)));
+    }
+
+    @Test
+    void reservas_paralelas_do_mesmo_email_resultam_em_exatamente_um_registro() throws Exception {
+        int pedidos = 8;
+        ExecutorService pool = Executors.newFixedThreadPool(pedidos);
+        try {
+            // A corrida é estreita: várias rodadas, para que sem o lock ela apareça de forma confiável.
+            for (int rodada = 0; rodada < 25; rodada++) {
+                jdbc.update("delete from envio_email");
+                CountDownLatch largada = new CountDownLatch(1);
+                List<Future<Optional<Long>>> respostas = new ArrayList<>();
+                for (int i = 0; i < pedidos; i++) {
+                    respostas.add(pool.submit(() -> {
+                        largada.await();
+                        return limite.reservar("ana@exemplo.com", "203.0.113.7");
+                    }));
+                }
+                largada.countDown();
+                int reservadas = 0;
+                for (Future<Optional<Long>> resposta : respostas) {
+                    if (resposta.get(60, TimeUnit.SECONDS).isPresent()) {
+                        reservadas++;
+                    }
+                }
+                assertThat(reservadas).as("reservas na rodada %d", rodada).isEqualTo(1);
+                assertThat(total()).as("registros na rodada %d", rodada).isEqualTo(1);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
     }
 }

@@ -26,6 +26,7 @@ public class SmtpEnvioEmail implements EnvioEmail {
 
     private static final Logger log = LoggerFactory.getLogger(SmtpEnvioEmail.class);
 
+    private static final String AVISO_DESLIGADO = "Envio de e-mail desligado: MAIL_USERNAME não está configurado.";
     private static final String NOME_REMETENTE = "Contas Claras";
 
     private final JavaMailSender mailSender;
@@ -34,12 +35,16 @@ public class SmtpEnvioEmail implements EnvioEmail {
     public SmtpEnvioEmail(JavaMailSender mailSender, @Value("${spring.mail.username:}") String remetente) {
         this.mailSender = mailSender;
         this.remetente = remetente;
+        if (remetente == null || remetente.isBlank()) {
+            // A API sobe mesmo assim; quem pedir e-mail recebe 503. O aviso na subida evita descobrir só no primeiro envio.
+            log.warn("{} Os pedidos que enviam e-mail responderão 503 até configurar.", AVISO_DESLIGADO);
+        }
     }
 
     @Override
     public void enviar(MensagemEmail mensagem) {
         if (remetente == null || remetente.isBlank()) {
-            log.warn("Envio de e-mail desligado: MAIL_USERNAME não está configurado.");
+            log.warn(AVISO_DESLIGADO);
             throw new EmailIndisponivelException();
         }
         try {

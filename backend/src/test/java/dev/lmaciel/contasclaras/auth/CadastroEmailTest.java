@@ -311,6 +311,38 @@ class CadastroEmailTest extends IntegracaoTest {
     }
 
     @Test
+    void tentativas_erradas_em_paralelo_esgotam_o_codigo_e_o_certo_depois_responde_400() throws Exception {
+        pedir(EMAIL).andExpect(status().isAccepted());
+        String certo = codigoDoUltimoEmail();
+        String errado = certo.equals("000000") ? "000001" : "000000";
+        int tentativas = 12; // bem acima das 5 permitidas
+        ExecutorService pool = Executors.newFixedThreadPool(tentativas);
+        CountDownLatch largada = new CountDownLatch(1);
+        try {
+            List<Future<Integer>> respostas = new ArrayList<>();
+            for (int i = 0; i < tentativas; i++) {
+                respostas.add(pool.submit(() -> {
+                    largada.await();
+                    return confirmarComCodigo(EMAIL, errado).andReturn().getResponse().getStatus();
+                }));
+            }
+            largada.countDown();
+            for (Future<Integer> resposta : respostas) {
+                assertThat(resposta.get(60, TimeUnit.SECONDS)).isEqualTo(400);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+
+        // Sem o lock as tentativas se perdem (cada uma lê o mesmo contador) e o código sobreviveria às 12.
+        assertThat(contar("codigo_email")).isZero();
+        confirmarComCodigo(EMAIL, certo)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value(INVALIDO));
+        assertThat(contar("usuario")).isZero();
+    }
+
+    @Test
     void conta_criada_pelo_google_antes_da_confirmacao_apaga_pendencia_e_responde_400() throws Exception {
         pedir(EMAIL).andExpect(status().isAccepted());
         String codigo = codigoDoUltimoEmail();

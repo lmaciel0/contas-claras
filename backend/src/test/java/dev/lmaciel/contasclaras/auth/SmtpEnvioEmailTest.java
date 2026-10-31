@@ -15,9 +15,12 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 
+import dev.lmaciel.contasclaras.CapturaLog;
 import dev.lmaciel.contasclaras.comum.EmailIndisponivelException;
 import jakarta.mail.Address;
 import jakarta.mail.Multipart;
@@ -47,6 +50,29 @@ class SmtpEnvioEmailTest {
             assertThatThrownBy(() -> envio.enviar(MENSAGEM)).isInstanceOf(EmailIndisponivelException.class);
         }
         verifyNoInteractions(mailSender);
+    }
+
+    @Test
+    void sem_usuario_configurado_registra_aviso_na_subida_sem_dados_sensiveis() {
+        for (String vazio : new String[] { "", "   ", null }) {
+            try (CapturaLog captura = CapturaLog.de(SmtpEnvioEmail.class)) {
+                new SmtpEnvioEmail(mailSender, vazio);
+
+                assertThat(captura.eventos()).hasSize(1);
+                ILoggingEvent aviso = captura.eventos().get(0);
+                assertThat(aviso.getLevel()).isEqualTo(Level.WARN);
+                assertThat(aviso.getFormattedMessage()).contains("MAIL_USERNAME").contains("503");
+            }
+        }
+    }
+
+    @Test
+    void com_usuario_configurado_nao_registra_aviso_na_subida() {
+        try (CapturaLog captura = CapturaLog.de(SmtpEnvioEmail.class)) {
+            new SmtpEnvioEmail(mailSender, "contas@exemplo.com");
+
+            assertThat(captura.eventos()).isEmpty();
+        }
     }
 
     @Test

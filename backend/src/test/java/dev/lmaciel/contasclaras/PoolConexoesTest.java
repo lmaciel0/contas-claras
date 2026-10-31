@@ -17,4 +17,10 @@ class PoolConexoesTest extends IntegracaoTest {
         assertThat(dataSource.getMaximumPoolSize()).isEqualTo(2);
         assertThat(dataSource.getMinimumIdle()).isZero();
     }
+
+    /** Sem isso a conexão ociosa dura 10 min e 8 instâncias passam das 15 conexões do pooler. */
+    @Test
+    void conexao_ociosa_e_devolvida_em_10_segundos() {
+        assertThat(dataSource.getIdleTimeout()).isEqualTo(10_000);
+    }
 }

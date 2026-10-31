@@ -22,6 +22,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("importar")
 @TestPropertySource(properties = {
+        "app.url=https://contas.exemplo.com",
         "app.jwt.secret=segredo-falso-so-para-testes-0123456789",
         "app.google.client-id=client-id-falso.apps.exemplo.com"
 })

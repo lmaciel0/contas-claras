@@ -9,7 +9,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -218,6 +224,42 @@ class EsqueciSenhaTest extends IntegracaoTest {
 
         redefinir(EMAIL, certo, NOVA_SENHA).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value(INVALIDO));
+        login(EMAIL, SENHA_PADRAO_TESTE).andExpect(status().isOk());
+    }
+
+    @Test
+    void tentativas_erradas_em_paralelo_esgotam_o_codigo_e_o_certo_depois_responde_400() throws Exception {
+        cadastrarEEntrar(EMAIL);
+        int tentativas = 12; // bem acima das 5 permitidas
+        ExecutorService pool = Executors.newFixedThreadPool(tentativas);
+        try {
+            // A janela da corrida é estreita (o BCrypt antes da transação espalha a chegada): várias rodadas.
+            for (int rodada = 0; rodada < 5; rodada++) {
+                jdbc.update("delete from envio_email"); // o relógio é fixo: libera o prazo de 60 s
+                esqueci(EMAIL).andExpect(status().isAccepted());
+                String certo = codigoDoUltimoEmail();
+                String errado = certo.equals("000000") ? "000001" : "000000";
+                CountDownLatch largada = new CountDownLatch(1);
+                List<Future<Integer>> respostas = new ArrayList<>();
+                for (int i = 0; i < tentativas; i++) {
+                    respostas.add(pool.submit(() -> {
+                        largada.await();
+                        return redefinir(EMAIL, errado, NOVA_SENHA).andReturn().getResponse().getStatus();
+                    }));
+                }
+                largada.countDown();
+                for (Future<Integer> resposta : respostas) {
+                    assertThat(resposta.get(60, TimeUnit.SECONDS)).as("rodada %d", rodada).isEqualTo(400);
+                }
+
+                // Sem o lock as tentativas se perdem (cada uma lê o mesmo contador) e o código sobreviveria às 12.
+                assertThat(contar("codigo_email")).as("rodada %d", rodada).isZero();
+                redefinir(EMAIL, certo, NOVA_SENHA).andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.erro").value(INVALIDO));
+            }
+        } finally {
+            pool.shutdownNow();
+        }
         login(EMAIL, SENHA_PADRAO_TESTE).andExpect(status().isOk());
     }
 

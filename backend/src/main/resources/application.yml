@@ -6,10 +6,12 @@ spring:
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     hikari:
-      # O session pooler do Supabase aceita 15 conexões no total. Com várias instâncias da API
-      # no ar, cada uma abre no máximo 2 e nenhuma segura conexão ociosa.
+      # O session pooler do Supabase aceita 15 conexões no total. Cada instância da API abre no máximo 2
+      # (8 instâncias já somam 16, acima do limite), então a conexão ociosa é devolvida em 10 s em vez dos
+      # 10 min padrão do Hikari; com minimum-idle 0, nenhuma instância parada segura conexão.
       maximum-pool-size: 2
       minimum-idle: 0
+      idle-timeout: 10000
   mail:
     # Gmail com senha de app. Sem MAIL_USERNAME o envio fica desligado e a API responde 503.
     host: smtp.gmail.com
@@ -29,8 +31,9 @@ spring:
     open-in-view: false
 
 app:
-  # Endereço público do front-end, usado nos links dos e-mails.
-  url: ${APP_URL:http://localhost:5173}
+  # Endereço público do front-end, usado nos links dos e-mails. Sem valor padrão de propósito: vem do ambiente
+  # (o padrão local fica em application-dev.yml).
+  url: ${APP_URL}
   jwt:
     # Segredo HS256, no mínimo 32 bytes. Sempre vem do ambiente; não há valor padrão de propósito.
     secret: ${JWT_SECRET}

@@ -261,12 +261,15 @@ public class FluxoEmailService {
         codigoRepo.deleteByExpiraEmBefore(clock.instant());
     }
 
-    /** Cria ou substitui a linha do tipo e e-mail, com o prazo de 15 min contado do {@code Clock}. */
+    /**
+     * Cria ou substitui a linha do tipo e e-mail, com o prazo de 15 min contado do {@code Clock}. Lê com lock: se
+     * {@code confirmar} apagar a linha no intervalo, ele espera e a gravação vira um insert, sem erro.
+     */
     private void gravar(TipoCodigo tipo, String email, String nome, String senhaHash, String codigo, String token) {
         Instant agora = clock.instant();
         String codigoHmac = codigos.hmacCodigo(tipo, email, codigo);
         String tokenHash = token == null ? null : codigos.hashToken(token);
-        CodigoEmail existente = codigoRepo.findByTipoAndEmail(tipo, email).orElse(null);
+        CodigoEmail existente = codigoRepo.buscarParaConferir(tipo, email).orElse(null);
         if (existente != null) {
             existente.substituir(nome, senhaHash, codigoHmac, tokenHash, agora, agora.plus(VALIDADE));
         } else {
