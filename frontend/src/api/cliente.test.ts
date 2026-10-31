@@ -308,6 +308,44 @@ describe('api', () => {
       expect(resultado).toEqual({ ok: true })
     })
 
+    it('503 com {erro} da própria API rejeita na hora, com a mensagem, em uma única chamada', async () => {
+      let chamadas = 0
+      servidor.use(
+        http.post('/api/exemplo', () => {
+          chamadas += 1
+          return HttpResponse.json({ erro: 'Não foi possível enviar o e-mail. Tente de novo.' }, { status: 503 })
+        }),
+      )
+
+      let erro: unknown
+      api('/api/exemplo', { method: 'POST' }).catch((e: unknown) => (erro = e))
+      await assentar()
+      await avancar(10_000) // passa de todas as esperas de nova tentativa
+
+      expect(erro).toBeInstanceOf(ErroApi)
+      expect(erro).toMatchObject({ status: 503, mensagem: 'Não foi possível enviar o e-mail. Tente de novo.' })
+      expect(chamadas).toBe(1)
+      expect(servidorAcordando()).toBe(false)
+    })
+
+    it('503 com JSON sem {erro} (proxy sem API) continua sendo tentado de novo', async () => {
+      let chamadas = 0
+      servidor.use(
+        http.get('/api/resumo', () => {
+          chamadas += 1
+          return chamadas === 1 ? HttpResponse.json({ outro: 'x' }, { status: 503 }) : HttpResponse.json({ ok: true })
+        }),
+      )
+
+      let resultado: unknown
+      api('/api/resumo').then((r) => (resultado = r))
+      await assentar()
+      await avancar(2100)
+
+      expect(chamadas).toBe(2)
+      expect(resultado).toEqual({ ok: true })
+    })
+
     it('504 sem parar até os 90 s rejeita com status 0 e nenhum erro aparece antes', async () => {
       let chamadas = 0
       servidor.use(

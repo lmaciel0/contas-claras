@@ -9,6 +9,8 @@ import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
 
 const INVALIDO = 'Código inválido ou expirado.'
+const AVISO_REENVIO =
+  'Se houver um cadastro pendente para este e-mail, enviamos um novo código. Se ele venceu, refaça o cadastro.'
 
 afterEach(() => {
   vi.useRealTimers()
@@ -96,6 +98,22 @@ describe('ConfirmarPage com código', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(INVALIDO)
     expect(botaoConfirmar()).toBeEnabled()
     expect(campoCodigo()).toHaveValue('000000')
+  })
+
+  it('503_da_api_com_erro_mostra_a_mensagem_na_hora', async () => {
+    semSessao()
+    servidor.use(
+      http.post('/api/auth/cadastro/confirmar', () =>
+        HttpResponse.json({ erro: 'Não foi possível enviar o e-mail. Tente de novo.' }, { status: 503 }),
+      ),
+    )
+    renderizarComEmail()
+
+    await userEvent.type(await screen.findByLabelText('Código'), '123456')
+    await userEvent.click(botaoConfirmar())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível enviar o e-mail. Tente de novo.')
+    expect(botaoConfirmar()).toBeEnabled()
   })
 
   it('o_campo_de_codigo_aceita_teclado_numerico_e_preenchimento_automatico', async () => {
@@ -230,7 +248,7 @@ describe('ConfirmarPage: reenviar', () => {
 
     await usuario.click(screen.getByRole('button', { name: 'Reenviar' }))
 
-    expect(await screen.findByText('Enviamos um novo código.')).toBeInTheDocument()
+    expect(await screen.findByText(AVISO_REENVIO)).toBeInTheDocument()
     expect(corpo).toEqual({ email: 'ana@exemplo.com' })
     expect(screen.getByRole('button', { name: /Reenviar/ })).toBeDisabled() // a contagem recomeça
   })

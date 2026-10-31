@@ -12,6 +12,9 @@ import { useContagem } from './useContagem'
 
 const MENSAGEM_SEM_EMAIL = 'Informe seu e-mail.'
 const MENSAGEM_CODIGO_INCOMPLETO = 'Digite os 6 dígitos do código.'
+/** Neutro de propósito: a API responde 202 igual com ou sem cadastro pendente (inclusive vencido). */
+const AVISO_REENVIO =
+  'Se houver um cadastro pendente para este e-mail, enviamos um novo código. Se ele venceu, refaça o cadastro.'
 
 /** E-mail que o cadastro deixou no estado da rota (nunca na URL); vazio se a tela foi aberta sem ele. */
 function emailDoEstado(estado: unknown): string {
@@ -98,7 +101,7 @@ export function ConfirmarPage() {
     setReenviando(true)
     try {
       await endpoints.auth.reenviarCadastro({ email: email.trim() })
-      setAviso('Enviamos um novo código.')
+      setAviso(AVISO_REENVIO)
       reiniciar()
     } catch (falha) {
       setErro(mensagemDoErro(falha))
