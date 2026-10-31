@@ -3,7 +3,6 @@ create table codigo_email (
     tipo        varchar(10) not null check (tipo in ('CADASTRO', 'SENHA')),
     email       varchar(254) not null,
     nome        varchar(120),          -- só CADASTRO
-    senha_hash  varchar(100),          -- só CADASTRO
     codigo_hmac varchar(64) not null,
     token_hash  varchar(64),           -- só CADASTRO
     tentativas  int not null default 0,

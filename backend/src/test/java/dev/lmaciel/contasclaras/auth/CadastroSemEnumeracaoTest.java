@@ -1,8 +1,8 @@
 package dev.lmaciel.contasclaras.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -21,12 +21,11 @@ import org.springframework.test.web.servlet.ResultActions;
 import dev.lmaciel.contasclaras.IntegracaoTest;
 
 /**
- * O cadastro não pode revelar quais e-mails têm conta: com ou sem conta, a resposta é a mesma, o BCrypt roda
- * nos dois casos (o tempo não denuncia o caminho) e sai exatamente um e-mail.
+ * O cadastro não pode revelar quais e-mails têm conta: com ou sem conta, a resposta é a mesma e sai exatamente
+ * um e-mail. O pedido não gera BCrypt em nenhum dos dois casos (a senha só existe na confirmação), então o
+ * tempo não depende de haver conta.
  */
 class CadastroSemEnumeracaoTest extends IntegracaoTest {
-
-    private static final String SENHA = "senha-segura-1";
 
     @MockitoSpyBean
     PasswordEncoder encoder;
@@ -44,12 +43,13 @@ class CadastroSemEnumeracaoTest extends IntegracaoTest {
 
     private ResultActions cadastrar(String email) throws Exception {
         return mvc.perform(post("/api/auth/cadastro").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nome\":\"Fulano\",\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, SENHA)));
+                .content("{\"nome\":\"Fulano\",\"email\":\"%s\"}".formatted(email)));
     }
 
     @Test
-    void com_ou_sem_conta_gasta_bcrypt_responde_igual_e_envia_um_email() throws Exception {
+    void com_ou_sem_conta_nao_gasta_bcrypt_responde_igual_e_envia_um_email() throws Exception {
         auth.criarUsuario("Dono", "dono@exemplo.com", encoder.encode("outra-senha-9"), null);
+        clearInvocations(encoder); // o BCrypt da preparação não conta
 
         for (String email : new String[] { "novo@exemplo.com", "dono@exemplo.com" }) {
             cadastrar(email)
@@ -58,8 +58,8 @@ class CadastroSemEnumeracaoTest extends IntegracaoTest {
                     .andExpect(content().string(""));
         }
 
-        // uma vez para cada pedido, com ou sem conta
-        verify(encoder, times(2)).encode(SENHA);
+        // nenhum BCrypt, com ou sem conta
+        verifyNoInteractions(encoder);
         assertThat(emailFalso.enviadas()).hasSize(2);
         assertThat(emailFalso.enviadas().stream().map(MensagemEmail::para).toList())
                 .containsExactly("novo@exemplo.com", "dono@exemplo.com");

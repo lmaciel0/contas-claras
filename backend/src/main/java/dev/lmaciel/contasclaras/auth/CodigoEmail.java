@@ -14,7 +14,8 @@ import jakarta.persistence.Table;
 /**
  * Código de uso único enviado por e-mail (confirmar cadastro ou redefinir senha). Guarda só o HMAC do código
  * e o hash do token do link, nunca os valores em claro. Há no máximo uma linha por tipo e e-mail.
- * {@code nome}, {@code senhaHash} e {@code tokenHash} só existem no tipo {@link TipoCodigo#CADASTRO}.
+ * {@code nome} e {@code tokenHash} só existem no tipo {@link TipoCodigo#CADASTRO}. A pendência nunca guarda
+ * senha: ela só é definida na confirmação, depois da prova de posse do e-mail.
  */
 @Entity
 @Table(name = "codigo_email")
@@ -33,9 +34,6 @@ public class CodigoEmail {
 
     @Column(length = 120)
     private String nome;
-
-    @Column(name = "senha_hash", length = 100)
-    private String senhaHash;
 
     @Column(name = "codigo_hmac", nullable = false, length = 64)
     private String codigoHmac;
@@ -56,12 +54,11 @@ public class CodigoEmail {
     protected CodigoEmail() {
     }
 
-    public CodigoEmail(TipoCodigo tipo, String email, String nome, String senhaHash, String codigoHmac,
-            String tokenHash, Instant criadoEm, Instant expiraEm) {
+    public CodigoEmail(TipoCodigo tipo, String email, String nome, String codigoHmac, String tokenHash,
+            Instant criadoEm, Instant expiraEm) {
         this.tipo = tipo;
         this.email = email;
         this.nome = nome;
-        this.senhaHash = senhaHash;
         this.codigoHmac = codigoHmac;
         this.tokenHash = tokenHash;
         this.criadoEm = criadoEm;
@@ -82,10 +79,6 @@ public class CodigoEmail {
 
     public String getNome() {
         return nome;
-    }
-
-    public String getSenhaHash() {
-        return senhaHash;
     }
 
     public String getCodigoHmac() {
@@ -114,10 +107,8 @@ public class CodigoEmail {
     }
 
     /** Novo pedido para o mesmo tipo e e-mail: troca código e token, zera as tentativas e renova o prazo. */
-    public void substituir(String nome, String senhaHash, String codigoHmac, String tokenHash, Instant criadoEm,
-            Instant expiraEm) {
+    public void substituir(String nome, String codigoHmac, String tokenHash, Instant criadoEm, Instant expiraEm) {
         this.nome = nome;
-        this.senhaHash = senhaHash;
         this.codigoHmac = codigoHmac;
         this.tokenHash = tokenHash;
         this.tentativas = 0;

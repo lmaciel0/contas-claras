@@ -25,6 +25,15 @@ class ModelosEmailTest {
     }
 
     @Test
+    void cadastro_avisa_que_a_senha_sera_definida_ao_confirmar() {
+        MensagemEmail m = modelos.codigoCadastro("ana@exemplo.com", "Ana", "042917", "tk");
+
+        for (String corpo : new String[] { m.texto(), m.html() }) {
+            assertThat(corpo).contains("Você vai definir a sua senha ao confirmar.");
+        }
+    }
+
+    @Test
     void assunto_nunca_contem_o_codigo() {
         assertThat(modelos.codigoCadastro("ana@exemplo.com", "Ana", "042917", "tk").assunto())
                 .isNotBlank().doesNotContain("042917");

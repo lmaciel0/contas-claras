@@ -265,7 +265,7 @@ class EsqueciSenhaTest extends IntegracaoTest {
 
     @Test
     void codigo_de_cadastro_nao_serve_para_redefinir() throws Exception {
-        json("/api/auth/cadastro", "{\"nome\":\"Ana\",\"email\":\"%s\",\"senha\":\"senha-segura-1\"}".formatted(EMAIL))
+        json("/api/auth/cadastro", "{\"nome\":\"Ana\",\"email\":\"%s\"}".formatted(EMAIL))
                 .andExpect(status().isAccepted());
         String codigoDoCadastro = codigoDoUltimoEmail();
 

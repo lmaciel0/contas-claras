@@ -46,7 +46,7 @@ public class AuthController {
     /** Sempre 202 sem corpo e sem cookie: a conta só nasce na confirmação por e-mail. */
     @PostMapping(path = "/cadastro", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> cadastro(@Valid @RequestBody CadastroRequest req, HttpServletRequest http) {
-        fluxoEmail.pedirCadastro(req.nome(), req.email(), req.senha(), http.getRemoteAddr());
+        fluxoEmail.pedirCadastro(req.nome(), req.email(), http.getRemoteAddr());
         return ResponseEntity.accepted().build();
     }
 
@@ -56,14 +56,14 @@ public class AuthController {
         return ResponseEntity.accepted().build();
     }
 
-    /** Confirma por {@code email} e {@code codigo}, ou só por {@code token} (o do link). */
+    /** Confirma por {@code email} e {@code codigo}, ou só por {@code token} (o do link), e define a senha da conta. */
     @PostMapping(path = "/cadastro/confirmar", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<UsuarioResponse> confirmarCadastro(@Valid @RequestBody ConfirmarCadastroRequest req) {
         Usuario usuario;
         if (StringUtils.hasText(req.token())) {
-            usuario = fluxoEmail.confirmarCadastroPorToken(req.token());
+            usuario = fluxoEmail.confirmarCadastroPorToken(req.token(), req.senha());
         } else if (StringUtils.hasText(req.email()) && req.codigo() != null) {
-            usuario = fluxoEmail.confirmarCadastro(req.email(), req.codigo());
+            usuario = fluxoEmail.confirmarCadastro(req.email(), req.codigo(), req.senha());
         } else {
             throw FluxoEmailService.codigoInvalido();
         }

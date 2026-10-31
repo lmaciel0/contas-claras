@@ -30,6 +30,8 @@ public class ModelosEmail {
 
                 Ou abra este link e confirme: %s
 
+                Você vai definir a sua senha ao confirmar.
+
                 O código e o link valem por %s e só podem ser usados uma vez.
 
                 %s
@@ -39,6 +41,7 @@ public class ModelosEmail {
                 <p>Seu código para confirmar o e-mail no Contas Claras é:</p>
                 <p style="font-size:28px;font-weight:bold;letter-spacing:4px">%s</p>
                 <p>Ou <a href="%s">abra este link</a> e confirme.</p>
+                <p>Você vai definir a sua senha ao confirmar.</p>
                 <p>O código e o link valem por %s e só podem ser usados uma vez.</p>
                 <p>%s</p>
                 """.formatted(escapar(nome), codigo, link, VALIDADE, AVISO));

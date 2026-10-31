@@ -59,11 +59,11 @@ class AuthControllerTest extends IntegracaoTest {
 
     // ---- helpers -----------------------------------------------------------------------
 
-    private ResultActions cadastrar(String nome, String email, String senha) throws Exception {
+    private ResultActions cadastrar(String nome, String email) throws Exception {
         return mvc.perform(post("/api/auth/cadastro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                        {"nome":"%s","email":"%s","senha":"%s"}""".formatted(nome, email, senha)));
+                        {"nome":"%s","email":"%s"}""".formatted(nome, email)));
     }
 
     private ResultActions login(String email, String senha) throws Exception {
@@ -116,43 +116,22 @@ class AuthControllerTest extends IntegracaoTest {
     // ---- cadastro ----------------------------------------------------------------------
 
     @Test
-    void cadastro_com_senha_curta_retorna_400() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", "1234567")
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.erro").value("A senha deve ter entre 8 e 72 caracteres."));
-    }
-
-    @Test
-    void cadastro_com_senha_longa_demais_retorna_400() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", "a".repeat(73))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.erro").value("A senha deve ter entre 8 e 72 caracteres."));
-    }
-
-    @Test
-    void cadastro_com_senha_acima_de_72_bytes_retorna_400() throws Exception {
-        cadastrar("Dono Teste", "dono@exemplo.com", "é".repeat(60))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.erro").value("A senha deve ter entre 8 e 72 caracteres."));
-    }
-
-    @Test
     void cadastro_com_email_invalido_retorna_400() throws Exception {
-        cadastrar("Dono Teste", "isto-nao-e-email", SENHA)
+        cadastrar("Dono Teste", "isto-nao-e-email")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value("Informe um e-mail válido."));
     }
 
     @Test
     void cadastro_sem_nome_retorna_400() throws Exception {
-        cadastrar("   ", "dono@exemplo.com", SENHA)
+        cadastrar("   ", "dono@exemplo.com")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value("Informe o nome."));
     }
 
     @Test
     void cadastro_com_nome_maior_que_120_retorna_400() throws Exception {
-        cadastrar("n".repeat(121), "dono@exemplo.com", SENHA)
+        cadastrar("n".repeat(121), "dono@exemplo.com")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value("O nome deve ter até 120 caracteres."));
     }
@@ -161,7 +140,7 @@ class AuthControllerTest extends IntegracaoTest {
     void cadastro_so_aceita_application_json() throws Exception {
         mvc.perform(post("/api/auth/cadastro")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("nome", "Dono Teste").param("email", "dono@exemplo.com").param("senha", SENHA))
+                .param("nome", "Dono Teste").param("email", "dono@exemplo.com"))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.erro").isNotEmpty());
     }

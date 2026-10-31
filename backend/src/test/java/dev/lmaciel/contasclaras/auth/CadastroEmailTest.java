@@ -70,8 +70,7 @@ class CadastroEmailTest extends IntegracaoTest {
     }
 
     private ResultActions pedir(String email) throws Exception {
-        return json("/api/auth/cadastro",
-                "{\"nome\":\"Ana Teste\",\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, SENHA));
+        return json("/api/auth/cadastro", "{\"nome\":\"Ana Teste\",\"email\":\"%s\"}".formatted(email));
     }
 
     private ResultActions reenviar(String email) throws Exception {
@@ -79,11 +78,24 @@ class CadastroEmailTest extends IntegracaoTest {
     }
 
     private ResultActions confirmarComCodigo(String email, String codigo) throws Exception {
-        return json("/api/auth/cadastro/confirmar", "{\"email\":\"%s\",\"codigo\":\"%s\"}".formatted(email, codigo));
+        return confirmarComCodigo(email, codigo, SENHA);
+    }
+
+    private ResultActions confirmarComCodigo(String email, String codigo, String senha) throws Exception {
+        return json("/api/auth/cadastro/confirmar",
+                "{\"email\":\"%s\",\"codigo\":\"%s\",\"senha\":\"%s\"}".formatted(email, codigo, senha));
     }
 
     private ResultActions confirmarComToken(String token) throws Exception {
-        return json("/api/auth/cadastro/confirmar", "{\"token\":\"%s\"}".formatted(token));
+        return confirmarComToken(token, SENHA);
+    }
+
+    private ResultActions confirmarComToken(String token, String senha) throws Exception {
+        return json("/api/auth/cadastro/confirmar", "{\"token\":\"%s\",\"senha\":\"%s\"}".formatted(token, senha));
+    }
+
+    private ResultActions login(String email, String senha) throws Exception {
+        return json("/api/auth/login", "{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, senha));
     }
 
     private MensagemEmail ultimoEmail() {
@@ -132,15 +144,28 @@ class CadastroEmailTest extends IntegracaoTest {
         assertThat(email.para()).isEqualTo(EMAIL);
         assertThat(email.texto()).contains("/confirmar?token=");
         assertThat(codigoDoUltimoEmail()).matches("\\d{6}");
-        // o banco guarda só HMAC do código, hash do token e BCrypt da senha
+        // o banco guarda só o HMAC do código e o hash do token
         var linha = jdbc.queryForMap("select * from codigo_email");
         assertThat(linha.get("tipo")).isEqualTo("CADASTRO");
         assertThat(linha.get("email")).isEqualTo(EMAIL);
         assertThat(linha.get("nome")).isEqualTo("Ana Teste");
-        assertThat((String) linha.get("senha_hash")).startsWith("$2");
         assertThat(linha.toString()).doesNotContain(codigoDoUltimoEmail()).doesNotContain(tokenDoUltimoEmail());
         assertThat(((Timestamp) linha.get("criado_em")).toInstant()).isEqualTo(clock.instant());
         assertThat(((Timestamp) linha.get("expira_em")).toInstant()).isEqualTo(clock.instant().plusSeconds(900));
+    }
+
+    @Test
+    void pendencia_nao_guarda_senha() throws Exception {
+        // mesmo que o cliente mande "senha" no pedido, nada dela chega ao banco
+        json("/api/auth/cadastro",
+                "{\"nome\":\"Ana Teste\",\"email\":\"%s\",\"senha\":\"%s\"}".formatted(EMAIL, SENHA))
+                .andExpect(status().isAccepted());
+
+        List<String> colunas = jdbc.queryForList(
+                "select column_name from information_schema.columns where table_name = 'codigo_email'", String.class);
+        assertThat(colunas).isNotEmpty().doesNotContain("senha_hash");
+        assertThat(jdbc.queryForMap("select * from codigo_email").toString())
+                .doesNotContain(SENHA).doesNotContain("$2");
     }
 
     @Test
@@ -187,9 +212,32 @@ class CadastroEmailTest extends IntegracaoTest {
         assertThat(contar("usuario")).isEqualTo(1);
         assertThat(contar("categoria")).isEqualTo(11);
         assertThat(contar("codigo_email")).isZero();
-        // a senha escolhida no pedido é a que vale no login
-        json("/api/auth/login", "{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(EMAIL, SENHA))
-                .andExpect(status().isOk());
+    }
+
+    @Test
+    void confirmar_define_a_senha_escolhida_e_ela_entra() throws Exception {
+        pedir(EMAIL).andExpect(status().isAccepted());
+
+        confirmarComCodigo(EMAIL, codigoDoUltimoEmail(), SENHA).andExpect(status().isCreated());
+
+        login(EMAIL, SENHA).andExpect(status().isOk());
+        login(EMAIL, "outra-senha-qualquer").andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void terceiro_nao_consegue_definir_a_senha_da_conta() throws Exception {
+        pedir(EMAIL).andExpect(status().isAccepted());
+        passarSegundos(61);
+        // o terceiro repete o pedido tentando impor a senha dele; o código novo vai só para o e-mail da vítima
+        json("/api/auth/cadastro",
+                "{\"nome\":\"Ana Teste\",\"email\":\"%s\",\"senha\":\"senha-do-atacante-1\"}".formatted(EMAIL))
+                .andExpect(status().isAccepted());
+        assertThat(emailFalso.enviadas()).hasSize(2);
+
+        confirmarComCodigo(EMAIL, codigoDoUltimoEmail(), SENHA).andExpect(status().isCreated());
+
+        login(EMAIL, SENHA).andExpect(status().isOk());
+        login(EMAIL, "senha-do-atacante-1").andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -203,6 +251,50 @@ class CadastroEmailTest extends IntegracaoTest {
 
         assertThat(contar("usuario")).isEqualTo(1);
         assertThat(contar("codigo_email")).isZero();
+    }
+
+    @Test
+    void confirmar_com_token_exige_senha() throws Exception {
+        pedir(EMAIL).andExpect(status().isAccepted());
+        String token = tokenDoUltimoEmail();
+
+        json("/api/auth/cadastro/confirmar", "{\"token\":\"%s\"}".formatted(token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Informe a senha."))
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+        json("/api/auth/cadastro/confirmar", "{\"email\":\"%s\",\"codigo\":\"%s\"}"
+                .formatted(EMAIL, codigoDoUltimoEmail()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Informe a senha."));
+
+        assertThat(contar("usuario")).isZero();
+        assertThat(contar("codigo_email")).isEqualTo(1);
+        // a pendência segue de pé: com a senha, o mesmo link confirma
+        confirmarComToken(token).andExpect(status().isCreated());
+        login(EMAIL, SENHA).andExpect(status().isOk());
+    }
+
+    @Test
+    void senha_fora_do_tamanho_na_confirmacao_responde_400_sem_consumir_tentativa() throws Exception {
+        pedir(EMAIL).andExpect(status().isAccepted());
+        String codigo = codigoDoUltimoEmail();
+        String token = tokenDoUltimoEmail();
+        String errado = codigo.equals("000000") ? "000001" : "000000";
+        String msg = "A senha deve ter entre 8 e 72 caracteres.";
+
+        // curta, longa e acima de 72 bytes (60 caracteres de 2 bytes); código certo, errado e token
+        for (String senha : new String[] { "1234567", "a".repeat(73), "é".repeat(60) }) {
+            confirmarComCodigo(EMAIL, codigo, senha).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.erro").value(msg));
+            confirmarComCodigo(EMAIL, errado, senha).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.erro").value(msg));
+            confirmarComToken(token, senha).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.erro").value(msg));
+        }
+
+        assertThat(jdbc.queryForObject("select tentativas from codigo_email", Integer.class)).isZero();
+        assertThat(contar("usuario")).isZero();
+        confirmarComCodigo(EMAIL, codigo, SENHA).andExpect(status().isCreated());
     }
 
     @Test
@@ -265,14 +357,15 @@ class CadastroEmailTest extends IntegracaoTest {
 
     @Test
     void confirmar_sem_codigo_nem_token_responde_400() throws Exception {
-        json("/api/auth/cadastro/confirmar", "{\"email\":\"" + EMAIL + "\"}")
+        json("/api/auth/cadastro/confirmar", "{\"email\":\"" + EMAIL + "\",\"senha\":\"" + SENHA + "\"}")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value(INVALIDO));
         json("/api/auth/cadastro/confirmar", "{}").andExpect(status().isBadRequest());
-        json("/api/auth/cadastro/confirmar", "{\"email\":\"" + EMAIL + "\",\"codigo\":\"12ab56\"}")
+        json("/api/auth/cadastro/confirmar",
+                "{\"email\":\"" + EMAIL + "\",\"codigo\":\"12ab56\",\"senha\":\"" + SENHA + "\"}")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value(INVALIDO));
-        json("/api/auth/cadastro/confirmar", "{\"token\":\"" + "t".repeat(65) + "\"}")
+        json("/api/auth/cadastro/confirmar", "{\"token\":\"" + "t".repeat(65) + "\",\"senha\":\"" + SENHA + "\"}")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value(INVALIDO));
     }
@@ -361,11 +454,10 @@ class CadastroEmailTest extends IntegracaoTest {
     // ---- reenvio e limites -------------------------------------------------------------
 
     @Test
-    void reenvio_com_pendencia_troca_codigo_e_link_e_mantem_nome_e_senha() throws Exception {
+    void reenvio_com_pendencia_troca_codigo_e_link_e_mantem_nome() throws Exception {
         pedir(EMAIL).andExpect(status().isAccepted());
         String codigoAntigo = codigoDoUltimoEmail();
         String tokenAntigo = tokenDoUltimoEmail();
-        String hashAntes = jdbc.queryForObject("select senha_hash from codigo_email", String.class);
         passarSegundos(61);
 
         reenviar(EMAIL).andExpect(status().isAccepted()).andExpect(content().string(""));
@@ -375,7 +467,6 @@ class CadastroEmailTest extends IntegracaoTest {
         String tokenNovo = tokenDoUltimoEmail();
         assertThat(tokenNovo).isNotEqualTo(tokenAntigo);
         assertThat(jdbc.queryForObject("select nome from codigo_email", String.class)).isEqualTo("Ana Teste");
-        assertThat(jdbc.queryForObject("select senha_hash from codigo_email", String.class)).isEqualTo(hashAntes);
         assertThat(jdbc.queryForObject("select tentativas from codigo_email", Integer.class)).isZero();
 
         // o link antigo e (salvo sorteio igual) o código antigo deixam de valer

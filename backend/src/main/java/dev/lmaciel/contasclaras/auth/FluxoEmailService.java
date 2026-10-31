@@ -60,12 +60,12 @@ public class FluxoEmailService {
     // ---- cadastro ----------------------------------------------------------------------
 
     /**
-     * Pede o cadastro: com ou sem conta, gasta o BCrypt, respeita os limites e envia exatamente um e-mail (código
-     * e link, ou o aviso de que já existe conta). Dentro dos 60 s do último envio, responde sem enviar.
+     * Pede o cadastro: respeita os limites e envia exatamente um e-mail (código e link, ou o aviso de que já
+     * existe conta). Dentro dos 60 s do último envio, responde sem enviar. Não recebe senha nem gera BCrypt: a
+     * senha só é definida na confirmação, depois da prova de posse do e-mail.
      */
-    public void pedirCadastro(String nome, String email, String senha, String ip) {
+    public void pedirCadastro(String nome, String email, String ip) {
         String emailNormalizado = Emails.normalizar(email);
-        String hash = auth.hashDaSenha(senha);
         Optional<Long> reserva = limite.reservar(emailNormalizado, ip);
         if (reserva.isEmpty()) {
             return;
@@ -80,7 +80,7 @@ public class FluxoEmailService {
                             .ifPresent(codigoRepo::delete);
                     return false;
                 }
-                gravar(TipoCodigo.CADASTRO, emailNormalizado, nome.trim(), hash, codigo, token);
+                gravar(TipoCodigo.CADASTRO, emailNormalizado, nome.trim(), codigo, token);
                 return true;
             });
             return Boolean.TRUE.equals(semConta)
@@ -90,7 +90,7 @@ public class FluxoEmailService {
     }
 
     /**
-     * Gera código e link novos para o cadastro pendente, mantendo nome e senha. Sem pendência, ou dentro dos 60 s,
+     * Gera código e link novos para o cadastro pendente, mantendo o nome. Sem pendência, ou dentro dos 60 s,
      * não faz nada: quem chama responde {@code 202} do mesmo jeito. Sem pendência não reserva envio, porque o
      * limite conta só e-mail enviado.
      */
@@ -114,7 +114,7 @@ public class FluxoEmailService {
             String nome = tx.execute(status -> {
                 apagarVencidos();
                 return codigoRepo.buscarParaConferir(TipoCodigo.CADASTRO, emailNormalizado).map(c -> {
-                    gravar(TipoCodigo.CADASTRO, emailNormalizado, c.getNome(), c.getSenhaHash(), codigo, token);
+                    gravar(TipoCodigo.CADASTRO, emailNormalizado, c.getNome(), codigo, token);
                     return c.getNome();
                 }).orElse(null);
             });
@@ -123,27 +123,34 @@ public class FluxoEmailService {
         });
     }
 
-    /** Confirma o cadastro pelo código de 6 dígitos e cria a conta. */
-    public Usuario confirmarCadastro(String email, String codigo) {
+    /**
+     * Confirma o cadastro pelo código de 6 dígitos, define a senha e cria a conta. Como em
+     * {@link #redefinirSenha}, o tamanho da senha é validado (sem gastar tentativa) e o BCrypt roda antes da
+     * transação, para não segurar conexão nem lock durante o hash.
+     */
+    public Usuario confirmarCadastro(String email, String codigo, String senha) {
         String emailNormalizado = Emails.normalizar(email);
+        String hashDaSenha = auth.hashDaSenha(senha);
         String esperado = codigos.hmacCodigo(TipoCodigo.CADASTRO, emailNormalizado, codigo);
-        return confirmar(() -> codigoRepo.buscarParaConferir(TipoCodigo.CADASTRO, emailNormalizado), esperado);
+        return confirmar(() -> codigoRepo.buscarParaConferir(TipoCodigo.CADASTRO, emailNormalizado), esperado,
+                hashDaSenha);
     }
 
-    /** Confirma o cadastro pelo token do link e cria a conta. */
-    public Usuario confirmarCadastroPorToken(String token) {
+    /** Confirma o cadastro pelo token do link, define a senha e cria a conta. Mesma ordem de {@link #confirmarCadastro}. */
+    public Usuario confirmarCadastroPorToken(String token, String senha) {
+        String hashDaSenha = auth.hashDaSenha(senha);
         String hash = codigos.hashToken(token);
         // O hash do token já identifica a linha: achá-la é acertar, então não há código a comparar nem tentativa a contar.
         return confirmar(() -> codigoRepo.buscarPorTokenParaConferir(hash)
-                .filter(c -> c.getTipo() == TipoCodigo.CADASTRO), null);
+                .filter(c -> c.getTipo() == TipoCodigo.CADASTRO), null, hashDaSenha);
     }
 
     /**
      * Confere a linha e cria a conta numa transação só. A transação devolve o resultado e a exceção {@code 400} sai
      * depois do commit, senão o incremento de tentativas sofreria rollback. {@code hmacEsperado} nulo significa
-     * que a linha já foi achada pelo token.
+     * que a linha já foi achada pelo token. {@code hashDaSenha} já vem pronto, gerado fora da transação.
      */
-    private Usuario confirmar(Supplier<Optional<CodigoEmail>> busca, String hmacEsperado) {
+    private Usuario confirmar(Supplier<Optional<CodigoEmail>> busca, String hmacEsperado, String hashDaSenha) {
         AtomicReference<Long> idDaLinha = new AtomicReference<>();
         Resultado resultado;
         try {
@@ -163,7 +170,7 @@ public class FluxoEmailService {
                     codigoRepo.delete(c);
                     return Resultado.RECUSADO;
                 }
-                Usuario usuario = auth.criarUsuario(c.getNome(), c.getEmail(), c.getSenhaHash(), null);
+                Usuario usuario = auth.criarUsuario(c.getNome(), c.getEmail(), hashDaSenha, null);
                 codigoRepo.delete(c);
                 return new Resultado(usuario);
             });
@@ -200,7 +207,7 @@ public class FluxoEmailService {
                 if (!usuarios.existsByEmail(emailNormalizado)) {
                     return false;
                 }
-                gravar(TipoCodigo.SENHA, emailNormalizado, null, null, codigo, null);
+                gravar(TipoCodigo.SENHA, emailNormalizado, null, codigo, null);
                 return true;
             });
             return Boolean.TRUE.equals(comConta)
@@ -265,15 +272,15 @@ public class FluxoEmailService {
      * Cria ou substitui a linha do tipo e e-mail, com o prazo de 15 min contado do {@code Clock}. Lê com lock: se
      * {@code confirmar} apagar a linha no intervalo, ele espera e a gravação vira um insert, sem erro.
      */
-    private void gravar(TipoCodigo tipo, String email, String nome, String senhaHash, String codigo, String token) {
+    private void gravar(TipoCodigo tipo, String email, String nome, String codigo, String token) {
         Instant agora = clock.instant();
         String codigoHmac = codigos.hmacCodigo(tipo, email, codigo);
         String tokenHash = token == null ? null : codigos.hashToken(token);
         CodigoEmail existente = codigoRepo.buscarParaConferir(tipo, email).orElse(null);
         if (existente != null) {
-            existente.substituir(nome, senhaHash, codigoHmac, tokenHash, agora, agora.plus(VALIDADE));
+            existente.substituir(nome, codigoHmac, tokenHash, agora, agora.plus(VALIDADE));
         } else {
-            codigoRepo.saveAndFlush(new CodigoEmail(tipo, email, nome, senhaHash, codigoHmac, tokenHash, agora,
+            codigoRepo.saveAndFlush(new CodigoEmail(tipo, email, nome, codigoHmac, tokenHash, agora,
                     agora.plus(VALIDADE)));
         }
     }

@@ -40,7 +40,7 @@ class FluxoEmailGravarTest {
         when(usuarios.existsByEmail(EMAIL)).thenReturn(true);
         when(codigos.gerarCodigo()).thenReturn("123456");
         when(codigos.hmacCodigo(TipoCodigo.SENHA, EMAIL, "123456")).thenReturn("hmac");
-        CodigoEmail existente = new CodigoEmail(TipoCodigo.SENHA, EMAIL, null, null, "antigo", null,
+        CodigoEmail existente = new CodigoEmail(TipoCodigo.SENHA, EMAIL, null, "antigo", null,
                 clock.instant(), clock.instant().plusSeconds(900));
         when(codigoRepo.buscarParaConferir(TipoCodigo.SENHA, EMAIL)).thenReturn(Optional.of(existente));
         FluxoEmailService fluxo = new FluxoEmailService(codigoRepo, usuarios, codigos, limite, mock(AuthService.class),
