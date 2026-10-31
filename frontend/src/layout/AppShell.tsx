@@ -5,6 +5,7 @@ import { Logo } from './Logo'
 import { PaletaContext } from './paleta'
 import { PaletaNavegacao } from './PaletaNavegacao'
 import { Sidebar } from './Sidebar'
+import { travarRolagem } from './travaRolagem'
 import { useEhDesktop } from './useEhDesktop'
 
 interface Props {
@@ -28,6 +29,8 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const [paletaAberta, setPaletaAberta] = useState(false)
   const botao = useRef<HTMLButtonElement>(null)
   const painel = useRef<HTMLDivElement>(null)
+  const principal = useRef<HTMLElement>(null)
+  const painelEstavaAberto = useRef(false)
   const idPainel = useId()
 
   const painelAberto = aberto && !ehDesktop
@@ -47,8 +50,7 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
       return
     }
     painel.current?.querySelector<HTMLElement>(FOCAVEIS)?.focus()
-    const overflowAnterior = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const soltarRolagem = travarRolagem()
     const fecharComEsc = (evento: globalThis.KeyboardEvent) => {
       if (evento.key === 'Escape') {
         fechar()
@@ -56,10 +58,18 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
     }
     document.addEventListener('keydown', fecharComEsc)
     return () => {
-      document.body.style.overflow = overflowAnterior
+      soltarRolagem()
       document.removeEventListener('keydown', fecharComEsc)
     }
   }, [painelAberto, fechar])
+
+  // Painel aberto que some porque a tela virou desktop: o foco (que estava nele) iria para o body; leva ao conteúdo.
+  useEffect(() => {
+    if (painelEstavaAberto.current && !painelAberto && ehDesktop) {
+      principal.current?.focus()
+    }
+    painelEstavaAberto.current = painelAberto
+  }, [painelAberto, ehDesktop])
 
   // Atalho global da paleta "Ir para…". Com o painel do menu aberto (celular) só bloqueia o atalho do navegador.
   useEffect(() => {
@@ -100,59 +110,57 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
     }
   }
 
-  if (ehDesktop) {
-    return (
-      <PaletaContext value={paleta}>
-        <div className="min-h-dvh bg-[var(--cor-fundo)]">
-          <AvisoServidor />
-          <div className="grid min-h-dvh grid-cols-[240px_1fr]">
-            <aside className="sticky top-0 flex h-dvh flex-col gap-3 overflow-y-auto border-r border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-4">
-              <div className="px-1">
-                <Logo />
-              </div>
-              <div className="min-h-0 flex-1">
-                <Sidebar nomeUsuario={nomeUsuario} aoSair={aoSair} />
-              </div>
-            </aside>
-            <main className="mx-auto w-full max-w-6xl min-w-0 px-6 py-5">
-              <Outlet />
-            </main>
-          </div>
-          <PaletaNavegacao aberta={paletaAberta} aoFechar={fecharPaleta} />
-        </div>
-      </PaletaContext>
-    )
-  }
+  const barraSuperior = (
+    <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-2">
+      <button
+        ref={botao}
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded={painelAberto}
+        aria-controls={painelAberto ? idPainel : undefined}
+        onClick={() => setAberto(true)}
+        className={botaoIcone}
+      >
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <Logo />
+    </header>
+  )
 
+  const sidebarFixa = (
+    <aside className="sticky top-0 flex h-dvh flex-col gap-3 overflow-y-auto border-r border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-4">
+      <div className="px-1">
+        <Logo />
+      </div>
+      <div className="min-h-0 flex-1">
+        <Sidebar nomeUsuario={nomeUsuario} aoSair={aoSair} />
+      </div>
+    </aside>
+  )
+
+  // O `<main>` (e a página dentro dele) fica sempre na mesma posição da árvore: só a sidebar fixa ou a barra do topo
+  // trocam, então cruzar 1280 px não remonta a rota nem perde o que foi digitado.
   return (
     <PaletaContext value={paleta}>
       <div className="min-h-dvh bg-[var(--cor-fundo)]">
         <AvisoServidor />
-        <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-2">
-          <button
-            ref={botao}
-            type="button"
-            aria-label="Abrir menu"
-            aria-expanded={painelAberto}
-            aria-controls={idPainel}
-            onClick={() => setAberto(true)}
-            className={botaoIcone}
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <Logo />
-        </header>
+        <div className={ehDesktop ? 'grid min-h-dvh grid-cols-[240px_1fr]' : undefined}>
+          {ehDesktop ? sidebarFixa : barraSuperior}
+          <main ref={principal} tabIndex={-1} className="mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6">
+            <Outlet />
+          </main>
+        </div>
 
         {painelAberto && (
           <div className="fixed inset-0 z-40">
@@ -195,9 +203,6 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
           </div>
         )}
 
-        <main className="mx-auto max-w-6xl px-4 py-5 md:px-6">
-          <Outlet />
-        </main>
         <PaletaNavegacao aberta={paletaAberta} aoFechar={fecharPaleta} />
       </div>
     </PaletaContext>

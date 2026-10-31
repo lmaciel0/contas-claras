@@ -24,6 +24,7 @@ function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn()) {
     <Routes>
       <Route element={<AppShell nomeUsuario="Ana" aoSair={aoSair} />}>
         <Route path="/" element={<p>Conteúdo do Início</p>} />
+        <Route path="/formulario" element={<input aria-label="Descrição" />} />
         <Route path="/lancamentos" element={<p>Conteúdo dos Lançamentos</p>} />
         <Route path="/cartoes" element={<p>Conteúdo dos Cartões</p>} />
         <Route path="/categorias" element={<p>Conteúdo das Categorias</p>} />
@@ -54,7 +55,7 @@ describe('AppShell abaixo de 1280 px', () => {
     const botao = screen.getByRole('button', { name: 'Abrir menu' })
 
     expect(botao).toHaveAttribute('aria-expanded', 'false')
-    expect(botao).toHaveAttribute('aria-controls')
+    expect(botao).not.toHaveAttribute('aria-controls')
     expect(botao).toHaveClass('min-h-11', 'min-w-11')
     expect(screen.queryByRole('navigation', { name: 'Menu principal' })).not.toBeInTheDocument()
   })
@@ -68,6 +69,7 @@ describe('AppShell abaixo de 1280 px', () => {
 
     expect(botao).toHaveAttribute('aria-expanded', 'true')
     const painel = screen.getByRole('dialog', { name: 'Menu' })
+    expect(botao).toHaveAttribute('aria-controls', painel.id)
     expect(within(painel).getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
     expect(painel.contains(document.activeElement)).toBe(true)
 
@@ -139,6 +141,60 @@ describe('AppShell abaixo de 1280 px', () => {
     act(() => definirLargura(1279))
 
     expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
+  })
+})
+
+describe('troca de layout ao cruzar 1280 px', () => {
+  it('o foco vai para o main quando o painel aberto some por redimensionamento', async () => {
+    definirLargura(1279)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    act(() => definirLargura(1280))
+
+    expect(screen.getByRole('main')).toHaveFocus()
+  })
+
+  it('o foco não é roubado quando o painel fecha pelo teclado', async () => {
+    definirLargura(1279)
+    renderizar()
+    const botao = screen.getByRole('button', { name: 'Abrir menu' })
+    await userEvent.click(botao)
+    await userEvent.keyboard('{Escape}')
+
+    expect(botao).toHaveFocus()
+    expect(screen.getByRole('main')).not.toHaveFocus()
+  })
+
+  it('a página não remonta: o que foi digitado sobrevive ao cruzar o breakpoint nos dois sentidos', async () => {
+    definirLargura(1440)
+    renderizar('/formulario?ano=2026&mes=10')
+    const campo = screen.getByRole('textbox', { name: 'Descrição' })
+    await userEvent.type(campo, 'Mercado')
+
+    act(() => definirLargura(390))
+    expect(screen.getByRole('textbox', { name: 'Descrição' })).toBe(campo)
+    expect(campo).toHaveValue('Mercado')
+
+    act(() => definirLargura(1440))
+    expect(screen.getByRole('textbox', { name: 'Descrição' })).toBe(campo)
+    expect(campo).toHaveValue('Mercado')
+  })
+})
+
+describe('trava de rolagem', () => {
+  afterEach(() => {
+    document.body.style.overflow = ''
+  })
+
+  it('abrir o menu trava o body e fechar restaura', async () => {
+    definirLargura(390)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+    expect(document.body.style.overflow).toBe('hidden')
+
+    await userEvent.keyboard('{Escape}')
+    expect(document.body.style.overflow).toBe('')
   })
 })
 

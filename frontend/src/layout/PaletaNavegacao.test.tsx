@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route, Routes, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -105,6 +105,44 @@ describe('PaletaNavegacao', () => {
     await user.keyboard('{ArrowDown}{ArrowDown}{Enter}')
     expect(paleta()).not.toBeInTheDocument()
     expect(screen.getByTestId('local')).toHaveTextContent('/financeiro?ano=2026&mes=7')
+  })
+
+  it('com o foco em "Fechar", Enter fecha e não navega; setas não mexem na opção ativa', async () => {
+    const user = userEvent.setup()
+    renderizar('/lancamentos?ano=2026&mes=10')
+    await user.keyboard('{Control>}k{/Control}')
+    const [primeira] = screen.getAllByRole('option')
+    const fechar = screen.getByRole('button', { name: 'Fechar' })
+    fechar.focus()
+
+    await user.keyboard('{ArrowDown}')
+    expect(primeira).toHaveAttribute('aria-selected', 'true')
+
+    await user.keyboard('{Enter}')
+    expect(paleta()).not.toBeInTheDocument()
+    expect(screen.getByTestId('local')).toHaveTextContent('/lancamentos?ano=2026&mes=10')
+  })
+
+  it('Enter durante composição (IME) não navega', async () => {
+    const user = userEvent.setup()
+    renderizar('/lancamentos?ano=2026&mes=10')
+    await user.keyboard('{Control>}k{/Control}')
+    await user.keyboard('cart')
+
+    fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Enter', isComposing: true })
+
+    expect(paleta()).toBeInTheDocument()
+    expect(screen.getByTestId('local')).toHaveTextContent('/lancamentos?ano=2026&mes=10')
+  })
+
+  it('trava a rolagem do body enquanto aberta e restaura ao fechar', async () => {
+    const user = userEvent.setup()
+    renderizar()
+    await user.keyboard('{Control>}k{/Control}')
+    expect(document.body.style.overflow).toBe('hidden')
+
+    await user.keyboard('{Escape}')
+    expect(document.body.style.overflow).toBe('')
   })
 
   it('página sem mês navega sem query string', async () => {

@@ -3,6 +3,8 @@
  * sem o `.theme__fill` (overlay de tela cheia). Tudo em em: o tamanho vem do `font-size` de `.theme`
  * (15 px dá trilho de 45 px de altura, acima do mínimo de 44 px de toque).
  * Cores só por tokens, então funciona nos dois temas: bolinha e ícone usam o par principal/sobre-principal.
+ * Contraste não textual (WCAG 1.4.11, 3:1): o anel (principal) delimita o controle sobre o fundo e a bolinha
+ * (principal) destaca-se do trilho (linha) nos dois temas.
  */
 .theme {
   --theme-duracao: 0.3s;
@@ -30,7 +32,7 @@
   height: 2.5em;
   border-radius: 25% / 50%;
   background-color: var(--cor-linha);
-  box-shadow: 0 0 0 0.125em var(--cor-principal-clara);
+  box-shadow: 0 0 0 0.125em var(--cor-principal);
   outline: 2px solid transparent;
   outline-offset: 0.25em;
   cursor: pointer;
@@ -120,10 +122,6 @@
 }
 
 /* Marcado (tema escuro): bolinha e ícone deslizam 3em, o disco vira crescente e os raios se recolhem. */
-.theme__toggle:checked {
-  background-color: var(--cor-principal-clara);
-}
-
 .theme__toggle:checked::before,
 .theme__toggle:checked ~ .theme__icon {
   transform: translateX(3em);

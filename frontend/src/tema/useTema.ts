@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CONSULTA_ESCURO, gravarTema, lerTemaSalvo, temaDoSistema, type Tema } from './tema'
+import { aplicarTema, CONSULTA_ESCURO, gravarTema, lerTemaSalvo, temaDoSistema, type Tema } from './tema'
 
 /**
  * Tema da interface. A escolha salva vence o sistema; sem escolha, acompanha o sistema em tempo real.
- * Aplica o resultado em `<html data-tema>`, que é o que o CSS lê.
+ * Aplica o resultado em `<html data-tema>` (o que o CSS lê) e na cor da barra do navegador.
  */
 export function useTema(): { tema: Tema; alternar: () => void } {
   const [escolha, setEscolha] = useState<Tema | null>(lerTemaSalvo)
@@ -19,7 +19,7 @@ export function useTema(): { tema: Tema; alternar: () => void } {
   }, [escolha])
 
   useEffect(() => {
-    document.documentElement.dataset.tema = tema
+    aplicarTema(tema)
   }, [tema])
 
   const alternar = useCallback(() => {

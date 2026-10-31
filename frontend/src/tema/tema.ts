@@ -28,3 +28,12 @@ export function temaDoSistema(): Tema {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 'claro'
   return window.matchMedia(CONSULTA_ESCURO).matches ? 'escuro' : 'claro'
 }
+
+/** Cor da barra do navegador (`<meta name="theme-color">`) em cada tema: o roxo da marca e o `--cor-fundo` escuro. */
+export const COR_BARRA: Record<Tema, string> = { claro: '#27187E', escuro: '#0f0b2b' }
+
+/** Aplica o tema em `<html data-tema>` e na cor da barra do navegador, respeitando a escolha explícita. */
+export function aplicarTema(tema: Tema): void {
+  document.documentElement.dataset.tema = tema
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', COR_BARRA[tema])
+}

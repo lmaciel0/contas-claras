@@ -83,6 +83,19 @@ describe('useTema', () => {
     expect(localStorage.getItem(CHAVE_TEMA)).toBe('claro')
   })
 
+  it('a cor da barra do navegador acompanha o tema escolhido', () => {
+    instalarMatchMedia(false)
+    document.head.innerHTML = '<meta name="theme-color" content="#27187E" />'
+    const { result } = renderHook(() => useTema())
+    const cor = () => document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.content
+    expect(cor()).toBe('#27187E')
+    act(() => result.current.alternar())
+    expect(cor()).toBe('#0f0b2b')
+    act(() => result.current.alternar())
+    expect(cor()).toBe('#27187E')
+    document.head.innerHTML = ''
+  })
+
   it('valor inválido salvo é ignorado', () => {
     instalarMatchMedia(true)
     localStorage.setItem(CHAVE_TEMA, 'roxo')

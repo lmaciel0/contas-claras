@@ -117,3 +117,52 @@ describe('cores fixas', () => {
     }
   })
 })
+
+describe('botão de tema: contraste não textual (WCAG 1.4.11, 3:1)', () => {
+  const botao = readFileSync(resolve(process.cwd(), 'src/tema/botao-tema.css'), 'utf8')
+  const lum = (h: string): number => {
+    const [r, g, b] = [1, 3, 5].map((i) => {
+      const c = parseInt(h.slice(i, i + 2), 16) / 255
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    }) as [number, number, number]
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  const ratio = (a: string, b: string): number => {
+    const [mx, mn] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]
+    return (mx + 0.05) / (mn + 0.05)
+  }
+  const tokens = (bloco: string) => (nome: string): string => {
+    const valor = new RegExp(`--${nome}:\\s*(#[0-9a-fA-F]{3,6})\\s*;`).exec(bloco)?.[1]
+    if (!valor) throw new Error(`token --${nome} ausente`)
+    return valor.length === 4 ? '#' + [...valor.slice(1)].map((c) => c + c).join('') : valor
+  }
+  const claro = tokens(/:root\s*\{([^}]*)\}/.exec(css)?.[1] ?? '')
+  const escuro = tokens(/:root\[data-tema='escuro'\]\s*\{([^}]*)\}/.exec(css)?.[1] ?? '')
+
+  /** Token usado por uma propriedade dentro de um seletor exato de botao-tema.css. */
+  const usado = (seletor: string, propriedade: string): string => {
+    const bloco = new RegExp(`${seletor.replace(/[.:()]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(botao)?.[1] ?? ''
+    const achado = new RegExp(`${propriedade}:[^;]*var\\(--([a-z-]+)\\)`).exec(bloco)?.[1]
+    if (!achado) throw new Error(`${seletor} ${propriedade} sem token`)
+    return achado
+  }
+
+  it.each([
+    ['claro', claro],
+    ['escuro', escuro],
+  ])('no tema %s o anel, o trilho e a bolinha passam de 3:1', (_nome, t) => {
+    const anel = t(usado('.theme__toggle', 'box-shadow'))
+    const trilho = t(usado('.theme__toggle', 'background-color'))
+    const bolinha = t(usado('.theme__toggle::before', 'background-color'))
+    for (const fundo of ['cor-card', 'cor-fundo']) {
+      expect(ratio(anel, t(fundo)), `anel sobre ${fundo}`).toBeGreaterThanOrEqual(3)
+    }
+    expect(ratio(bolinha, trilho), 'bolinha sobre trilho').toBeGreaterThanOrEqual(3)
+  })
+
+  it('marcado (escuro): a bolinha continua com 3:1 sobre o trilho marcado', () => {
+    const bloco = /\.theme__toggle:checked\s*\{([^}]*)\}/.exec(botao)?.[1] ?? ''
+    const marcado = /background-color:\s*var\(--([a-z-]+)\)/.exec(bloco)?.[1] ?? usado('.theme__toggle', 'background-color')
+    expect(ratio(escuro(usado('.theme__toggle::before', 'background-color')), escuro(marcado))).toBeGreaterThanOrEqual(3)
+  })
+})

@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 
 import { useNavigate } from 'react-router'
 import { GRUPOS_MENU } from './itensMenu'
 import { normalizar } from './paleta'
+import { travarRolagem } from './travaRolagem'
 import { useMesSelecionado } from './useMesSelecionado'
 
 interface Props {
@@ -37,10 +38,9 @@ export function PaletaNavegacao({ aberta, aoFechar }: Props) {
     }
     const anterior = document.activeElement instanceof HTMLElement ? document.activeElement : null
     campo.current?.focus()
-    const overflowAnterior = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const soltarRolagem = travarRolagem()
     return () => {
-      document.body.style.overflow = overflowAnterior
+      soltarRolagem()
       setConsulta('')
       setAtivo(0)
       if (anterior?.isConnected) {
@@ -67,6 +67,8 @@ export function PaletaNavegacao({ aberta, aoFechar }: Props) {
 
   const aoTeclar = (evento: KeyboardEvent<HTMLDivElement>) => {
     const total = resultados.length
+    // Setas e Enter valem só no campo de busca; em "Fechar" (ou outro botão) o Enter faz o que o botão faz.
+    const noCampo = evento.target === campo.current
     switch (evento.key) {
       case 'Escape':
         evento.preventDefault()
@@ -74,18 +76,22 @@ export function PaletaNavegacao({ aberta, aoFechar }: Props) {
         aoFechar()
         break
       case 'ArrowDown':
+        if (!noCampo) break
         evento.preventDefault()
         if (total > 0) {
           setAtivo((indiceAtivo + 1) % total)
         }
         break
       case 'ArrowUp':
+        if (!noCampo) break
         evento.preventDefault()
         if (total > 0) {
           setAtivo((indiceAtivo - 1 + total) % total)
         }
         break
       case 'Enter':
+        // Enter que confirma uma composição (IME) não é "ir".
+        if (!noCampo || evento.nativeEvent.isComposing) break
         evento.preventDefault()
         ir(indiceAtivo)
         break
