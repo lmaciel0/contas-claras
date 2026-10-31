@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { Outlet } from 'react-router'
 import { AvisoServidor } from './AvisoServidor'
+import { HeaderPrincipal } from './HeaderPrincipal'
 import { Logo } from './Logo'
 import { PaletaContext } from './paleta'
 import { PaletaNavegacao } from './PaletaNavegacao'
@@ -157,9 +158,18 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
         <AvisoServidor />
         <div className={ehDesktop ? 'grid min-h-dvh grid-cols-[240px_1fr]' : undefined}>
           {ehDesktop ? sidebarFixa : barraSuperior}
-          <main ref={principal} tabIndex={-1} className="mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6">
-            <Outlet />
-          </main>
+          <div className="flex min-w-0 flex-1 flex-col">
+            {ehDesktop && (
+              <HeaderPrincipal
+                nomeUsuario={nomeUsuario}
+                aoSair={aoSair}
+                onAbrirBusca={paleta.abrir}
+              />
+            )}
+            <main ref={principal} tabIndex={-1} className="mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6">
+              <Outlet />
+            </main>
+          </div>
         </div>
 
         {painelAberto && (
