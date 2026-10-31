@@ -30,9 +30,9 @@ export function NotaFixada() {
   const queryClient = useQueryClient()
   const consulta = useNotaFixada()
   const categorias = useCategoriasNota()
-  const salvar = useSalvarConteudoNota()
-  const [avisoErro, setAvisoErro] = useState(false)
   const pendente = useRef<Pendente | null>(null)
+  const salvar = useSalvarConteudoNota(() => pendente.current !== null)
+  const [avisoErro, setAvisoErro] = useState(false)
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const gravar = useCallback(() => {
@@ -81,7 +81,11 @@ export function NotaFixada() {
     setAvisoErro(false)
     const anterior = pendente.current?.anterior ?? queryClient.getQueryData<NotaFixadaResponse>(CHAVE)
     pendente.current = { id: nota.id, conteudo: novo, anterior }
-    queryClient.setQueryData<NotaFixadaResponse>(CHAVE, { nota: { ...nota, conteudo: novo } })
+    // Uma releitura em voo não pode sobrescrever a marcação otimista: cancela antes de gravar no cache.
+    void queryClient.cancelQueries({ queryKey: CHAVE }).then(() => {
+      const atual = queryClient.getQueryData<NotaFixadaResponse>(CHAVE)?.nota ?? nota
+      queryClient.setQueryData<NotaFixadaResponse>(CHAVE, { nota: { ...atual, conteudo: pendente.current?.conteudo ?? novo } })
+    })
     if (temporizador.current !== null) clearTimeout(temporizador.current)
     temporizador.current = setTimeout(() => gravarRef.current(), ATRASO_GRAVACAO_MS)
   }

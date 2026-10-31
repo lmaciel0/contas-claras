@@ -19,6 +19,7 @@ interface Valor {
   categoriaId: number | null
 }
 
+const TITULO_PADRAO = 'Sem título'
 const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
 const botao = `inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-[var(--cor-linha)] px-4 text-sm font-semibold transition-colors duration-200 motion-reduce:transition-none ${foco}`
 
@@ -30,19 +31,30 @@ export function EdicaoNota({ nota, categorias, aoExcluir, excluindo }: Props) {
   const fixar = useFixarNota()
   const tituloVazio = valor.titulo.trim() === ''
 
-  const { estado, descarregar } = useAutosave<Valor>({
+  const { estado, descarregar, cancelar } = useAutosave<Valor>({
     valor,
-    // Título vazio rejeita: a nota segue "pendente" e a próxima alteração tenta de novo.
+    // Durante a edição, título vazio rejeita (a próxima alteração tenta de novo); ao sair, grava "Sem título" para
+    // não perder o conteúdo.
     salvar: async (v) => {
       if (v.titulo.trim() === '') throw new Error('Informe um título.')
       await salvarNota.mutateAsync({ id: nota.id, ...v, titulo: v.titulo.trim() })
     },
+    salvarAoSair: async (v) => {
+      await salvarNota.mutateAsync({ id: nota.id, ...v, titulo: v.titulo.trim() || TITULO_PADRAO })
+    },
     aoSair: (v) => {
-      if (v.titulo.trim() === '') return
-      endpoints.notas.editar(nota.id, { ...v, titulo: v.titulo.trim() }, { keepalive: true }).catch(() => undefined)
+      endpoints.notas
+        .editar(nota.id, { ...v, titulo: v.titulo.trim() || TITULO_PADRAO }, { keepalive: true })
+        .catch(() => undefined)
     },
   })
   useEffect(() => () => void descarregar(), [descarregar])
+
+  // Excluir descarta a edição pendente (sem gravar) para nenhum PUT concorrer com o DELETE.
+  function confirmarExclusao() {
+    cancelar()
+    aoExcluir()
+  }
 
   const fixada = fixar.isPending ? !nota.fixada : nota.fixada
   let indicador = 'Salvo'
@@ -93,7 +105,7 @@ export function EdicaoNota({ nota, categorias, aoExcluir, excluindo }: Props) {
         </button>
         {confirmando ? (
           <span role="group" aria-label="Confirmar exclusão" className="inline-flex items-center gap-1">
-            <button type="button" disabled={excluindo} onClick={aoExcluir} className={`${botao} border-transparent bg-[var(--cor-negativo)] text-[var(--cor-sobre-negativo)] disabled:opacity-60`}>
+            <button type="button" disabled={excluindo} onClick={confirmarExclusao} className={`${botao} border-transparent bg-[var(--cor-negativo)] text-[var(--cor-sobre-negativo)] disabled:opacity-60`}>
               Sim, excluir
             </button>
             <button type="button" onClick={() => setConfirmando(false)} className={`${botao} border-transparent`}>

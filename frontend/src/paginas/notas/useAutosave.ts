@@ -5,6 +5,8 @@ export type EstadoAutosave = 'salvo' | 'pendente' | 'salvando' | 'erro'
 interface Opcoes<T> {
   valor: T
   salvar: (valor: T) => Promise<unknown>
+  /** Gravação final (desmontagem/descarga); se faltar, vale `salvar`. Ali é melhor gravar algo do que perder a edição. */
+  salvarAoSair?: (valor: T) => Promise<unknown>
   atrasoMs?: number
   aoSair?: (valor: T) => void
 }
@@ -13,11 +15,12 @@ interface Opcoes<T> {
  * Salva `valor` um tempo depois da última mudança. O primeiro valor é o estado já salvo. Só há uma gravação por vez:
  * se o valor muda durante uma gravação, sai exatamente uma gravação depois, com o valor mais recente.
  */
-export function useAutosave<T>({ valor, salvar, atrasoMs = 1000, aoSair }: Opcoes<T>) {
+export function useAutosave<T>({ valor, salvar, salvarAoSair, atrasoMs = 1000, aoSair }: Opcoes<T>) {
   const [estado, setEstado] = useState<EstadoAutosave>('salvo')
   const valorRef = useRef(valor)
   const ultimoSalvoRef = useRef(valor)
   const salvarRef = useRef(salvar)
+  const salvarAoSairRef = useRef(salvarAoSair)
   const aoSairRef = useRef(aoSair)
   const relogio = useRef<ReturnType<typeof setTimeout> | null>(null)
   const emAndamento = useRef<Promise<void> | null>(null)
@@ -25,6 +28,7 @@ export function useAutosave<T>({ valor, salvar, atrasoMs = 1000, aoSair }: Opcoe
 
   useEffect(() => {
     salvarRef.current = salvar
+    salvarAoSairRef.current = salvarAoSair
     aoSairRef.current = aoSair
   })
 
@@ -33,7 +37,7 @@ export function useAutosave<T>({ valor, salvar, atrasoMs = 1000, aoSair }: Opcoe
     relogio.current = null
   }
 
-  const gravar = useCallback(async (): Promise<void> => {
+  const gravar = useCallback(async (saindo = false): Promise<void> => {
     limparRelogio()
     if (emAndamento.current) return emAndamento.current
     if (!pendente.current) return
@@ -42,7 +46,7 @@ export function useAutosave<T>({ valor, salvar, atrasoMs = 1000, aoSair }: Opcoe
     setEstado('salvando')
     const tarefa = (async () => {
       try {
-        await salvarRef.current(enviado)
+        await (saindo ? (salvarAoSairRef.current ?? salvarRef.current) : salvarRef.current)(enviado)
         ultimoSalvoRef.current = enviado
         setEstado(pendente.current ? 'pendente' : 'salvo')
       } catch {
@@ -77,7 +81,13 @@ export function useAutosave<T>({ valor, salvar, atrasoMs = 1000, aoSair }: Opcoe
     if (estado === 'pendente' && !relogio.current) agendar()
   }, [estado, agendar])
 
-  const descarregar = useCallback(() => gravar(), [gravar])
+  const descarregar = useCallback(() => gravar(true), [gravar])
+
+  /** Descarta o que espera para ser gravado, sem enviar (ex.: a nota vai ser excluída). */
+  const cancelar = useCallback(() => {
+    limparRelogio()
+    pendente.current = false
+  }, [])
 
   useEffect(() => {
     const sair = () => {
@@ -93,10 +103,10 @@ export function useAutosave<T>({ valor, salvar, atrasoMs = 1000, aoSair }: Opcoe
       document.removeEventListener('visibilitychange', aoOcultar)
       limparRelogio()
       const andamento = emAndamento.current
-      if (andamento) void andamento.then(() => (pendente.current ? gravar() : undefined))
-      else if (pendente.current) void gravar()
+      if (andamento) void andamento.then(() => (pendente.current ? gravar(true) : undefined))
+      else if (pendente.current) void gravar(true)
     }
   }, [gravar])
 
-  return { estado, descarregar }
+  return { estado, descarregar, cancelar }
 }

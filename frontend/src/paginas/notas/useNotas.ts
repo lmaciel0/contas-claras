@@ -71,14 +71,30 @@ export function useFixarNota() {
   })
 }
 
-/** Marcar item de checklist fora do editor (card do Início): a nota aberta, se houver em cache, fica velha. */
-export function useSalvarConteudoNota() {
+export const CHAVE_SALVAR_CONTEUDO = ['salvar-conteudo-nota']
+
+/**
+ * Marcar item de checklist fora do editor (card do Início): a nota aberta, se houver em cache, fica velha. `adiarFixada`
+ * diz se ainda há marcação a caminho; nesse caso a releitura da nota fixada espera, para não trazer do servidor um
+ * conteúdo sem as marcações pendentes (a gravação que fechar o lote relê).
+ */
+export function useSalvarConteudoNota(adiarFixada?: () => boolean) {
   const queryClient = useQueryClient()
   return useMutation({
+    mutationKey: CHAVE_SALVAR_CONTEUDO,
     mutationFn: ({ id, conteudo }: { id: number; conteudo: ConteudoNota }) =>
       endpoints.notas.salvarConteudo(id, conteudo),
-    onSuccess: (_nota, { id }) =>
-      Promise.all([invalidarNotas(queryClient), queryClient.invalidateQueries({ queryKey: ['nota', id] })]),
+    onSuccess: (_nota, { id }) => {
+      const emVoo = queryClient.isMutating({ mutationKey: CHAVE_SALVAR_CONTEUDO }) > 1
+      if (emVoo || adiarFixada?.()) {
+        return Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['notas'] }),
+          queryClient.invalidateQueries({ queryKey: ['categorias-nota'] }),
+          queryClient.invalidateQueries({ queryKey: ['nota', id] }),
+        ])
+      }
+      return Promise.all([invalidarNotas(queryClient), queryClient.invalidateQueries({ queryKey: ['nota', id] })])
+    },
   })
 }
 
