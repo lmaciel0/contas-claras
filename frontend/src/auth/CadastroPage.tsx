@@ -1,25 +1,21 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, Navigate } from 'react-router'
-import { BotaoGoogle } from './BotaoGoogle'
 import { CampoTexto, classeBotaoPrimario, MensagemDeErro } from './CampoTexto'
 import { mensagemDoErro } from './mensagemDoErro'
 import { MENSAGEM_SENHA_FORA_DO_TAMANHO, senhaValida } from './senha'
-import { TelaAuth, TelaCarregando } from './TelaAuth'
+import { TelaAuth } from './TelaAuth'
 import { useAuth } from './useAuth'
 
 /** `/cadastro`. A API cria a conta já com sessão (cookie), então depois do sucesso a pessoa vai direto ao Início. */
 export function CadastroPage() {
-  const { usuario, carregando, cadastrar } = useAuth()
+  const { usuario, cadastrar } = useAuth()
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
-  if (carregando) {
-    return <TelaCarregando />
-  }
   if (usuario !== null) {
     return <Navigate to="/" replace />
   }
@@ -75,15 +71,12 @@ export function CadastroPage() {
           {enviando ? 'Criando…' : 'Criar conta'}
         </button>
       </form>
-      <div className="mt-4 flex flex-col gap-4">
-        <BotaoGoogle aoErro={setErro} />
-        <p className="m-0 text-center text-sm">
-          Já tem conta?{' '}
-          <Link to="/login" className="font-semibold text-[var(--cor-principal)]">
-            Entrar
-          </Link>
-        </p>
-      </div>
+      <p className="m-0 mt-5 text-center text-sm">
+        Já tem conta?{' '}
+        <Link to="/login" className="font-semibold text-[var(--cor-principal)]">
+          Entrar
+        </Link>
+      </p>
     </TelaAuth>
   )
 }

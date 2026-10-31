@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Route, Routes } from 'react-router'
 import { CadastroPage } from './auth/CadastroPage'
 import { DefinirSenhaPage } from './auth/DefinirSenhaPage'
+import { LayoutAuth } from './auth/LayoutAuth'
 import { LoginPage } from './auth/LoginPage'
 import { RotaProtegida } from './auth/RotaProtegida'
 import { useAuth } from './auth/useAuth'
@@ -72,8 +73,10 @@ function MolduraDoUsuario() {
 export function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/cadastro" element={<CadastroPage />} />
+      <Route element={<LayoutAuth />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/cadastro" element={<CadastroPage />} />
+      </Route>
       <Route element={<RotaProtegida />}>
         <Route element={<MolduraDoUsuario />}>
           <Route path="/" element={<InicioPage />} />

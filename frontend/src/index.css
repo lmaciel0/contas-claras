@@ -53,3 +53,93 @@ body {
     color: var(--cor-negativo-texto);
   }
 }
+
+/*
+ * Telas de auth (`LayoutAuth`). Ficam fora de `@layer` de propósito: CSS sem camada vence as utilities do Tailwind
+ * (que vivem em `@layer utilities`), então estas regras trocam o visual de `CampoTexto` e dos botões sem mexer neles.
+ * Rótulos seguem visíveis, nenhum texto fica abaixo de 12 px e os campos mantêm 16 px (no iOS menos que isso dá zoom).
+ */
+.auth-card {
+  border-radius: 40px;
+  padding: 25px 35px;
+  border: 5px solid #fff;
+  background: linear-gradient(0deg, #fff 0%, rgb(244 247 251) 100%);
+  box-shadow: rgb(39 24 126 / 25%) 0 30px 30px -20px;
+}
+
+.auth-card h1 {
+  margin: 0 0 20px;
+  text-align: center;
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--cor-principal);
+}
+
+.auth-card input {
+  border: 0;
+  border-inline: 2px solid transparent;
+  border-radius: 20px;
+  padding: 15px 20px;
+  box-shadow: rgb(39 24 126 / 12%) 0 10px 10px -5px;
+}
+
+.auth-card input:focus {
+  border-inline-color: var(--cor-principal);
+}
+
+.auth-card button[type='submit'] {
+  background: linear-gradient(45deg, var(--cor-principal) 0%, #4a36c4 100%);
+  border-radius: 20px;
+  padding-block: 15px;
+  transition: transform 0.2s ease;
+}
+
+.auth-card button[type='submit']:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
+.auth-card button[type='submit']:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Troca de tela: deslize de 24 px com fade. `entra-direita` vem da direita (avançar); `entra-esquerda`, da esquerda. */
+@keyframes auth-desliza-da-direita {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes auth-desliza-da-esquerda {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.auth-entra-direita {
+  animation: auth-desliza-da-direita 300ms ease-out;
+}
+
+.auth-entra-esquerda {
+  animation: auth-desliza-da-esquerda 300ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-entra-direita,
+  .auth-entra-esquerda {
+    animation: none;
+  }
+
+  .auth-card button[type='submit'] {
+    transition: none;
+  }
+}
