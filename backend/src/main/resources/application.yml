@@ -5,6 +5,11 @@ spring:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
+    hikari:
+      # O session pooler do Supabase aceita 15 conexões no total. Com várias instâncias da API
+      # no ar, cada uma abre no máximo 2 e nenhuma segura conexão ociosa.
+      maximum-pool-size: 2
+      minimum-idle: 0
   jpa:
     hibernate:
       ddl-auto: validate
