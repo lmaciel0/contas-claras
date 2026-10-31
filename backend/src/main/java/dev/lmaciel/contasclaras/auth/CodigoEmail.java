@@ -1,0 +1,110 @@
+package dev.lmaciel.contasclaras.auth;
+
+import java.time.Instant;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+/**
+ * Código de uso único enviado por e-mail (confirmar cadastro ou redefinir senha). Guarda só o HMAC do código
+ * e o hash do token do link, nunca os valores em claro. Há no máximo uma linha por tipo e e-mail.
+ * {@code nome}, {@code senhaHash} e {@code tokenHash} só existem no tipo {@link TipoCodigo#CADASTRO}.
+ */
+@Entity
+@Table(name = "codigo_email")
+public class CodigoEmail {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private TipoCodigo tipo;
+
+    @Column(nullable = false, length = 254)
+    private String email;
+
+    @Column(length = 120)
+    private String nome;
+
+    @Column(name = "senha_hash", length = 100)
+    private String senhaHash;
+
+    @Column(name = "codigo_hmac", nullable = false, length = 64)
+    private String codigoHmac;
+
+    @Column(name = "token_hash", length = 64)
+    private String tokenHash;
+
+    @Column(nullable = false)
+    private int tentativas;
+
+    @Column(name = "expira_em", nullable = false)
+    private Instant expiraEm;
+
+    /** Vem do {@code Clock} injetado, não do {@code default now()} do banco, para os testes com relógio fixo. */
+    @Column(name = "criado_em", nullable = false)
+    private Instant criadoEm;
+
+    protected CodigoEmail() {
+    }
+
+    public CodigoEmail(TipoCodigo tipo, String email, String nome, String senhaHash, String codigoHmac,
+            String tokenHash, Instant criadoEm, Instant expiraEm) {
+        this.tipo = tipo;
+        this.email = email;
+        this.nome = nome;
+        this.senhaHash = senhaHash;
+        this.codigoHmac = codigoHmac;
+        this.tokenHash = tokenHash;
+        this.criadoEm = criadoEm;
+        this.expiraEm = expiraEm;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public TipoCodigo getTipo() {
+        return tipo;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public String getSenhaHash() {
+        return senhaHash;
+    }
+
+    public String getCodigoHmac() {
+        return codigoHmac;
+    }
+
+    public String getTokenHash() {
+        return tokenHash;
+    }
+
+    public int getTentativas() {
+        return tentativas;
+    }
+
+    public Instant getExpiraEm() {
+        return expiraEm;
+    }
+
+    public Instant getCriadoEm() {
+        return criadoEm;
+    }
+}

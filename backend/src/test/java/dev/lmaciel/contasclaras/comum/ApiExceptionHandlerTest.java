@@ -62,6 +62,11 @@ class ApiExceptionHandlerTest {
         void parametro(@RequestParam @Size(min = 3, message = "Informe ao menos 3 letras") String q) {
         }
 
+        @GetMapping("/sonda/email-indisponivel")
+        void emailIndisponivel() {
+            throw new EmailIndisponivelException();
+        }
+
         @GetMapping("/sonda/erro")
         void erro() {
             throw new IllegalStateException("detalhe interno que não pode vazar");
@@ -82,6 +87,13 @@ class ApiExceptionHandlerTest {
         mvc.perform(get("/sonda/nao-encontrado"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.erro").value("Não encontrado."));
+    }
+
+    @Test
+    void email_indisponivel_responde_503_com_a_mensagem_exata() throws Exception {
+        mvc.perform(get("/sonda/email-indisponivel"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.erro").value("Não foi possível enviar o e-mail. Tente de novo."));
     }
 
     @Test

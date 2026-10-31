@@ -18,6 +18,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import dev.lmaciel.contasclaras.auth.EnvioEmailFalso;
+
 import jakarta.servlet.http.Cookie;
 
 /**
@@ -25,7 +27,7 @@ import jakarta.servlet.http.Cookie;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@Import(RelogioFixoConfig.class)
+@Import({ RelogioFixoConfig.class, EnvioEmailFalso.class })
 @TestPropertySource(properties = {
         "app.jwt.secret=" + IntegracaoTest.JWT_SECRET_TESTE,
         "app.allowed-emails=" + IntegracaoTest.EMAILS_LIBERADOS_TESTE,

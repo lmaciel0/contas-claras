@@ -10,12 +10,27 @@ spring:
       # no ar, cada uma abre no máximo 2 e nenhuma segura conexão ociosa.
       maximum-pool-size: 2
       minimum-idle: 0
+  mail:
+    # Gmail com senha de app. Sem MAIL_USERNAME o envio fica desligado e a API responde 503.
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      "[mail.smtp.auth]": true
+      "[mail.smtp.starttls.enable]": true
+      "[mail.smtp.starttls.required]": true
+      "[mail.smtp.connectiontimeout]": 10000
+      "[mail.smtp.timeout]": 10000
+      "[mail.smtp.writetimeout]": 10000
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
 
 app:
+  # Endereço público do front-end, usado nos links dos e-mails.
+  url: ${APP_URL:http://localhost:5173}
   jwt:
     # Segredo HS256, no mínimo 32 bytes. Sempre vem do ambiente; não há valor padrão de propósito.
     secret: ${JWT_SECRET}
