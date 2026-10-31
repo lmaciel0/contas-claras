@@ -25,10 +25,12 @@ const tarefasVazias: TarefasResponse = {
 
 /**
  * Servidor MSW compartilhado pelos testes; cada teste registra seus handlers com `servidor.use(...)`.
- * Handlers de base: `GET /api/resumo` e `GET /api/tarefas` vazios, porque a tela inicial (`/`) os consulta sempre que
+ * Handlers de base: `GET /api/resumo`, `GET /api/tarefas`, `GET /api/notas/fixada` (sem nota) e `GET /api/categorias-nota` vazios, porque a tela inicial (`/`) os consulta sempre que
  * um teste de autenticação termina nela. Teste que olha o resumo registra o próprio handler, que tem prioridade.
  */
 export const servidor = setupServer(
   http.get('/api/resumo', () => HttpResponse.json(resumoVazio)),
   http.get('/api/tarefas', () => HttpResponse.json(tarefasVazias)),
+  http.get('/api/notas/fixada', () => HttpResponse.json({ nota: null })),
+  http.get('/api/categorias-nota', () => HttpResponse.json([])),
 )
