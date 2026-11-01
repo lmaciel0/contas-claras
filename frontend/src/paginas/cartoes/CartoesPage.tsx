@@ -3,6 +3,7 @@ import { useId, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { endpoints } from '../../api/endpoints'
+import type { CartaoResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { Carregando } from '../../componentes/Carregando'
 import { formatarMoeda } from '../../formato/moeda'
@@ -26,6 +27,130 @@ function CardResumo({ titulo, valor }: CardResumoProps) {
       </h2>
       <p className="valor m-0 mt-1 text-lg font-bold tracking-tight md:text-[26px]">{valor}</p>
     </section>
+  )
+}
+
+function calcularTotaisTitular(
+  cartoes: CartaoResponse[],
+  titularFiltro: string,
+  totalPadrao: { totalFaturas: string; limiteTotal: string; usoGeral: string | null }
+) {
+  if (titularFiltro === 'todos') {
+    return totalPadrao
+  }
+
+  const somaFaturas = cartoes.reduce(
+    (acc, c) => acc + (Number.parseFloat(c.fatura) || 0),
+    0
+  )
+  const cartoesComLimite = cartoes.filter((c) => c.limite !== null)
+  const somaLimites = cartoesComLimite.reduce(
+    (acc, c) => acc + (Number.parseFloat(c.limite!) || 0),
+    0
+  )
+  const somaFaturasComLimite = cartoesComLimite.reduce(
+    (acc, c) => acc + (Number.parseFloat(c.fatura) || 0),
+    0
+  )
+
+  return {
+    totalFaturas: somaFaturas.toFixed(2),
+    limiteTotal: somaLimites.toFixed(2),
+    usoGeral: somaLimites > 0 ? (somaFaturasComLimite / somaLimites).toFixed(4) : null,
+  }
+}
+
+interface FiltroTitularesProps {
+  titulares: string[]
+  cartoes: CartaoResponse[]
+  titularFiltro: string
+  aoSelecionar: (titular: string) => void
+}
+
+function FiltroTitulares({ titulares, cartoes, titularFiltro, aoSelecionar }: FiltroTitularesProps) {
+  if (titulares.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={() => aoSelecionar('todos')}
+        className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
+          titularFiltro === 'todos'
+            ? 'bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)]'
+            : 'border border-[var(--cor-linha)] bg-[var(--cor-card)] text-[var(--cor-mutado)] hover:border-[var(--cor-principal)] hover:text-[var(--cor-texto)]'
+        }`}
+      >
+        Todos ({cartoes.length})
+      </button>
+      {titulares.map((titular) => {
+        const count = cartoes.filter(
+          (c) => (c.titular?.trim().toLowerCase() ?? '') === titular.toLowerCase()
+        ).length
+        const ativo = titularFiltro.toLowerCase() === titular.toLowerCase()
+        return (
+          <button
+            key={titular}
+            type="button"
+            onClick={() => aoSelecionar(titular)}
+            className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
+              ativo
+                ? 'bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)]'
+                : 'border border-[var(--cor-linha)] bg-[var(--cor-card)] text-[var(--cor-mutado)] hover:border-[var(--cor-principal)] hover:text-[var(--cor-texto)]'
+            }`}
+          >
+            {titular} ({count})
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+interface ListaCartoesProps {
+  totalCartoes: number
+  cartoesExibidos: CartaoResponse[]
+  titularFiltro: string
+  aoCriarCartao: () => void
+}
+
+function ListaCartoes({ totalCartoes, cartoesExibidos, titularFiltro, aoCriarCartao }: ListaCartoesProps) {
+  if (totalCartoes === 0) {
+    return (
+      <div className="card flex flex-col items-start gap-3 text-sm text-[var(--cor-mutado)]">
+        <p className="m-0">
+          Nenhum cartão cadastrado. Você pode cadastrar um cartão diretamente por aqui ou marcando um item existente em{' '}
+          <Link to="/categorias" className="font-semibold text-[var(--cor-principal)]">
+            Categorias
+          </Link>.
+        </p>
+        <button
+          type="button"
+          onClick={aoCriarCartao}
+          className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-[var(--cor-principal)] px-4 text-sm font-semibold text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+        >
+          + Cadastrar primeiro cartão
+        </button>
+      </div>
+    )
+  }
+
+  if (cartoesExibidos.length === 0) {
+    return (
+      <div className="card text-sm text-[var(--cor-mutado)]">
+        <p className="m-0">Nenhum cartão encontrado para o titular {titularFiltro}.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="item-entra grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 md:gap-3.5">
+      {cartoesExibidos.map((cartao) => (
+        <CardCartao key={cartao.itemId} cartao={cartao} />
+      ))}
+    </div>
   )
 }
 
@@ -89,7 +214,7 @@ export function CartoesPage() {
           .map((c) => c.titular?.trim())
           .filter((t): t is string => Boolean(t))
       )
-    ).sort()
+    ).sort((a, b) => a.localeCompare(b))
 
     const cartoesExibidos =
       titularFiltro === 'todos'
@@ -98,105 +223,40 @@ export function CartoesPage() {
             (c) => (c.titular?.trim().toLowerCase() ?? '') === titularFiltro.toLowerCase()
           )
 
-    let totalFaturasExibido = totalFaturas
-    let limiteTotalExibido = limiteTotal
-    let usoGeralExibido = usoGeral
-
-    if (titularFiltro !== 'todos') {
-      const somaFaturas = cartoesExibidos.reduce(
-        (acc, c) => acc + (parseFloat(c.fatura) || 0),
-        0
-      )
-      const somaLimites = cartoesExibidos
-        .filter((c) => c.limite !== null)
-        .reduce((acc, c) => acc + (parseFloat(c.limite!) || 0), 0)
-      const somaFaturasComLimite = cartoesExibidos
-        .filter((c) => c.limite !== null)
-        .reduce((acc, c) => acc + (parseFloat(c.fatura) || 0), 0)
-
-      totalFaturasExibido = somaFaturas.toFixed(2)
-      limiteTotalExibido = somaLimites.toFixed(2)
-      usoGeralExibido =
-        somaLimites > 0 ? (somaFaturasComLimite / somaLimites).toFixed(4) : null
-    }
-
-    const filtroTitulares = titularesPresentes.length > 0 && (
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setTitularFiltro('todos')}
-          className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
-            titularFiltro === 'todos'
-              ? 'bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)]'
-              : 'border border-[var(--cor-linha)] bg-[var(--cor-card)] text-[var(--cor-mutado)] hover:border-[var(--cor-principal)] hover:text-[var(--cor-texto)]'
-          }`}
-        >
-          Todos ({cartoes.length})
-        </button>
-        {titularesPresentes.map((titular) => {
-          const count = cartoes.filter(
-            (c) => (c.titular?.trim().toLowerCase() ?? '') === titular.toLowerCase()
-          ).length
-          const ativo = titularFiltro.toLowerCase() === titular.toLowerCase()
-          return (
-            <button
-              key={titular}
-              type="button"
-              onClick={() => setTitularFiltro(titular)}
-              className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
-                ativo
-                  ? 'bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)]'
-                  : 'border border-[var(--cor-linha)] bg-[var(--cor-card)] text-[var(--cor-mutado)] hover:border-[var(--cor-principal)] hover:text-[var(--cor-texto)]'
-              }`}
-            >
-              {titular} ({count})
-            </button>
-          )
-        })}
-      </div>
-    )
+    const totais = calcularTotaisTitular(cartoesExibidos, titularFiltro, {
+      totalFaturas,
+      limiteTotal,
+      usoGeral,
+    })
 
     conteudo = (
       <>
-        {filtroTitulares}
+        <FiltroTitulares
+          titulares={titularesPresentes}
+          cartoes={cartoes}
+          titularFiltro={titularFiltro}
+          aoSelecionar={setTitularFiltro}
+        />
         <div className="mb-3.5 grid gap-2.5 sm:grid-cols-3 md:gap-3.5">
           <CardResumo
             titulo={titularFiltro === 'todos' ? 'Faturas do mês' : `Faturas de ${titularFiltro}`}
-            valor={formatarMoeda(totalFaturasExibido)}
+            valor={formatarMoeda(totais.totalFaturas)}
           />
           <CardResumo
             titulo={titularFiltro === 'todos' ? 'Limite total' : `Limite de ${titularFiltro}`}
-            valor={formatarMoeda(limiteTotalExibido)}
+            valor={formatarMoeda(totais.limiteTotal)}
           />
-          <CardResumo titulo="Uso geral" valor={usoGeralExibido === null ? '—' : formatarPercentual(usoGeralExibido)} />
+          <CardResumo
+            titulo="Uso geral"
+            valor={totais.usoGeral === null ? '—' : formatarPercentual(totais.usoGeral)}
+          />
         </div>
-        {cartoes.length === 0 ? (
-          <div className="card flex flex-col items-start gap-3 text-sm text-[var(--cor-mutado)]">
-            <p className="m-0">
-              Nenhum cartão cadastrado. Você pode cadastrar um cartão diretamente por aqui ou marcando um item existente em{' '}
-              <Link to="/categorias" className="font-semibold text-[var(--cor-principal)]">
-                Categorias
-              </Link>.
-            </p>
-            <button
-              type="button"
-              onClick={() => setCriandoCartao(true)}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-[var(--cor-principal)] px-4 text-sm font-semibold text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
-            >
-              + Cadastrar primeiro cartão
-            </button>
-          </div>
-        ) : cartoesExibidos.length === 0 ? (
-          <div className="card text-sm text-[var(--cor-mutado)]">
-            <p className="m-0">Nenhum cartão encontrado para o titular {titularFiltro}.</p>
-          </div>
-        ) : (
-          <div className="item-entra grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 md:gap-3.5">
-            {cartoesExibidos.map((cartao) => (
-              <CardCartao key={cartao.itemId} cartao={cartao} />
-            ))}
-          </div>
-        )}
+        <ListaCartoes
+          totalCartoes={cartoes.length}
+          cartoesExibidos={cartoesExibidos}
+          titularFiltro={titularFiltro}
+          aoCriarCartao={() => setCriandoCartao(true)}
+        />
         <p className="mx-1 mt-2.5 mb-0 text-xs text-[var(--cor-mutado)]">
           O limite do banco também desconta parcelas futuras, que o app não conhece.
         </p>
