@@ -2,7 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { ErroApi } from '../../api/cliente'
 import { endpoints } from '../../api/endpoints'
-import { Carregando } from '../../componentes/Carregando'
+import { Esqueleto } from '../../componentes/Esqueleto'
 import { mesAnterior, mesAtual, nomeMes } from '../../formato/mes'
 import { CardSobra } from '../inicio/CardSobra'
 import { CardsTotais } from '../inicio/CardsTotais'
@@ -39,7 +39,30 @@ export function FinancasDoMes() {
         </Link>
       </div>
 
-      {consulta.isPending && <Carregando texto="Carregando as finanças…" />}
+      {consulta.isPending && (
+        <div
+          role="status"
+          className="grid gap-2.5 md:grid-cols-35 md:gap-3.5"
+          aria-busy="true"
+          aria-label="Carregando as finanças…"
+        >
+          <span className="sr-only">Carregando as finanças…</span>
+          <div aria-hidden="true" className="card flex flex-col justify-between p-4 min-h-[140px]">
+            <Esqueleto className="h-4 w-28" />
+            <Esqueleto className="h-8 w-36" />
+            <Esqueleto className="h-3 w-24" />
+          </div>
+          <div aria-hidden="true" className="card flex flex-col justify-between p-4 min-h-[140px]">
+            <Esqueleto className="h-4 w-28" />
+            <Esqueleto className="h-8 w-36" />
+            <Esqueleto className="h-3 w-24" />
+          </div>
+          <div aria-hidden="true" className="card flex flex-col gap-3 p-4 min-h-[140px]">
+            <Esqueleto className="h-4 w-32" />
+            <Esqueleto linhas={2} />
+          </div>
+        </div>
+      )}
 
       {consulta.isError && (
         <div role="alert" className="flex flex-wrap items-center gap-3 text-sm">

@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { ErroApi } from '../../api/cliente'
 import { endpoints } from '../../api/endpoints'
-import { Carregando } from '../../componentes/Carregando'
+import { Esqueleto } from '../../componentes/Esqueleto'
 import { mesAnterior, nomeMes } from '../../formato/mes'
 import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
@@ -39,7 +39,32 @@ export function InicioPage() {
     return (
       <>
         {titulo}
-        <Carregando texto="Carregando o resumo…" />
+        <div
+          role="status"
+          className="grid gap-2.5 md:grid-cols-35 md:gap-3.5"
+          aria-busy="true"
+          aria-label="Carregando o resumo…"
+        >
+          <span className="sr-only">Carregando o resumo…</span>
+          <div aria-hidden="true" className="card flex flex-col justify-between p-4 min-h-[140px]">
+            <Esqueleto className="h-4 w-28" />
+            <Esqueleto className="h-8 w-36" />
+            <Esqueleto className="h-3 w-24" />
+          </div>
+          <div aria-hidden="true" className="card flex flex-col justify-between p-4 min-h-[140px]">
+            <Esqueleto className="h-4 w-28" />
+            <Esqueleto className="h-8 w-36" />
+            <Esqueleto className="h-3 w-24" />
+          </div>
+          <div aria-hidden="true" className="card flex flex-col gap-3 p-4 min-h-[140px]">
+            <Esqueleto className="h-4 w-32" />
+            <Esqueleto linhas={2} />
+          </div>
+          <div aria-hidden="true" className="card flex flex-col gap-3 p-4 min-h-[140px]">
+            <Esqueleto className="h-4 w-32" />
+            <Esqueleto linhas={2} />
+          </div>
+        </div>
       </>
     )
   }

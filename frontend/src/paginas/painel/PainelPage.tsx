@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useAuth } from '../../auth/useAuth'
-import { usePaleta } from '../../layout/paleta'
 import { CardReflexao } from './CardReflexao'
 import { FinancasDoMes } from './FinancasDoMes'
 import { TarefasDeHoje } from './TarefasDeHoje'
@@ -12,7 +11,6 @@ export function PainelPage() {
   // Fixa a hora da primeira renderização: a saudação não muda sozinha no meio do uso.
   const [agora] = useState(() => new Date())
   const nome = primeiroNome(usuario?.nome)
-  const { abrir } = usePaleta()
 
   return (
     <div className="flex flex-col gap-5">
@@ -27,20 +25,6 @@ export function PainelPage() {
         </h1>
         <p className="m-0 mt-1.5 text-[13px] text-[var(--cor-mutado)]">{dataPorExtenso(agora)}</p>
       </header>
-      <button
-        type="button"
-        onClick={abrir}
-        aria-keyshortcuts="Control+K Meta+K"
-        className="flex min-h-11 w-full max-w-sm cursor-pointer items-center justify-between gap-3 rounded-xl border border-[var(--cor-linha)] bg-[var(--cor-card)] px-3.5 text-left text-sm text-[var(--cor-texto)] hover:border-[var(--cor-principal)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
-      >
-        <span>Ir para…</span>
-        <kbd
-          aria-hidden="true"
-          className="hidden rounded-md bg-[var(--cor-fundo)] px-1.5 py-0.5 font-sans text-[11px] text-[var(--cor-texto)] sm:inline"
-        >
-          Ctrl K
-        </kbd>
-      </button>
       <div className="item-entra" style={{ '--i': 1 } as React.CSSProperties}>
         <CardReflexao />
       </div>

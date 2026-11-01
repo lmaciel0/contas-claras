@@ -83,10 +83,7 @@ export function HeaderPrincipal({
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-          <span className="flex-1 text-left">Search…</span>
-          <kbd className="hidden rounded-md border border-[var(--cor-linha)] bg-[var(--cor-card)] px-1.5 py-0.5 text-xs font-semibold text-[var(--cor-mutado)] sm:inline-block">
-            Ctrl+K
-          </kbd>
+          <span className="flex-1 text-left">Buscar…</span>
         </button>
       </div>
 

@@ -465,3 +465,26 @@ textarea {
   }
 }
 
+/* Efeito shimmer para esqueletos de carregamento */
+@keyframes esqueleto-pulso {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.esqueleto-shimmer {
+  background-color: var(--cor-linha);
+  animation: esqueleto-pulso 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-shimmer {
+    animation: none;
+    opacity: 0.45;
+  }
+}
+

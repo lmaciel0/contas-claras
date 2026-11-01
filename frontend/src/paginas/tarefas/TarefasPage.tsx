@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import type { TarefaResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
-import { Carregando } from '../../componentes/Carregando'
+import { Esqueleto } from '../../componentes/Esqueleto'
 import { TarefaLinha } from './TarefaLinha'
 import { useConcluirTarefa, useCriarTarefa, useEditarTarefa, useExcluirTarefa, useTarefas } from './useTarefas'
 
@@ -288,7 +288,20 @@ export function TarefasPage() {
 
   let conteudo: ReactNode
   if (consulta.isPending) {
-    conteudo = <Carregando texto="Carregando as tarefas…" />
+    conteudo = (
+      <div className="flex flex-col gap-3" role="status" aria-label="Carregando as tarefas…" aria-busy="true">
+        <span className="sr-only">Carregando as tarefas…</span>
+        <div aria-hidden="true" className="flex flex-col gap-2.5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="card flex items-center gap-3 py-3">
+              <Esqueleto variante="circulo" className="size-5" />
+              <Esqueleto className="h-4 flex-1" />
+              <Esqueleto className="h-4 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   } else if (consulta.data === undefined) {
     conteudo = (
       <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">
