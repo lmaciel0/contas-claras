@@ -50,15 +50,20 @@ export function EditorItem({ categoria, existente, aoFechar }: Props) {
     const nomeLimpo = nome.trim()
     const diaLido = lerDia(dia)
     if (nomeLimpo === '') {
-      setErro('Informe o nome do item.')
+      setErro(categoria.tipo === 'RECEITA' ? 'Informe o nome da receita.' : 'Informe o nome do item.')
       return
     }
     if (diaLido === undefined) {
-      setErro('O dia de vencimento vai de 1 a 31.')
+      setErro(
+        categoria.tipo === 'RECEITA'
+          ? 'O dia de recebimento vai de 1 a 31.'
+          : 'O dia de vencimento vai de 1 a 31.',
+      )
       return
     }
     let limiteLido: string | null = null
-    if (cartao && limite.trim() !== '') {
+    const eCartao = categoria.tipo !== 'RECEITA' && cartao
+    if (eCartao && limite.trim() !== '') {
       limiteLido = lerValor(limite)
       if (limiteLido === null) {
         setErro(MENSAGEM_LIMITE)
@@ -69,19 +74,30 @@ export function EditorItem({ categoria, existente, aoFechar }: Props) {
     salvar.mutate({
       nome: nomeLimpo,
       diaVencimento: diaLido,
-      cartao,
+      cartao: eCartao,
       limite: limiteLido,
       // O PUT exige `arquivado`; item novo nasce ativo e a API ignora o campo no POST.
       ...(existente === undefined ? {} : { arquivado }),
     })
   }
 
+  const tituloMoldura =
+    categoria.tipo === 'RECEITA'
+      ? existente === undefined
+        ? 'Nova receita'
+        : 'Editar receita'
+      : existente === undefined
+        ? 'Novo item'
+        : 'Editar item'
+
   return (
-    <Moldura titulo={existente === undefined ? 'Novo item' : 'Editar item'} aoFechar={aoFechar}>
+    <Moldura titulo={tituloMoldura} aoFechar={aoFechar}>
       <form onSubmit={enviar} noValidate className="flex flex-col gap-4">
-        <p className="m-0 text-sm text-[var(--cor-mutado)]">{`Categoria ${categoria.nome}`}</p>
+        {categoria.tipo !== 'RECEITA' && (
+          <p className="m-0 text-sm text-[var(--cor-mutado)]">{`Categoria ${categoria.nome}`}</p>
+        )}
         <CampoTexto
-          rotulo="Nome do item"
+          rotulo={categoria.tipo === 'RECEITA' ? 'Nome da receita' : 'Nome do item'}
           value={nome}
           maxLength={120}
           autoComplete="off"
@@ -91,7 +107,7 @@ export function EditorItem({ categoria, existente, aoFechar }: Props) {
           }}
         />
         <CampoTexto
-          rotulo="Dia de vencimento (opcional)"
+          rotulo={categoria.tipo === 'RECEITA' ? 'Dia de recebimento (opcional)' : 'Dia de vencimento (opcional)'}
           inputMode="numeric"
           autoComplete="off"
           maxLength={2}
@@ -101,40 +117,42 @@ export function EditorItem({ categoria, existente, aoFechar }: Props) {
             setErro(null)
           }}
         />
-        <div className="flex flex-col gap-3 rounded-2xl bg-[var(--cor-card)] p-3">
-          <label className={classeCaixa}>
-            <span>É cartão de crédito</span>
-            <input
-              type="checkbox"
-              checked={cartao}
-              onChange={(evento) => setCartao(evento.target.checked)}
-              className="size-6 accent-[var(--cor-principal)]"
-            />
-          </label>
-          {cartao && (
-            <div className="flex flex-col gap-1.5">
-              <CampoTexto
-                rotulo="Limite"
-                inputMode="decimal"
-                autoComplete="off"
-                placeholder="0,00"
-                aria-describedby="ajuda-limite"
-                value={limite}
-                onChange={(evento) => {
-                  setLimite(evento.target.value)
-                  setErro(null)
-                }}
+        {categoria.tipo !== 'RECEITA' && (
+          <div className="flex flex-col gap-3 rounded-2xl bg-[var(--cor-card)] p-3">
+            <label className={classeCaixa}>
+              <span>É cartão de crédito</span>
+              <input
+                type="checkbox"
+                checked={cartao}
+                onChange={(evento) => setCartao(evento.target.checked)}
+                className="size-6 accent-[var(--cor-principal)]"
               />
-              <p id="ajuda-limite" className="m-0 text-xs text-[var(--cor-mutado)]">
-                Opcional. Sem limite, a tela Cartões mostra só a fatura.
-              </p>
-            </div>
-          )}
-        </div>
+            </label>
+            {cartao && (
+              <div className="flex flex-col gap-1.5">
+                <CampoTexto
+                  rotulo="Limite"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="0,00"
+                  aria-describedby="ajuda-limite"
+                  value={limite}
+                  onChange={(evento) => {
+                    setLimite(evento.target.value)
+                    setErro(null)
+                  }}
+                />
+                <p id="ajuda-limite" className="m-0 text-xs text-[var(--cor-mutado)]">
+                  Opcional. Sem limite, a tela Cartões mostra só a fatura.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
         {existente !== undefined && (
           <div className="flex flex-col gap-1 rounded-2xl bg-[var(--cor-card)] p-3">
             <label className={classeCaixa}>
-              <span>Arquivar este item</span>
+              <span>{categoria.tipo === 'RECEITA' ? 'Arquivar esta receita' : 'Arquivar este item'}</span>
               <input
                 type="checkbox"
                 checked={arquivado}
@@ -143,7 +161,9 @@ export function EditorItem({ categoria, existente, aoFechar }: Props) {
               />
             </label>
             <p className="m-0 text-xs text-[var(--cor-mutado)]">
-              Item arquivado sai das listas de escolha e dos cartões; os lançamentos antigos continuam.
+              {categoria.tipo === 'RECEITA'
+                ? 'Receita arquivada sai das listas de escolha; os lançamentos antigos continuam.'
+                : 'Item arquivado sai das listas de escolha e dos cartões; os lançamentos antigos continuam.'}
             </p>
           </div>
         )}

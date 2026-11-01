@@ -139,6 +139,9 @@ function Formulario({ categorias, existente, mesInicial, aoFechar, aoSalvar }: F
   }
 
   const categoriasDoTipo = categorias.filter((c) => c.tipo === tipo)
+  const categoriasReceita = categorias.filter((c) => c.tipo === 'RECEITA')
+  const itensReceita = categoriasReceita.flatMap((c) => c.itens)
+  const categoriaReceitaPadrao = categoriasReceita[0]?.id ?? null
   const ocupado = salvar.isPending || excluir.isPending
 
   return (
@@ -151,31 +154,53 @@ function Formulario({ categorias, existente, mesInicial, aoFechar, aoSalvar }: F
         aoMudar={escolherTipo}
         desabilitado={editando}
       />
-      <CampoSelect
-        rotulo="Categoria"
-        value={categoriaId === null ? '' : String(categoriaId)}
-        disabled={editando}
-        onChange={(evento) => {
-          setCategoriaId(Number(evento.target.value))
-          setItemId(null)
-        }}
-      >
-        {categoriasDoTipo.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.nome}
-          </option>
-        ))}
-      </CampoSelect>
-      {categoriasDoTipo.length === 0 && (
-        <p className="m-0 text-sm text-[var(--cor-mutado)]">Nenhuma categoria deste tipo. Crie uma em Categorias.</p>
+      {tipo === 'DESPESA' ? (
+        <>
+          <CampoSelect
+            rotulo="Categoria"
+            value={categoriaId === null ? '' : String(categoriaId)}
+            disabled={editando}
+            onChange={(evento) => {
+              setCategoriaId(Number(evento.target.value))
+              setItemId(null)
+            }}
+          >
+            {categoriasDoTipo.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nome}
+              </option>
+            ))}
+          </CampoSelect>
+          {categoriasDoTipo.length === 0 && (
+            <p className="m-0 text-sm text-[var(--cor-mutado)]">Nenhuma categoria deste tipo. Crie uma em Categorias.</p>
+          )}
+          <SeletorItem
+            categoriaId={categoriaId}
+            itens={categoria?.itens ?? []}
+            itemId={itemId}
+            desabilitado={editando}
+            aoEscolher={(escolhido) => setItemId(escolhido?.id ?? null)}
+          />
+        </>
+      ) : (
+        <SeletorItem
+          categoriaId={categoriaId ?? categoriaReceitaPadrao}
+          itens={itensReceita}
+          itemId={itemId}
+          rotulo="Fonte da receita"
+          rotuloVazio="Escolha a receita"
+          textoCriar="+ nova fonte de receita"
+          rotuloNovo="Nome da fonte de receita"
+          desabilitado={editando}
+          aoEscolher={(escolhido) => {
+            setItemId(escolhido?.id ?? null)
+            if (escolhido) {
+              const catDoItem = categoriasReceita.find((c) => c.itens.some((i) => i.id === escolhido.id))
+              if (catDoItem) setCategoriaId(catDoItem.id)
+            }
+          }}
+        />
       )}
-      <SeletorItem
-        categoriaId={categoriaId}
-        itens={categoria?.itens ?? []}
-        itemId={itemId}
-        desabilitado={editando}
-        aoEscolher={(escolhido) => setItemId(escolhido?.id ?? null)}
-      />
       <CampoSelect
         rotulo="Mês"
         value={chaveMes(mesAno)}

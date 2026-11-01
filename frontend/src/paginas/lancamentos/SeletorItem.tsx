@@ -11,6 +11,10 @@ interface Props {
   categoriaId: number | null
   itens: ItemResponse[]
   itemId: number | null
+  rotulo?: string
+  rotuloVazio?: string
+  textoCriar?: string
+  rotuloNovo?: string
   /** Trava a escolha (edição: trocar o item criaria outro lançamento, não moveria este). */
   desabilitado?: boolean
   aoEscolher: (item: ItemResponse | null) => void
@@ -20,7 +24,17 @@ interface Props {
  * Lista de itens da categoria (sem os arquivados, exceto o que já está escolhido) e o "+ novo item", que cria o
  * item com nome e dia de vencimento opcional e já o deixa selecionado.
  */
-export function SeletorItem({ categoriaId, itens, itemId, desabilitado = false, aoEscolher }: Props) {
+export function SeletorItem({
+  categoriaId,
+  itens,
+  itemId,
+  rotulo = 'Item',
+  rotuloVazio = 'Escolha o item',
+  textoCriar = '+ novo item',
+  rotuloNovo = 'Nome do novo item',
+  desabilitado = false,
+  aoEscolher,
+}: Props) {
   const queryClient = useQueryClient()
   const [criando, setCriando] = useState(false)
   const [nome, setNome] = useState('')
@@ -78,12 +92,12 @@ export function SeletorItem({ categoriaId, itens, itemId, desabilitado = false, 
   return (
     <div className="flex flex-col gap-2">
       <CampoSelect
-        rotulo="Item"
+        rotulo={rotulo}
         value={itemId === null ? '' : String(itemId)}
         disabled={desabilitado}
         onChange={(evento) => aoEscolher(itens.find((i) => String(i.id) === evento.target.value) ?? null)}
       >
-        <option value="">Escolha o item</option>
+        <option value="">{rotuloVazio}</option>
         {visiveis.map((item) => (
           <option key={item.id} value={item.id}>
             {item.nome}
@@ -97,13 +111,13 @@ export function SeletorItem({ categoriaId, itens, itemId, desabilitado = false, 
           onClick={() => setCriando(true)}
           className="min-h-11 self-start rounded-full px-3 text-sm font-semibold text-[var(--cor-principal)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--cor-principal)]"
         >
-          + novo item
+          {textoCriar}
         </button>
       )}
       {criando && (
         <div className="flex flex-col gap-3 rounded-2xl bg-[var(--cor-fundo)] p-3">
           <CampoTexto
-            rotulo="Nome do novo item"
+            rotulo={rotuloNovo}
             value={nome}
             maxLength={80}
             autoFocus
