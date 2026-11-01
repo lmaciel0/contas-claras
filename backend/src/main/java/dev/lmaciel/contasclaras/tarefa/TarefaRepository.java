@@ -16,7 +16,7 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
     long countByUsuarioIdAndConcluidaEmIsNotNull(long usuarioId);
 
-    /** Concluídas no intervalo [desde, ate), da mais recente para a mais antiga. */
-    List<Tarefa> findByUsuarioIdAndConcluidaEmGreaterThanEqualAndConcluidaEmLessThanOrderByConcluidaEmDesc(
+    /** Concluídas no intervalo [desde, ate), da mais recente para a mais antiga (limite de 50). */
+    List<Tarefa> findTop50ByUsuarioIdAndConcluidaEmGreaterThanEqualAndConcluidaEmLessThanOrderByConcluidaEmDesc(
             long usuarioId, Instant desde, Instant ate);
 }

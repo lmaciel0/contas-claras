@@ -336,6 +336,75 @@ class TarefaControllerTest extends IntegracaoTest {
     }
 
     @Test
+    void criaTarefaSanitizandoCaracteresInvisiveisENbsp() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        // Título com NBSP, RLO e zero-width spaces antes, no meio e depois
+        String json = """
+                {"titulo": "\\u00A0Comprar\\u202E leite\\u200B\\uFEFF\\u00A0"}""";
+
+        mvc.perform(post("/api/tarefas").cookie(sessao).contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.titulo").value("Comprar leite"));
+    }
+
+    @Test
+    void rejeitaCriacaoComTituloSoDeCaracteresInvisiveis() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        String json = """
+                {"titulo": "\\u00A0\\u200B\\uFEFF   "}""";
+
+        mvc.perform(post("/api/tarefas").cookie(sessao).contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void rejeitaEdicaoComTituloSoDeCaracteresInvisiveis() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long id = criarComId(sessao, """
+                {"titulo": "Tarefa normal"}""");
+
+        String json = """
+                {"titulo": "\\u202E\\u200B   "}""";
+
+        mvc.perform(put("/api/tarefas/" + id).cookie(sessao).contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void retorna404AoBuscarEditarConcluirOuExcluirTarefaDeOutroUsuario() throws Exception {
+        Cookie sessaoDono = cadastrarEEntrar(DONO);
+        long id = criarComId(sessaoDono, """
+                {"titulo": "Tarefa privada do dono"}""");
+
+        Cookie sessaoOutra = cadastrarEEntrar(OUTRA);
+
+        mvc.perform(put("/api/tarefas/" + id).cookie(sessaoOutra).contentType(MediaType.APPLICATION_JSON).content("""
+                {"titulo": "Tentando alterar"}"""))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(patch("/api/tarefas/" + id + "/concluida").cookie(sessaoOutra).contentType(MediaType.APPLICATION_JSON).content("""
+                {"concluida": true}"""))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(delete("/api/tarefas/" + id).cookie(sessaoOutra))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void limitaConcluidasHojeA50Itens() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        // Insere 55 tarefas concluídas dentro do dia de hoje (2026-10-29 no relógio de teste)
+        for (int i = 1; i <= 55; i++) {
+            inserirConcluida(DONO, "Feita " + i, "2026-10-29T12:30:00-03:00");
+        }
+
+        mvc.perform(get("/api/tarefas").cookie(sessao))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.concluidasHoje", hasSize(50)))
+                .andExpect(jsonPath("$.totalConcluidas").value(55));
+    }
+
+    @Test
     void patchSemCampoDa400() throws Exception {
         Cookie sessao = cadastrarEEntrar(DONO);
         long id = criarComId(sessao, """
