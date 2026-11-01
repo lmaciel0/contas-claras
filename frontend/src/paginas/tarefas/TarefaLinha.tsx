@@ -25,7 +25,7 @@ export function TarefaLinha({ tarefa, hoje, aoAlternar, desabilitada = false, mo
   const rotulo = `${tarefa.concluida ? 'Reabrir tarefa' : 'Marcar como feita'}: ${tarefa.titulo}`
 
   return (
-    <li className="flex min-h-11 items-center gap-3" data-atrasada={atrasada || undefined}>
+    <li className="item-entra flex min-h-11 items-center gap-3" data-atrasada={atrasada || undefined}>
       <button
         type="button"
         aria-label={rotulo}

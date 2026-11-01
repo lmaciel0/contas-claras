@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useId, useState } from 'react'
 import type { ReactNode } from 'react'
 import { endpoints } from '../../api/endpoints'
@@ -201,7 +201,7 @@ function Secao({ titulo, tipo, todas, ocupado, aoMover, aoAbrir }: SecaoProps) {
 export function CategoriasPage() {
   const queryClient = useQueryClient()
   const [editor, setEditor] = useState<EditorAberto | null>(null)
-  const consulta = useQuery({ queryKey: ['categorias'], queryFn: endpoints.categorias.listar })
+  const consulta = useQuery({ queryKey: ['categorias'], queryFn: endpoints.categorias.listar, placeholderData: keepPreviousData })
 
   const reordenar = useMutation({
     mutationFn: (ids: number[]) => endpoints.categorias.reordenar(ids),

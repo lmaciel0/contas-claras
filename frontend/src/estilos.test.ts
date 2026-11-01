@@ -197,3 +197,16 @@ describe('botão de tema: contraste não textual (WCAG 1.4.11, 3:1)', () => {
     expect(ratio(escuro(usado('.theme__toggle::before', 'background-color')), escuro(marcado))).toBeGreaterThanOrEqual(3)
   })
 })
+
+describe('fluidez e animações', () => {
+  it('define animação item-entra e respeita prefers-reduced-motion', () => {
+    expect(css).toMatch(/@keyframes item-entra\s*\{/)
+    expect(css).toMatch(/\.item-entra\s*\{/)
+    expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.item-entra\s*\{[\s\S]*?animation:\s*none/)
+  })
+
+  it('elementos interativos possuem transições suaves que respeitam prefers-reduced-motion', () => {
+    expect(css).toMatch(/transition-duration:\s*150ms/)
+    expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*?transition:\s*none/)
+  })
+})
