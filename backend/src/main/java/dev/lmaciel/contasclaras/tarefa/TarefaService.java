@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import dev.lmaciel.contasclaras.auth.UsuarioLogado;
 import dev.lmaciel.contasclaras.comum.NaoEncontradoException;
+import dev.lmaciel.contasclaras.comum.RequisicaoInvalidaException;
 import dev.lmaciel.contasclaras.tarefa.dto.TarefaRequest;
 import dev.lmaciel.contasclaras.tarefa.dto.TarefaResponse;
 import dev.lmaciel.contasclaras.tarefa.dto.TarefasResponse;
@@ -29,6 +31,10 @@ public class TarefaService {
     private static final Comparator<Tarefa> POR_DATA_E_CRIACAO =
             Comparator.comparing(Tarefa::getData).thenComparing(POR_CRIACAO);
 
+    private static final Pattern CARACTERES_INVISIVEIS = Pattern.compile(
+            "[\\u200B-\\u200D\\uFEFF\\u200E\\u200F\\u202A-\\u202E\\u2066-\\u2069]"
+    );
+
     private final TarefaRepository tarefas;
     private final UsuarioRepository usuarios;
     private final Clock clock;
@@ -37,6 +43,22 @@ public class TarefaService {
         this.tarefas = tarefas;
         this.usuarios = usuarios;
         this.clock = clock;
+    }
+
+    public static String sanitizarTitulo(String titulo) {
+        if (titulo == null) {
+            throw new RequisicaoInvalidaException("O título é obrigatório.");
+        }
+        String semNbsp = titulo.replace('\u00A0', ' ');
+        String semInvisiveis = CARACTERES_INVISIVEIS.matcher(semNbsp).replaceAll("");
+        String limpo = semInvisiveis.strip();
+        if (limpo.isEmpty()) {
+            throw new RequisicaoInvalidaException("O título é obrigatório.");
+        }
+        if (limpo.length() > 200) {
+            throw new RequisicaoInvalidaException("O título deve ter no máximo 200 caracteres.");
+        }
+        return limpo;
     }
 
     /**
@@ -50,7 +72,7 @@ public class TarefaService {
 
     @Transactional
     public TarefaResponse criar(TarefaRequest req, UsuarioLogado u) {
-        Tarefa nova = new Tarefa(usuarios.getReferenceById(u.id()), req.titulo(), req.data());
+        Tarefa nova = new Tarefa(usuarios.getReferenceById(u.id()), sanitizarTitulo(req.titulo()), req.data());
         tarefas.saveAndFlush(nova);
         return TarefaResponse.de(nova);
     }
@@ -58,7 +80,7 @@ public class TarefaService {
     @Transactional
     public TarefaResponse editar(long id, TarefaRequest req, UsuarioLogado u) {
         Tarefa tarefa = buscarDoUsuario(id, u);
-        tarefa.editar(req.titulo(), req.data());
+        tarefa.editar(sanitizarTitulo(req.titulo()), req.data());
         tarefas.saveAndFlush(tarefa);
         return TarefaResponse.de(tarefa);
     }
@@ -107,7 +129,7 @@ public class TarefaService {
         Instant inicioDeHoje = hoje.atStartOfDay(clock.getZone()).toInstant();
         Instant inicioDeAmanha = hoje.plusDays(1).atStartOfDay(clock.getZone()).toInstant();
         List<TarefaResponse> concluidasHoje = tarefas
-                .findByUsuarioIdAndConcluidaEmGreaterThanEqualAndConcluidaEmLessThanOrderByConcluidaEmDesc(
+                .findTop50ByUsuarioIdAndConcluidaEmGreaterThanEqualAndConcluidaEmLessThanOrderByConcluidaEmDesc(
                         u.id(), inicioDeHoje, inicioDeAmanha)
                 .stream().map(TarefaResponse::de).toList();
 
