@@ -317,4 +317,31 @@ describe('CartoesPage', () => {
     expect(screen.getByText('Nubank Diana')).toBeInTheDocument()
     expect(screen.queryByText('Inter Lucas')).not.toBeInTheDocument()
   })
+
+  it('exibe_sugestoes_dinamicas_de_titulares_e_nao_estaticas', async () => {
+    responderCartoes({
+      totalFaturas: '1000.00',
+      limiteTotal: '2000.00',
+      usoGeral: '0.5000',
+      cartoes: [
+        cartao({ itemId: 1, nome: 'Cartão Família', titular: 'Mariana' }),
+      ],
+    })
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: '+ Novo cartão' }))
+
+    // Não deve conter sugestões estáticas fixas de terceiros
+    expect(screen.queryByRole('button', { name: 'Diana' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Camila' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Ana Célia' })).not.toBeInTheDocument()
+
+    // Deve conter o titular derivado dos cartões cadastrados
+    const botaoMariana = screen.getByRole('button', { name: 'Mariana' })
+    expect(botaoMariana).toBeInTheDocument()
+
+    // Clicar no chip de sugestão preenche o campo
+    await userEvent.click(botaoMariana)
+    expect(screen.getByLabelText('Titular do cartão')).toHaveValue('Mariana')
+  })
 })

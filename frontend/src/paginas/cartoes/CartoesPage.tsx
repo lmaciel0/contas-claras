@@ -168,6 +168,15 @@ export function CartoesPage() {
     placeholderData: keepPreviousData,
   })
 
+  const cartoesCarregados = consulta.data?.cartoes ?? []
+  const titularesPresentes = Array.from(
+    new Set(
+      cartoesCarregados
+        .map((c) => c.titular?.trim())
+        .filter((t): t is string => Boolean(t))
+    )
+  ).sort((a, b) => a.localeCompare(b))
+
   const titulo = (
     <>
       <FaixaFinanceira />
@@ -268,7 +277,12 @@ export function CartoesPage() {
     <>
       {titulo}
       {conteudo}
-      {criandoCartao && <EditorCartao aoFechar={() => setCriandoCartao(false)} />}
+      {criandoCartao && (
+        <EditorCartao
+          aoFechar={() => setCriandoCartao(false)}
+          titularesSugeridos={titularesPresentes}
+        />
+      )}
     </>
   )
 }
