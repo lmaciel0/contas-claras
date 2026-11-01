@@ -2,10 +2,10 @@ import { useEffect, useId, useRef } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
 
 interface Props {
-  titulo: string
-  aoFechar: () => void
-  children: ReactNode
-  larguraMaxima?: string
+  readonly titulo: string
+  readonly aoFechar: () => void
+  readonly children: ReactNode
+  readonly larguraMaxima?: string
 }
 
 const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
@@ -61,14 +61,7 @@ export function Moldura({ titulo, aoFechar, children, larguraMaxima }: Props) {
   }
 
   return (
-    <div
-      onClick={(evento) => {
-        if (evento.target === evento.currentTarget) {
-          aoFechar()
-        }
-      }}
-      className="fixed inset-0 z-50 bg-[var(--cor-fundo)] md:grid md:place-items-center md:bg-black/40 md:p-6"
-    >
+    <div className="fixed inset-0 z-50 bg-[var(--cor-fundo)] md:grid md:place-items-center md:bg-black/40 md:p-6">
       <div
         ref={janela}
         role="dialog"
