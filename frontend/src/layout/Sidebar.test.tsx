@@ -6,7 +6,6 @@ import { Sidebar } from './Sidebar'
 
 beforeEach(() => {
   localStorage.clear()
-  vi.stubGlobal('matchMedia', undefined)
 })
 
 function renderizar(rota = '/?ano=2026&mes=10', nome = 'Ana', aoSair = vi.fn()) {

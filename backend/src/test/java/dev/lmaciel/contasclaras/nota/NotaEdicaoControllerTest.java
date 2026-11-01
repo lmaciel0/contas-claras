@@ -69,7 +69,7 @@ class NotaEdicaoControllerTest extends NotaTestSupport {
         long id = criarNota(sessao, null);
         String doc = paragrafo("ok");
 
-        for (String titulo : new String[] { "   ", " ", "\\u00a0 \\u00a0", "abc\\u202edef", "a\\nb", "a".repeat(201) }) {
+        for (String titulo : new String[] { "   ", " ", "\\u00a0 \\u00a0", "abc\\u202edef", "abc\\u200Bdef", "abc\\uFEFFdef", "a\\nb", "a".repeat(201) }) {
             mvc.perform(put(URL + "/" + id).cookie(sessao).contentType(MediaType.APPLICATION_JSON)
                     .content(corpo(titulo, doc, null)))
                     .andExpect(status().isBadRequest())

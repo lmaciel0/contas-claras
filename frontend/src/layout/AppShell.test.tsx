@@ -8,10 +8,8 @@ import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AppShell } from './AppShell'
 
-// O jsdom não tem `matchMedia`; o app não depende dele (o tema padrão é o claro).
 beforeEach(() => {
   localStorage.clear()
-  vi.stubGlobal('matchMedia', undefined)
 })
 
 function definirLargura(largura: number) {

@@ -64,7 +64,7 @@ class CategoriaNotaControllerTest extends IntegracaoTest {
     void rejeitaNomeVazioSoComNbspOuComDirecaoDeTexto() throws Exception {
         Cookie sessao = cadastrarEEntrar(DONO);
 
-        for (String nome : new String[] { "   ", "    ", "abc‮def" }) {
+        for (String nome : new String[] { "   ", "    ", "abc‮def", "Casa\u200B", "\uFEFFTrabalho" }) {
             mvc.perform(post(URL).cookie(sessao).contentType(MediaType.APPLICATION_JSON)
                     .content(corpo(nome, "azul")))
                     .andExpect(status().isBadRequest())

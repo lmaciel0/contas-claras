@@ -95,6 +95,9 @@ public class NotaService {
         return new NotaFixadaResponse(notas.findByUsuarioIdAndFixadaTrue(u.id()).map(this::resposta).orElse(null));
     }
 
+    private static final org.springframework.data.domain.Pageable LIMITE_LISTAGEM =
+            org.springframework.data.domain.PageRequest.of(0, 100);
+
     /** Fixar tira a fixação da anterior na mesma transação; o índice único do banco decide as corridas. */
     @Transactional
     public NotaResponse fixar(long id, boolean fixada, UsuarioLogado u) {
@@ -109,6 +112,8 @@ public class NotaService {
             notas.flush();
         } catch (DataIntegrityViolationException e) {
             throw ViolacaoDeUnicidade.ocorreu(e) ? new ConflitoException(FIXACAO_CONCORRENTE) : e;
+        } catch (org.springframework.dao.CannotAcquireLockException e) {
+            throw new ConflitoException(FIXACAO_CONCORRENTE);
         }
         return resposta(nota);
     }
@@ -126,8 +131,8 @@ public class NotaService {
         }
         int filtro = semCategoria ? NotaRepository.SEM_CATEGORIA
                 : categoriaId != null ? NotaRepository.DA_CATEGORIA : NotaRepository.TODAS;
-        return notas.listar(u.id(), padrao(busca), filtro, categoriaId == null ? 0 : categoriaId).stream()
-                .map(NotaResumoResponse::de).toList();
+        return notas.listar(u.id(), padrao(busca), filtro, categoriaId == null ? 0 : categoriaId, LIMITE_LISTAGEM)
+                .stream().map(NotaResumoResponse::de).toList();
     }
 
     /** {@code %texto%} com {@code \}, {@code %} e {@code _} da busca escapados; busca vazia casa tudo. */

@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route, Routes, useLocation } from 'react-router'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { AuthProvider } from '../auth/AuthProvider'
 import { PainelPage } from '../paginas/painel/PainelPage'
 import { comSessao } from '../teste/auth'
@@ -11,7 +11,6 @@ import { normalizar } from './paleta'
 
 beforeEach(() => {
   localStorage.clear()
-  vi.stubGlobal('matchMedia', undefined)
   Object.defineProperty(window, 'innerWidth', {
     configurable: true,
     writable: true,

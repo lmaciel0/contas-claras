@@ -9,7 +9,7 @@ public final class TextoSeguro {
      * isolates LRI a PDI).
      */
     public static final String TEM_CARACTERE_PROIBIDO =
-            "[^\\p{Cc}\\u061C\\u200E\\u200F\\u202A-\\u202E\\u2066-\\u2069]*";
+            "[^\\p{Cc}\\u061C\\u200B-\\u200F\\u202A-\\u202E\\u2060-\\u2069\\uFEFF]*";
 
     private TextoSeguro() {
     }
