@@ -235,4 +235,57 @@ describe('CartoesPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }))
     expect(await screen.findByRole('region', { name: 'Cartão Azul' })).toBeInTheDocument()
   })
+
+  it('permite cadastrar um novo cartão diretamente pela aba de cartões', async () => {
+    responderCartoes(resposta({ cartoes: [] }))
+    const criados: Array<{ catId: string; body: unknown }> = []
+    servidor.use(
+      http.get('/api/categorias', () =>
+        HttpResponse.json([
+          { id: 10, nome: 'Cartões de crédito', tipo: 'DESPESA', itens: [] },
+          { id: 20, nome: 'Alimentação', tipo: 'DESPESA', itens: [] },
+        ]),
+      ),
+      http.post('/api/categorias/:catId/itens', async ({ params, request }) => {
+        const body = await request.json()
+        criados.push({ catId: String(params.catId), body })
+        return HttpResponse.json({
+          id: 99,
+          nome: (body as { nome: string }).nome,
+          diaVencimento: 10,
+          cartao: true,
+          limite: '5000.00',
+          arquivado: false,
+        })
+      }),
+    )
+
+    renderizar()
+
+    await userEvent.click(await screen.findByRole('button', { name: '+ Novo cartão' }))
+
+    expect(screen.getByRole('dialog', { name: 'Novo cartão' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Novo cartão' })).toBeInTheDocument()
+
+    await userEvent.type(screen.getByLabelText('Nome do cartão'), 'Nubank Ultravioleta')
+    await userEvent.type(screen.getByLabelText('Dia de vencimento da fatura (opcional)'), '10')
+    await userEvent.type(screen.getByLabelText('Limite total (opcional)'), '5000,00')
+
+    expect(screen.getByLabelText('Categoria no orçamento')).toHaveValue('10')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar cartão' }))
+
+    await waitFor(() => expect(criados).toHaveLength(1))
+    expect(criados[0]).toEqual({
+      catId: '10',
+      body: {
+        nome: 'Nubank Ultravioleta',
+        diaVencimento: 10,
+        cartao: true,
+        limite: '5000.00',
+      },
+    })
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
 })

@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { endpoints } from '../../api/endpoints'
@@ -10,6 +10,7 @@ import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { formatarPercentual } from '../inicio/valores'
 import { CardCartao } from './CardCartao'
+import { EditorCartao } from './EditorCartao'
 
 interface CardResumoProps {
   titulo: string
@@ -34,6 +35,7 @@ function CardResumo({ titulo, valor }: CardResumoProps) {
  */
 export function CartoesPage() {
   const { ano, mes } = useMesSelecionado()
+  const [criandoCartao, setCriandoCartao] = useState(false)
   const consulta = useQuery({
     queryKey: ['cartoes', ano, mes],
     queryFn: () => endpoints.cartoes.listar(ano, mes),
@@ -43,11 +45,20 @@ export function CartoesPage() {
   const titulo = (
     <>
       <FaixaFinanceira />
-      <div className="mb-3 sr-only md:not-sr-only md:mb-5">
-        <h1 className="m-0 text-[28px] font-bold tracking-tight">Cartões</h1>
-        <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">
-          Quanto da fatura do mês ocupa o limite de cada cartão.
-        </p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 md:mb-5">
+        <div>
+          <h1 className="m-0 text-[28px] font-bold tracking-tight">Cartões</h1>
+          <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">
+            Quanto da fatura do mês ocupa o limite de cada cartão.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCriandoCartao(true)}
+          className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-[var(--cor-principal)] px-4 text-sm font-semibold text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+        >
+          + Novo cartão
+        </button>
       </div>
     </>
   )
@@ -78,13 +89,21 @@ export function CartoesPage() {
           <CardResumo titulo="Uso geral" valor={usoGeral === null ? '—' : formatarPercentual(usoGeral)} />
         </div>
         {cartoes.length === 0 ? (
-          <p className="card m-0 text-sm text-[var(--cor-mutado)]">
-            Nenhum cartão cadastrado. Em{' '}
-            <Link to="/categorias" className="font-semibold text-[var(--cor-principal)]">
-              Categorias
-            </Link>
-            , edite um item e marque &quot;É cartão de crédito&quot;.
-          </p>
+          <div className="card flex flex-col items-start gap-3 text-sm text-[var(--cor-mutado)]">
+            <p className="m-0">
+              Nenhum cartão cadastrado. Você pode cadastrar um cartão diretamente por aqui ou marcando um item existente em{' '}
+              <Link to="/categorias" className="font-semibold text-[var(--cor-principal)]">
+                Categorias
+              </Link>.
+            </p>
+            <button
+              type="button"
+              onClick={() => setCriandoCartao(true)}
+              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-[var(--cor-principal)] px-4 text-sm font-semibold text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+            >
+              + Cadastrar primeiro cartão
+            </button>
+          </div>
         ) : (
           <div className="item-entra grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 md:gap-3.5">
             {cartoes.map((cartao) => (
@@ -103,6 +122,7 @@ export function CartoesPage() {
     <>
       {titulo}
       {conteudo}
+      {criandoCartao && <EditorCartao aoFechar={() => setCriandoCartao(false)} />}
     </>
   )
 }
