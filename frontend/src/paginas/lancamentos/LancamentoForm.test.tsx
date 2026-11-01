@@ -229,17 +229,20 @@ describe('LancamentoForm (novo)', () => {
     expect(nomes).toEqual(['Escolha o item', 'Luz', 'Condomínio'])
   })
 
-  it('categoria_so_lista_as_do_tipo_escolhido', async () => {
+  it('ao_escolher_receita_oculta_categoria_e_exibe_fonte_da_receita', async () => {
     renderizar('/lancamentos/novo?ano=2026&mes=10')
     const categoria = await campo('Categoria')
     expect(within(categoria).getAllByRole('option').map((o) => o.textContent)).toEqual(['Moradia', 'Lazer'])
 
     await userEvent.click(screen.getByRole('radio', { name: 'Receita' }))
 
-    expect(within(screen.getByLabelText('Categoria')).getAllByRole('option').map((o) => o.textContent)).toEqual([
-      'Receitas',
-    ])
-    expect(within(screen.getByLabelText('Item')).getByRole('option', { name: 'Salário' })).toBeInTheDocument()
+    // Campo Categoria é ocultado para receitas
+    expect(screen.queryByLabelText('Categoria')).not.toBeInTheDocument()
+
+    // O campo Item vira Fonte da receita diretamente
+    const fonte = screen.getByLabelText('Fonte da receita')
+    expect(fonte).toBeInTheDocument()
+    expect(within(fonte).getByRole('option', { name: 'Salário' })).toBeInTheDocument()
   })
 
   it('mostra_o_erro_da_api_e_continua_no_formulario', async () => {

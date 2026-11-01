@@ -48,7 +48,9 @@ describe('CategoriasPage', () => {
 
     const receitas = await regiao('Receitas')
     const despesas = await regiao('Despesas')
-    expect(within(receitas).getByRole('region', { name: 'Salários' })).toBeInTheDocument()
+    expect(within(receitas).getByText('Salário')).toBeInTheDocument()
+    expect(within(receitas).getByRole('button', { name: '+ Nova receita' })).toBeInTheDocument()
+    expect(within(receitas).queryByRole('region', { name: 'Salários' })).not.toBeInTheDocument()
     expect(within(receitas).queryByRole('region', { name: 'Moradia' })).not.toBeInTheDocument()
 
     const moradia = within(despesas).getByRole('region', { name: 'Moradia' })
@@ -113,9 +115,9 @@ describe('CategoriasPage', () => {
     )
     renderizar()
 
-    const receitas = await regiao('Receitas')
-    await userEvent.click(within(receitas).getByRole('button', { name: '+ Nova categoria' }))
-    await userEvent.type(await screen.findByLabelText('Nome da categoria'), 'Salários')
+    const despesas = await regiao('Despesas')
+    await userEvent.click(within(despesas).getByRole('button', { name: '+ Nova categoria' }))
+    await userEvent.type(await screen.findByLabelText('Nome da categoria'), 'Moradia')
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Já existe uma categoria com esse nome.')
@@ -126,11 +128,53 @@ describe('CategoriasPage', () => {
     responder()
     renderizar()
 
-    const receitas = await regiao('Receitas')
-    await userEvent.click(within(receitas).getByRole('button', { name: '+ Nova categoria' }))
+    const despesas = await regiao('Despesas')
+    await userEvent.click(within(despesas).getByRole('button', { name: '+ Nova categoria' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Salvar' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Informe o nome da categoria.')
+  })
+
+  it('cria_nova_receita_diretamente', async () => {
+    responder()
+    const criados: Array<{ catId: string; req: ItemRequest }> = []
+    servidor.use(
+      http.post('/api/categorias/:catId/itens', async ({ params, request }) => {
+        const req = (await request.json()) as ItemRequest
+        criados.push({ catId: String(params.catId), req })
+        return HttpResponse.json({
+          id: 99,
+          nome: req.nome,
+          diaVencimento: req.diaVencimento,
+          cartao: false,
+          limite: null,
+          arquivado: false,
+        })
+      }),
+    )
+
+    renderizar()
+
+    const receitas = await regiao('Receitas')
+    await userEvent.click(within(receitas).getByRole('button', { name: '+ Nova receita' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Nova receita' })).toBeInTheDocument()
+    expect(screen.queryByText(/É cartão de crédito/)).not.toBeInTheDocument()
+
+    await userEvent.type(screen.getByLabelText('Nome da receita'), 'Freelance')
+    await userEvent.type(screen.getByLabelText('Dia de recebimento (opcional)'), '15')
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    await waitFor(() => expect(criados).toHaveLength(1))
+    expect(criados[0]).toEqual({
+      catId: '1',
+      req: {
+        nome: 'Freelance',
+        diaVencimento: 15,
+        cartao: false,
+        limite: null,
+      },
+    })
   })
 
   it('apagar_categoria_com_lancamentos_mostra_mensagem_409', async () => {
@@ -327,8 +371,6 @@ describe('CategoriasPage', () => {
 
     expect(await screen.findByRole('button', { name: 'Subir categoria Moradia' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Descer categoria Lazer' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Subir categoria Salários' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Descer categoria Salários' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Descer categoria Moradia' })).toBeEnabled()
   })
 

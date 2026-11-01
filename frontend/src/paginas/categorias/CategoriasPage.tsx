@@ -147,6 +147,67 @@ function CardCategoria({
   )
 }
 
+interface SecaoReceitasProps {
+  todas: CategoriaResponse[]
+  aoCriarReceita: (categoria: CategoriaResponse) => void
+  aoEditarItem: (item: ItemResponse, categoria: CategoriaResponse) => void
+}
+
+function SecaoReceitas({ todas, aoCriarReceita, aoEditarItem }: SecaoReceitasProps) {
+  const idTitulo = useId()
+  const categoriasReceita = todas.filter((c) => c.tipo === 'RECEITA')
+  const categoriaPrincipal = categoriasReceita[0]
+  const itensReceita = categoriasReceita.flatMap((c) => c.itens.map((item) => ({ item, categoria: c })))
+
+  return (
+    <section aria-labelledby={idTitulo} className="mb-5">
+      <div className="mb-2.5 flex items-center justify-between gap-3">
+        <h2 id={idTitulo} className="m-0 text-lg font-bold">
+          Receitas
+        </h2>
+        {categoriaPrincipal !== undefined && (
+          <button
+            type="button"
+            onClick={() => aoCriarReceita(categoriaPrincipal)}
+            className={classeBotaoTexto}
+          >
+            + Nova receita
+          </button>
+        )}
+      </div>
+      {itensReceita.length === 0 ? (
+        <p className="card m-0 text-sm text-[var(--cor-mutado)]">Nenhuma receita cadastrada ainda.</p>
+      ) : (
+        <div className="card flex flex-col gap-1">
+          <ul className="m-0 list-none p-0">
+            {itensReceita.map(({ item, categoria }) => (
+              <li
+                key={item.id}
+                className={`flex items-center justify-between gap-2 border-t border-[var(--cor-linha)] first:border-t-0 ${
+                  item.arquivado ? 'opacity-70' : ''
+                }`}
+              >
+                <div className="flex min-w-0 flex-col py-2">
+                  <span className="truncate text-[13px] font-medium">{item.nome}</span>
+                  <DetalhesDoItem item={item} />
+                </div>
+                <button
+                  type="button"
+                  aria-label={`Editar receita ${item.nome}`}
+                  onClick={() => aoEditarItem(item, categoria)}
+                  className={classeBotaoTexto}
+                >
+                  Editar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  )
+}
+
 interface SecaoProps {
   titulo: string
   tipo: TipoCategoria
@@ -249,7 +310,11 @@ export function CategoriasPage() {
     }
     conteudo = (
       <>
-        <Secao titulo="Receitas" tipo="RECEITA" todas={todas} ocupado={reordenar.isPending} aoMover={mover} aoAbrir={setEditor} />
+        <SecaoReceitas
+          todas={todas}
+          aoCriarReceita={(categoria) => setEditor({ alvo: 'item', categoria })}
+          aoEditarItem={(item, categoria) => setEditor({ alvo: 'item', categoria, existente: item })}
+        />
         <Secao titulo="Despesas" tipo="DESPESA" todas={todas} ocupado={reordenar.isPending} aoMover={mover} aoAbrir={setEditor} />
       </>
     )
