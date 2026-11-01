@@ -1,22 +1,32 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { endpoints } from '../../api/endpoints'
 import type { ItemRequest } from '../../api/tipos'
 import { CampoTexto, classeBotaoPrimario, MensagemDeErro } from '../../auth/CampoTexto'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
+import { AuthContexto } from '../../auth/useAuth'
 import { lerValor } from '../../formato/moeda'
 import { lerDia } from '../lancamentos/datas'
 import { Moldura } from '../lancamentos/Moldura'
 
 interface Props {
   aoFechar: () => void
+  titularesSugeridos?: string[]
 }
 
-export function EditorCartao({ aoFechar }: Props) {
+export function EditorCartao({ aoFechar, titularesSugeridos = [] }: Props) {
   const queryClient = useQueryClient()
+  const auth = useContext(AuthContexto)
+  const primeiroNome = auth?.usuario?.nome?.trim().split(/\s+/)[0] ?? ''
+
+  // Sugestões dinâmicas: primeiro nome do usuário autenticado + titulares cadastrados nos cartões
+  const sugestoes = Array.from(
+    new Set([primeiroNome, ...titularesSugeridos].filter((s): s is string => Boolean(s && s.trim())))
+  )
+
   const [nome, setNome] = useState('')
-  const [titular, setTitular] = useState('Lucas')
+  const [titular, setTitular] = useState(primeiroNome)
   const [dia, setDia] = useState('')
   const [limite, setLimite] = useState('')
   const [categoriaId, setCategoriaId] = useState<number | null>(null)
@@ -102,7 +112,7 @@ export function EditorCartao({ aoFechar }: Props) {
         <div className="flex flex-col gap-1.5">
           <CampoTexto
             rotulo="Titular do cartão"
-            placeholder="Ex.: Lucas, Diana, Camila..."
+            placeholder="Nome do titular (opcional)"
             value={titular}
             maxLength={60}
             autoComplete="off"
@@ -111,18 +121,20 @@ export function EditorCartao({ aoFechar }: Props) {
               setErro(null)
             }}
           />
-          <div className="flex flex-wrap gap-1.5">
-            {['Lucas', 'Diana', 'Camila', 'Ana Célia'].map((sugestao) => (
-              <button
-                key={sugestao}
-                type="button"
-                onClick={() => setTitular(sugestao)}
-                className="cursor-pointer rounded-lg border border-[var(--cor-linha)] bg-[var(--cor-fundo)] px-2.5 py-1 text-xs font-semibold text-[var(--cor-mutado)] transition-colors hover:border-[var(--cor-principal)] hover:text-[var(--cor-principal)]"
-              >
-                {sugestao}
-              </button>
-            ))}
-          </div>
+          {sugestoes.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {sugestoes.map((sugestao) => (
+                <button
+                  key={sugestao}
+                  type="button"
+                  onClick={() => setTitular(sugestao)}
+                  className="cursor-pointer rounded-lg border border-[var(--cor-linha)] bg-[var(--cor-fundo)] px-2.5 py-1 text-xs font-semibold text-[var(--cor-mutado)] transition-colors hover:border-[var(--cor-principal)] hover:text-[var(--cor-principal)]"
+                >
+                  {sugestao}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <CampoTexto
           rotulo="Dia de vencimento da fatura (opcional)"
