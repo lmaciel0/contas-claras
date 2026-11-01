@@ -15,5 +15,6 @@ public record CartaoUso(
         BigDecimal fatura,
         BigDecimal limite,
         BigDecimal uso,
-        FaixaUso faixa) {
+        FaixaUso faixa,
+        String titular) {
 }

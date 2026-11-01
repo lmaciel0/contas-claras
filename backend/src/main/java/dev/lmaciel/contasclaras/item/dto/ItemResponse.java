@@ -10,10 +10,11 @@ public record ItemResponse(
         Integer diaVencimento,
         boolean cartao,
         BigDecimal limite,
-        boolean arquivado) {
+        boolean arquivado,
+        String titular) {
 
     public static ItemResponse de(Item item) {
         return new ItemResponse(item.getId(), item.getNome(), item.getDiaVencimento(), item.isCartao(),
-                item.getLimite(), item.isArquivado());
+                item.getLimite(), item.isArquivado(), item.getTitular());
     }
 }

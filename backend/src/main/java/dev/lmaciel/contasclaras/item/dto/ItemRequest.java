@@ -33,10 +33,18 @@ public record ItemRequest(
         @Digits(integer = 1000, fraction = 2, message = "O limite deve ter no máximo 2 casas decimais.")
         BigDecimal limite,
 
-        Boolean arquivado) {
+        Boolean arquivado,
+
+        @Size(max = 60, message = "O titular deve ter até 60 caracteres.")
+        String titular) {
+
+    public ItemRequest(String nome, Integer diaVencimento, Boolean cartao, BigDecimal limite, Boolean arquivado) {
+        this(nome, diaVencimento, cartao, limite, arquivado, null);
+    }
 
     /** Espaços nas pontas do nome são ignorados antes da validação (e da checagem de duplicidade). */
     public ItemRequest {
         nome = nome == null ? null : nome.trim();
+        titular = titular == null || titular.isBlank() ? null : titular.trim();
     }
 }

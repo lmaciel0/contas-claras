@@ -34,10 +34,29 @@ class CartaoControllerTest extends IntegracaoTest {
 
     /** Cria um item de cartão na categoria "Cartões de crédito"; {@code limite} e {@code dia} podem ser null. */
     private long criarCartao(String email, String nome, String limite, Integer dia) {
+        return criarCartao(email, nome, limite, dia, null);
+    }
+
+    private long criarCartao(String email, String nome, String limite, Integer dia, String titular) {
         long id = criarItem(email, "Cartões de crédito", nome);
-        jdbc.update("update item set cartao = true, limite = ?::numeric, dia_vencimento = ? where id = ?",
-                limite, dia, id);
+        jdbc.update("update item set cartao = true, limite = ?::numeric, dia_vencimento = ?, titular = ? where id = ?",
+                limite, dia, titular, id);
         return id;
+    }
+
+    @Test
+    void cartoes_retorna_titular_do_cartao() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long c1 = criarCartao(DONO, "Cartão Diana", "2000.00", 5, "Diana");
+        long c2 = criarCartao(DONO, "Cartão Meu", "5000.00", 10, null);
+        criarLancamento(c1, 2026, 10, "500.00", "PREVISTO");
+
+        cartoes(sessao, "?ano=2026&mes=10")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cartoes[0].itemId").value(c1))
+                .andExpect(jsonPath("$.cartoes[0].titular").value("Diana"))
+                .andExpect(jsonPath("$.cartoes[1].itemId").value(c2))
+                .andExpect(jsonPath("$.cartoes[1].titular").value(nullValue()));
     }
 
     @Test

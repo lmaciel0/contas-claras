@@ -8,6 +8,7 @@ export const item = (parcial: Partial<ItemResponse> & Pick<ItemResponse, 'id' | 
   diaVencimento: null,
   cartao: false,
   limite: null,
+  titular: null,
   arquivado: false,
   ...parcial,
 })

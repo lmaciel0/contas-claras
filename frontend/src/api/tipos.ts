@@ -53,6 +53,7 @@ export interface ItemResponse {
   cartao: boolean
   limite: string | null
   arquivado: boolean
+  titular: string | null
 }
 export interface CategoriaResponse {
   id: number
@@ -73,6 +74,7 @@ export interface ItemRequest {
   limite: string | null
   /** Obrigatório só no PUT. */
   arquivado?: boolean
+  titular?: string | null
 }
 
 // Cartões (fatura do mês contra o limite)
@@ -85,6 +87,7 @@ export interface CartaoResponse {
   /** Fração com 4 casas (`"0.7300"` = 73%); `null` sem limite. Pode passar de 1. */
   uso: string | null
   faixa: FaixaUso
+  titular: string | null
 }
 export interface CartoesResponse {
   totalFaturas: string

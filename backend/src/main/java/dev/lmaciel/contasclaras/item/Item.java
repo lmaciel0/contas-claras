@@ -45,25 +45,44 @@ public class Item {
     @Column(nullable = false)
     private boolean arquivado;
 
+    @Column(length = 60)
+    private String titular;
+
     protected Item() {
     }
 
     public Item(Categoria categoria, String nome, Integer diaVencimento, boolean cartao, BigDecimal limite) {
+        this(categoria, nome, diaVencimento, cartao, limite, null);
+    }
+
+    public Item(Categoria categoria, String nome, Integer diaVencimento, boolean cartao, BigDecimal limite,
+            String titular) {
         this.categoria = categoria;
         this.nome = nome;
         this.diaVencimento = diaVencimento;
         this.cartao = cartao;
         this.limite = duasCasas(limite);
+        this.titular = normalizarTitular(titular);
     }
 
     /** Troca todos os dados editáveis de uma vez (o PUT substitui o item). */
     public void atualizar(String nome, Integer diaVencimento, boolean cartao, BigDecimal limite,
             boolean arquivado) {
+        atualizar(nome, diaVencimento, cartao, limite, arquivado, this.titular);
+    }
+
+    public void atualizar(String nome, Integer diaVencimento, boolean cartao, BigDecimal limite,
+            boolean arquivado, String titular) {
         this.nome = nome;
         this.diaVencimento = diaVencimento;
         this.cartao = cartao;
         this.limite = duasCasas(limite);
         this.arquivado = arquivado;
+        this.titular = normalizarTitular(titular);
+    }
+
+    private static String normalizarTitular(String titular) {
+        return titular == null || titular.isBlank() ? null : titular.trim();
     }
 
     /** Mesma escala do banco ({@code numeric(12,2)}): a resposta traz "1500.50", não "1500.5". */
@@ -97,5 +116,9 @@ public class Item {
 
     public boolean isArquivado() {
         return arquivado;
+    }
+
+    public String getTitular() {
+        return titular;
     }
 }

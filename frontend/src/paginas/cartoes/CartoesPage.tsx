@@ -36,6 +36,7 @@ function CardResumo({ titulo, valor }: CardResumoProps) {
 export function CartoesPage() {
   const { ano, mes } = useMesSelecionado()
   const [criandoCartao, setCriandoCartao] = useState(false)
+  const [titularFiltro, setTitularFiltro] = useState<string>('todos')
   const consulta = useQuery({
     queryKey: ['cartoes', ano, mes],
     queryFn: () => endpoints.cartoes.listar(ano, mes),
@@ -81,12 +82,93 @@ export function CartoesPage() {
     )
   } else {
     const { totalFaturas, limiteTotal, usoGeral, cartoes } = consulta.data
+
+    const titularesPresentes = Array.from(
+      new Set(
+        cartoes
+          .map((c) => c.titular?.trim())
+          .filter((t): t is string => Boolean(t))
+      )
+    ).sort()
+
+    const cartoesExibidos =
+      titularFiltro === 'todos'
+        ? cartoes
+        : cartoes.filter(
+            (c) => (c.titular?.trim().toLowerCase() ?? '') === titularFiltro.toLowerCase()
+          )
+
+    let totalFaturasExibido = totalFaturas
+    let limiteTotalExibido = limiteTotal
+    let usoGeralExibido = usoGeral
+
+    if (titularFiltro !== 'todos') {
+      const somaFaturas = cartoesExibidos.reduce(
+        (acc, c) => acc + (parseFloat(c.fatura) || 0),
+        0
+      )
+      const somaLimites = cartoesExibidos
+        .filter((c) => c.limite !== null)
+        .reduce((acc, c) => acc + (parseFloat(c.limite!) || 0), 0)
+      const somaFaturasComLimite = cartoesExibidos
+        .filter((c) => c.limite !== null)
+        .reduce((acc, c) => acc + (parseFloat(c.fatura) || 0), 0)
+
+      totalFaturasExibido = somaFaturas.toFixed(2)
+      limiteTotalExibido = somaLimites.toFixed(2)
+      usoGeralExibido =
+        somaLimites > 0 ? (somaFaturasComLimite / somaLimites).toFixed(4) : null
+    }
+
+    const filtroTitulares = titularesPresentes.length > 0 && (
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setTitularFiltro('todos')}
+          className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
+            titularFiltro === 'todos'
+              ? 'bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)]'
+              : 'border border-[var(--cor-linha)] bg-[var(--cor-card)] text-[var(--cor-mutado)] hover:border-[var(--cor-principal)] hover:text-[var(--cor-texto)]'
+          }`}
+        >
+          Todos ({cartoes.length})
+        </button>
+        {titularesPresentes.map((titular) => {
+          const count = cartoes.filter(
+            (c) => (c.titular?.trim().toLowerCase() ?? '') === titular.toLowerCase()
+          ).length
+          const ativo = titularFiltro.toLowerCase() === titular.toLowerCase()
+          return (
+            <button
+              key={titular}
+              type="button"
+              onClick={() => setTitularFiltro(titular)}
+              className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
+                ativo
+                  ? 'bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)]'
+                  : 'border border-[var(--cor-linha)] bg-[var(--cor-card)] text-[var(--cor-mutado)] hover:border-[var(--cor-principal)] hover:text-[var(--cor-texto)]'
+              }`}
+            >
+              {titular} ({count})
+            </button>
+          )
+        })}
+      </div>
+    )
+
     conteudo = (
       <>
+        {filtroTitulares}
         <div className="mb-3.5 grid gap-2.5 sm:grid-cols-3 md:gap-3.5">
-          <CardResumo titulo="Faturas do mês" valor={formatarMoeda(totalFaturas)} />
-          <CardResumo titulo="Limite total" valor={formatarMoeda(limiteTotal)} />
-          <CardResumo titulo="Uso geral" valor={usoGeral === null ? '—' : formatarPercentual(usoGeral)} />
+          <CardResumo
+            titulo={titularFiltro === 'todos' ? 'Faturas do mês' : `Faturas de ${titularFiltro}`}
+            valor={formatarMoeda(totalFaturasExibido)}
+          />
+          <CardResumo
+            titulo={titularFiltro === 'todos' ? 'Limite total' : `Limite de ${titularFiltro}`}
+            valor={formatarMoeda(limiteTotalExibido)}
+          />
+          <CardResumo titulo="Uso geral" valor={usoGeralExibido === null ? '—' : formatarPercentual(usoGeralExibido)} />
         </div>
         {cartoes.length === 0 ? (
           <div className="card flex flex-col items-start gap-3 text-sm text-[var(--cor-mutado)]">
@@ -104,9 +186,13 @@ export function CartoesPage() {
               + Cadastrar primeiro cartão
             </button>
           </div>
+        ) : cartoesExibidos.length === 0 ? (
+          <div className="card text-sm text-[var(--cor-mutado)]">
+            <p className="m-0">Nenhum cartão encontrado para o titular {titularFiltro}.</p>
+          </div>
         ) : (
           <div className="item-entra grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 md:gap-3.5">
-            {cartoes.map((cartao) => (
+            {cartoesExibidos.map((cartao) => (
               <CardCartao key={cartao.itemId} cartao={cartao} />
             ))}
           </div>

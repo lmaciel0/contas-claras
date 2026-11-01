@@ -86,6 +86,25 @@ class ItemControllerTest extends IntegracaoTest {
     }
 
     @Test
+    void cria_e_edita_item_com_titular() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long cartoes = categoriaId(DONO, "Cartões de crédito");
+
+        ResultActions criado = criarItem(sessao, cartoes, """
+                {"nome":"Nubank Diana","diaVencimento":5,"cartao":true,"limite":2500,"titular":"Diana"}""")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nome").value("Nubank Diana"))
+                .andExpect(jsonPath("$.titular").value("Diana"));
+
+        long id = idDoItem(criado);
+
+        editarItem(sessao, id, """
+                {"nome":"Nubank Diana","diaVencimento":5,"cartao":true,"limite":3000,"arquivado":false,"titular":"Diana Mendonça"}""")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.titular").value("Diana Mendonça"));
+    }
+
+    @Test
     void item_dia_vencimento_32_retorna_400() throws Exception {
         Cookie sessao = cadastrarEEntrar(DONO);
         long casa = categoriaId(DONO, "Doméstica");
