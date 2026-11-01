@@ -89,8 +89,9 @@ export function App() {
         <Route element={<MolduraDoUsuario />}>
           <Route path="/" element={<PainelPage />} />
           <Route path="/tarefas" element={<TarefasPage />} />
-          <Route path="/notas" element={<NotasPage />} />
-          <Route path="/notas/:id" element={<NotaPage />} />
+          <Route path="/notas" element={<NotasPage />}>
+            <Route path=":id" element={<NotaPage />} />
+          </Route>
           <Route path="/financeiro" element={<InicioPage />} />
           <Route path="/lancamentos" element={<LancamentosPage />}>
             <Route path="novo" element={<LancamentoForm />} />

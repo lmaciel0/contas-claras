@@ -5,6 +5,7 @@ interface Props {
   titulo: string
   aoFechar: () => void
   children: ReactNode
+  larguraMaxima?: string
 }
 
 const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
@@ -13,7 +14,7 @@ const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), select
  * Moldura do formulário: tela cheia abaixo de 768 px e janela modal com fundo escurecido a partir daí (só CSS,
  * o mesmo HTML nos dois). `Esc` fecha, `Tab` não sai da janela e o foco volta para onde estava ao fechar.
  */
-export function Moldura({ titulo, aoFechar, children }: Props) {
+export function Moldura({ titulo, aoFechar, children, larguraMaxima }: Props) {
   const idTitulo = useId()
   const janela = useRef<HTMLDivElement>(null)
   const fecharRef = useRef(aoFechar)
@@ -60,7 +61,14 @@ export function Moldura({ titulo, aoFechar, children }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--cor-fundo)] md:grid md:place-items-center md:bg-black/40 md:p-6">
+    <div
+      onClick={(evento) => {
+        if (evento.target === evento.currentTarget) {
+          aoFechar()
+        }
+      }}
+      className="fixed inset-0 z-50 bg-[var(--cor-fundo)] md:grid md:place-items-center md:bg-black/40 md:p-6"
+    >
       <div
         ref={janela}
         role="dialog"
@@ -68,7 +76,7 @@ export function Moldura({ titulo, aoFechar, children }: Props) {
         aria-labelledby={idTitulo}
         tabIndex={-1}
         onKeyDown={prenderFoco}
-        className="h-full overflow-y-auto px-4 pt-4 pb-8 outline-none md:h-auto md:max-h-full md:w-full md:max-w-lg md:rounded-3xl md:bg-[var(--cor-fundo)] md:p-6 md:shadow-2xl"
+        className={`h-full overflow-y-auto px-4 pt-4 pb-8 outline-none md:h-auto md:max-h-full md:w-full ${larguraMaxima ?? 'md:max-w-lg'} md:rounded-3xl md:bg-[var(--cor-fundo)] md:p-6 md:shadow-2xl`}
       >
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 id={idTitulo} className="m-0 text-xl font-bold">
