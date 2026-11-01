@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Outlet, useNavigate } from 'react-router'
 import type { NotaResumoResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { CartaoNota } from './CartaoNota'
@@ -120,6 +120,7 @@ export function NotasPage() {
       </div>
       <FaixaCategorias categorias={lista} selecionada={efetiva} aoSelecionar={setSelecao} />
       {conteudo}
+      <Outlet />
     </div>
   )
 }

@@ -1,27 +1,21 @@
 import { Link, useNavigate, useParams } from 'react-router'
 import { ErroApi } from '../../api/cliente'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
+import { Moldura } from '../lancamentos/Moldura'
 import { EdicaoNota } from './EdicaoNota'
 import { useCategoriasNota, useExcluirNota, useNota } from './useNotas'
 
-const linkVoltar =
-  'inline-flex min-h-11 items-center self-start rounded-full px-2 text-sm font-semibold text-[var(--cor-principal)] no-underline hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
-
-function Voltar() {
-  return (
-    <Link to="/notas" className={linkVoltar}>
-      Voltar às notas
-    </Link>
-  )
-}
-
-/** Tela de edição `/notas/:id`. Nota inexistente ou de outra pessoa (404) mostra "Nota não encontrada.". */
+/** Modal de edição `/notas/:id`. Nota inexistente ou de outra pessoa (404) mostra "Nota não encontrada.". */
 export function NotaPage() {
   const id = Number(useParams().id)
   const navegar = useNavigate()
   const nota = useNota(id)
   const categorias = useCategoriasNota()
   const excluir = useExcluirNota()
+
+  function fechar() {
+    navegar('/notas')
+  }
 
   let corpo
   if (nota.isError) {
@@ -51,15 +45,17 @@ export function NotaPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3">
+    <Moldura titulo="Editar nota" aoFechar={fechar} larguraMaxima="md:max-w-3xl">
       <h1 className="sr-only">Editar nota</h1>
-      <Voltar />
+      <Link to="/notas" className="sr-only">
+        Voltar às notas
+      </Link>
       {excluir.isError && (
         <p role="alert" className="m-0 text-xs text-[var(--cor-negativo-texto)]">
           {mensagemDoErro(excluir.error)}
         </p>
       )}
       {corpo}
-    </div>
+    </Moldura>
   )
 }

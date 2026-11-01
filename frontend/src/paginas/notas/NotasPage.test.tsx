@@ -27,8 +27,9 @@ function api(notas: NotaResumoResponse[] | (() => NotaResumoResponse[]), categor
 function renderizar() {
   return renderComApp(
     <Routes>
-      <Route path="/notas" element={<NotasPage />} />
-      <Route path="/notas/:id" element={<p>Editando a nota</p>} />
+      <Route path="/notas" element={<NotasPage />}>
+        <Route path=":id" element={<p>Editando a nota</p>} />
+      </Route>
     </Routes>,
     '/notas',
   )

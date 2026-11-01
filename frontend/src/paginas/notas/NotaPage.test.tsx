@@ -91,4 +91,30 @@ describe('NotaPage', () => {
     expect(screen.queryByText('Salvo')).not.toBeInTheDocument()
     expect(puts).toHaveLength(0)
   })
+
+  it('renderizaComoModalDialogComAriaModal', async () => {
+    montarNotaPage(notaCompleta(1, { titulo: 'Modal Nota' }))
+    await carregada()
+
+    const dialogo = screen.getByRole('dialog')
+    expect(dialogo).toBeInTheDocument()
+    expect(dialogo).toHaveAttribute('aria-modal', 'true')
+    expect(screen.getByRole('button', { name: 'Fechar' })).toBeInTheDocument()
+  })
+
+  it('fecharPorBotaoNavegaParaNotas', async () => {
+    montarNotaPage(notaCompleta(1, { titulo: 'Modal Nota' }))
+    await carregada()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }))
+    expect(await screen.findByText('Lista de notas')).toBeInTheDocument()
+  })
+
+  it('fecharPorEscNavegaParaNotas', async () => {
+    montarNotaPage(notaCompleta(1, { titulo: 'Modal Nota' }))
+    await carregada()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(await screen.findByText('Lista de notas')).toBeInTheDocument()
+  })
 })
