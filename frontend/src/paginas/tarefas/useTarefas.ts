@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { endpoints } from '../../api/endpoints'
 import type { TarefaRequest } from '../../api/tipos'
 import { invalidarTarefas } from './invalidar'
@@ -8,7 +8,12 @@ import { invalidarTarefas } from './invalidar'
  * meia-noite o cache de uma aba aberta deixaria tarefas novas do card caírem como atrasadas.
  */
 export function useTarefas() {
-  return useQuery({ queryKey: ['tarefas'], queryFn: endpoints.tarefas.listar, refetchOnWindowFocus: true })
+  return useQuery({
+    queryKey: ['tarefas'],
+    queryFn: endpoints.tarefas.listar,
+    refetchOnWindowFocus: true,
+    placeholderData: keepPreviousData,
+  })
 }
 
 export function useCriarTarefa() {

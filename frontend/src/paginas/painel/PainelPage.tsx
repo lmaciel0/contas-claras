@@ -41,9 +41,15 @@ export function PainelPage() {
           Ctrl K
         </kbd>
       </button>
-      <CardReflexao />
-      <TarefasDeHoje />
-      <FinancasDoMes />
+      <div className="item-entra" style={{ '--i': 1 } as React.CSSProperties}>
+        <CardReflexao />
+      </div>
+      <div className="item-entra" style={{ '--i': 2 } as React.CSSProperties}>
+        <TarefasDeHoje />
+      </div>
+      <div className="item-entra" style={{ '--i': 3 } as React.CSSProperties}>
+        <FinancasDoMes />
+      </div>
     </div>
   )
 }
