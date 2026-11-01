@@ -4,7 +4,7 @@ import { Outlet } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import type { LancamentoResponse, StatusLancamento } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
-import { Carregando } from '../../componentes/Carregando'
+import { Esqueleto } from '../../componentes/Esqueleto'
 import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { GrupoCategoria } from './GrupoCategoria'
@@ -60,7 +60,25 @@ export function LancamentosPage() {
 
   let conteudo: ReactNode
   if (consulta.isPending) {
-    conteudo = <Carregando texto="Carregando os lançamentos…" />
+    conteudo = (
+      <div
+        className="grid gap-2.5 md:grid-cols-2 md:gap-3.5"
+        role="status"
+        aria-label="Carregando os lançamentos…"
+        aria-busy="true"
+      >
+        <span className="sr-only">Carregando os lançamentos…</span>
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} aria-hidden="true" className="card flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <Esqueleto className="h-5 w-32" />
+              <Esqueleto className="h-5 w-20" />
+            </div>
+            <Esqueleto linhas={3} />
+          </div>
+        ))}
+      </div>
+    )
   } else if (consulta.isError) {
     conteudo = (
       <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">

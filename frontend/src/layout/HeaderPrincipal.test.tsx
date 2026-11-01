@@ -12,7 +12,7 @@ describe('HeaderPrincipal', () => {
 
     const busca = screen.getByRole('button', { name: /buscar/i })
     expect(busca).toBeInTheDocument()
-    expect(screen.getByText('Search…')).toBeInTheDocument()
+    expect(screen.getByText('Buscar…')).toBeInTheDocument()
 
     await user.click(busca)
     expect(onAbrirBusca).toHaveBeenCalledTimes(1)

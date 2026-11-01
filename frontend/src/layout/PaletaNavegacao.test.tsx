@@ -260,12 +260,11 @@ describe('PaletaNavegacao', () => {
     expect(paleta()).toBeInTheDocument()
   })
 
-  it('o botão "Ir para…" da tela inicial abre a paleta', async () => {
+  it('o botão de busca do cabeçalho abre a paleta', async () => {
     const user = userEvent.setup()
     renderizar('/')
-    await user.click(await screen.findByRole('button', { name: /^Ir para…/ }))
+    await user.click(await screen.findByRole('button', { name: /buscar páginas e atalhos/i }))
     expect(await screen.findByRole('dialog', { name: 'Ir para' })).toBeInTheDocument()
-    expect(screen.getByText('Ctrl K')).toBeInTheDocument()
   })
 
   it('abaixo de 1280 px a paleta também abre', async () => {

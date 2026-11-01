@@ -5,7 +5,7 @@ import { Link } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import type { CartaoResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
-import { Carregando } from '../../componentes/Carregando'
+import { Esqueleto } from '../../componentes/Esqueleto'
 import { formatarMoeda } from '../../formato/moeda'
 import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
@@ -200,7 +200,34 @@ export function CartoesPage() {
 
   let conteudo: ReactNode
   if (consulta.isPending) {
-    conteudo = <Carregando texto="Carregando os cartões…" />
+    conteudo = (
+      <div className="flex flex-col gap-4" role="status" aria-label="Carregando os cartões…" aria-busy="true">
+        <span className="sr-only">Carregando os cartões…</span>
+        <div aria-hidden="true" className="grid gap-2.5 sm:grid-cols-3 md:gap-3.5">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card !p-3.5 md:!p-4 flex flex-col gap-2">
+              <Esqueleto className="h-3.5 w-24" />
+              <Esqueleto className="h-7 w-32" />
+            </div>
+          ))}
+        </div>
+        <div aria-hidden="true" className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card flex flex-col gap-4 p-4">
+              <div className="flex items-center justify-between">
+                <Esqueleto className="h-5 w-28" />
+                <Esqueleto className="h-5 w-16" />
+              </div>
+              <Esqueleto className="h-2 w-full rounded-full" />
+              <div className="flex justify-between">
+                <Esqueleto className="h-3 w-20" />
+                <Esqueleto className="h-3 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   } else if (consulta.isError) {
     conteudo = (
       <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">
