@@ -20,6 +20,7 @@ describe('NotaPage', () => {
   it('carregaTituloConteudoECategoria', async () => {
     montarNotaPage(notaCompleta(1, { titulo: 'Reunião', categoriaId: 5 }), [categoriaNota(5, { nome: 'Trabalho' })])
 
+    expect(screen.getByRole('heading', { level: 1, name: 'Editar nota' })).toBeInTheDocument()
     expect(await screen.findByLabelText('Título da nota')).toHaveValue('Reunião')
     await waitFor(() => expect(editorProseMirror()).toHaveTextContent('Texto inicial'))
     await waitFor(() => expect(screen.getByLabelText('Categoria')).toHaveValue('5'))

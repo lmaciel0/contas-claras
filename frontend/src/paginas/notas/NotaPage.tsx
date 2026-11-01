@@ -52,6 +52,7 @@ export function NotaPage() {
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3">
+      <h1 className="sr-only">Editar nota</h1>
       <Voltar />
       {excluir.isError && (
         <p role="alert" className="m-0 text-xs text-[var(--cor-negativo-texto)]">

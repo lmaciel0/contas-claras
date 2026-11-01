@@ -27,7 +27,10 @@ import dev.lmaciel.contasclaras.nota.dto.NotaRequest;
 import dev.lmaciel.contasclaras.nota.dto.NotaResponse;
 import dev.lmaciel.contasclaras.nota.dto.NotaResumoResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @RestController
 @RequestMapping("/api/notas")
 public class NotaController {
@@ -40,7 +43,7 @@ public class NotaController {
 
     @GetMapping
     List<NotaResumoResponse> listar(@AuthenticationPrincipal Jwt jwt,
-            @RequestParam(required = false) String busca,
+            @RequestParam(required = false) @Size(max = 100) String busca,
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(defaultValue = "false") boolean semCategoria) {
         return notas.listar(busca, categoriaId, semCategoria, UsuarioLogado.de(jwt));

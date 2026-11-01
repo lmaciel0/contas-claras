@@ -47,7 +47,8 @@ public interface NotaRepository extends JpaRepository<Nota, Long> {
                    or (:filtro = 2 and n.categoria is null))
             order by n.atualizadoEm desc, n.id desc""")
     List<Resumo> listar(@Param("usuarioId") long usuarioId, @Param("padrao") String padrao,
-            @Param("filtro") int filtro, @Param("categoriaId") long categoriaId);
+            @Param("filtro") int filtro, @Param("categoriaId") long categoriaId,
+            org.springframework.data.domain.Pageable pageable);
 
     @Query("""
             select new dev.lmaciel.contasclaras.nota.NotaRepository$TotalPorCategoria(n.categoria.id, count(n))
