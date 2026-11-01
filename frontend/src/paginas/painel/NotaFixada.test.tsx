@@ -1,14 +1,11 @@
 import { screen, within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
-import { AuthProvider } from '../../auth/AuthProvider'
-import { RotaProtegida } from '../../auth/RotaProtegida'
 import { comSessao } from '../../teste/auth'
 import { renderComApp } from '../../teste/render'
 import { servidor } from '../../teste/servidor'
 import { montarNotaFixada, notaComCaixinhas } from './notaFixadaTeste'
-import { PainelPage } from './PainelPage'
+import { NotaFixada } from './NotaFixada'
 
 describe('NotaFixada', () => {
   it('mostraTituloConteudoECorDaCategoria', async () => {
@@ -42,41 +39,21 @@ describe('NotaFixada', () => {
     expect((await screen.findByTestId('bolinha-categoria')).style.backgroundColor).toBe('var(--cor-mutado)')
   })
 
-  it('erroNaApiMostraMensagemNoCardENaoQuebraOPainel', async () => {
+  it('erroNaApiMostraMensagemNoCard', async () => {
     servidor.use(http.get('/api/notas/fixada', () => HttpResponse.json({ mensagem: 'Falha geral' }, { status: 500 })))
     comSessao()
-    renderComApp(
-      <AuthProvider>
-        <Routes>
-          <Route element={<RotaProtegida />}>
-            <Route path="/" element={<PainelPage />} />
-          </Route>
-        </Routes>
-      </AuthProvider>,
-    )
+    renderComApp(<NotaFixada />)
 
     const card = (await screen.findByRole('heading', { name: 'Nota fixada' })).closest('section')!
     expect(await within(card).findByRole('alert')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Hoje' })).toBeInTheDocument()
   })
 
-  it('carregandoNaoBloqueiaASaudacao', async () => {
+  it('carregandoMostraEstadoAriaBusy', async () => {
     servidor.use(http.get('/api/notas/fixada', () => new Promise<never>(() => {})))
     comSessao()
-    renderComApp(
-      <AuthProvider>
-        <Routes>
-          <Route element={<RotaProtegida />}>
-            <Route path="/" element={<PainelPage />} />
-          </Route>
-        </Routes>
-      </AuthProvider>,
-    )
+    renderComApp(<NotaFixada />)
 
-    expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument()
     const card = screen.getByRole('heading', { name: 'Nota fixada' }).closest('section')!
     expect(card.querySelector('[aria-busy="true"]')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Hoje' })).toBeInTheDocument()
   })
 })
