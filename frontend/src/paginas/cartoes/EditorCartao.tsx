@@ -16,6 +16,7 @@ interface Props {
 export function EditorCartao({ aoFechar }: Props) {
   const queryClient = useQueryClient()
   const [nome, setNome] = useState('')
+  const [titular, setTitular] = useState('Lucas')
   const [dia, setDia] = useState('')
   const [limite, setLimite] = useState('')
   const [categoriaId, setCategoriaId] = useState<number | null>(null)
@@ -78,6 +79,7 @@ export function EditorCartao({ aoFechar }: Props) {
         diaVencimento: diaLido ?? null,
         cartao: true,
         limite: limiteLido,
+        titular: titular.trim() || 'Lucas',
       },
     })
   }
@@ -97,6 +99,31 @@ export function EditorCartao({ aoFechar }: Props) {
             setErro(null)
           }}
         />
+        <div className="flex flex-col gap-1.5">
+          <CampoTexto
+            rotulo="Titular do cartão"
+            placeholder="Ex.: Lucas, Diana, Camila..."
+            value={titular}
+            maxLength={60}
+            autoComplete="off"
+            onChange={(evento) => {
+              setTitular(evento.target.value)
+              setErro(null)
+            }}
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {['Lucas', 'Diana', 'Camila', 'Ana Célia'].map((sugestao) => (
+              <button
+                key={sugestao}
+                type="button"
+                onClick={() => setTitular(sugestao)}
+                className="cursor-pointer rounded-lg border border-[var(--cor-linha)] bg-[var(--cor-fundo)] px-2.5 py-1 text-xs font-semibold text-[var(--cor-mutado)] transition-colors hover:border-[var(--cor-principal)] hover:text-[var(--cor-principal)]"
+              >
+                {sugestao}
+              </button>
+            ))}
+          </div>
+        </div>
         <CampoTexto
           rotulo="Dia de vencimento da fatura (opcional)"
           inputMode="numeric"

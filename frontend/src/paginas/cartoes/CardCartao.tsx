@@ -34,9 +34,16 @@ export function CardCartao({ cartao }: Props) {
   return (
     <section aria-labelledby={idTitulo} data-faixa={faixa} className="card flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2 text-sm font-semibold">
-        <h3 id={idTitulo} className="m-0 min-w-0 truncate text-sm font-semibold">
-          {cartao.nome}
-        </h3>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <h3 id={idTitulo} className="m-0 min-w-0 truncate text-sm font-semibold">
+            {cartao.nome}
+          </h3>
+          {cartao.titular && (
+            <span className="inline-flex shrink-0 items-center rounded-full border border-[var(--cor-linha)] bg-[var(--cor-fundo)] px-2 py-0.5 text-[11px] font-semibold text-[var(--cor-principal)]">
+              {cartao.titular}
+            </span>
+          )}
+        </div>
         {comLimite && (
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${CLASSE_DO_CHIP[faixa]}`}>
             {formatarPercentual(uso)}

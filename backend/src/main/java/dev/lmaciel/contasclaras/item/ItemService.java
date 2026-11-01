@@ -42,7 +42,7 @@ public class ItemService {
         if (itens.existsByCategoriaIdAndNome(categoriaId, req.nome())) {
             throw new ConflitoException(NOME_DUPLICADO);
         }
-        Item novo = new Item(categoria, req.nome(), req.diaVencimento(), req.cartao(), req.limite());
+        Item novo = new Item(categoria, req.nome(), req.diaVencimento(), req.cartao(), req.limite(), req.titular());
         // A checagem acima evita o erro no caso comum; a restrição única do banco decide as corridas.
         try {
             return itens.saveAndFlush(novo);
@@ -61,7 +61,7 @@ public class ItemService {
         if (itens.existsByCategoriaIdAndNomeAndIdNot(item.getCategoria().getId(), req.nome(), itemId)) {
             throw new ConflitoException(NOME_DUPLICADO);
         }
-        item.atualizar(req.nome(), req.diaVencimento(), req.cartao(), req.limite(), req.arquivado());
+        item.atualizar(req.nome(), req.diaVencimento(), req.cartao(), req.limite(), req.arquivado(), req.titular());
         try {
             itens.flush();
         } catch (DataIntegrityViolationException e) {

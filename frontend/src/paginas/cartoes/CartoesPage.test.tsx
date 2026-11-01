@@ -14,6 +14,7 @@ const cartao = (parcial: Partial<CartaoResponse> & Pick<CartaoResponse, 'itemId'
   limite: null,
   uso: null,
   faixa: 'SEM_LIMITE',
+  titular: null,
   ...parcial,
 })
 
@@ -283,9 +284,37 @@ describe('CartoesPage', () => {
         diaVencimento: 10,
         cartao: true,
         limite: '5000.00',
+        titular: 'Lucas',
       },
     })
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('filtraPorTitularERecalculaTotais', async () => {
+    const user = userEvent.setup()
+    responderCartoes({
+      totalFaturas: '2500.00',
+      limiteTotal: '5000.00',
+      usoGeral: '0.5000',
+      cartoes: [
+        cartao({ itemId: 1, nome: 'Nubank Diana', fatura: '1500.00', limite: '3000.00', titular: 'Diana' }),
+        cartao({ itemId: 2, nome: 'Inter Lucas', fatura: '1000.00', limite: '2000.00', titular: 'Lucas' }),
+      ],
+    })
+    renderizar()
+
+    expect(await screen.findByRole('button', { name: /Diana \(1\)/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Lucas \(1\)/ })).toBeInTheDocument()
+    expect(screen.getByText('R$ 2.500,00')).toBeInTheDocument()
+
+    // Clica no filtro Diana
+    await user.click(screen.getByRole('button', { name: /Diana \(1\)/ }))
+
+    // Fatura e limite recalculam para Diana
+    expect(await screen.findByRole('region', { name: 'Faturas de Diana' })).toHaveTextContent('1.500,00')
+    expect(screen.getByRole('region', { name: 'Limite de Diana' })).toHaveTextContent('3.000,00')
+    expect(screen.getByText('Nubank Diana')).toBeInTheDocument()
+    expect(screen.queryByText('Inter Lucas')).not.toBeInTheDocument()
   })
 })

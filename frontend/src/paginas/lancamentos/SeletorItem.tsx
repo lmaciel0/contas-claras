@@ -87,6 +87,7 @@ export function SeletorItem({ categoriaId, itens, itemId, desabilitado = false, 
         {visiveis.map((item) => (
           <option key={item.id} value={item.id}>
             {item.nome}
+            {item.titular ? ` (${item.titular})` : ''}
           </option>
         ))}
       </CampoSelect>
