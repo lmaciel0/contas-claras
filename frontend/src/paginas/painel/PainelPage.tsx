@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useAuth } from '../../auth/useAuth'
 import { usePaleta } from '../../layout/paleta'
+import { CardReflexao } from './CardReflexao'
 import { FinancasDoMes } from './FinancasDoMes'
-import { NotaFixada } from './NotaFixada'
 import { TarefasDeHoje } from './TarefasDeHoje'
 import { dataPorExtenso, primeiroNome, saudacao } from './saudacao'
 
-/** Tela inicial (`/`): saudação com o primeiro nome, a data por extenso e as tarefas de hoje, a nota fixada e as finanças do mês atual. */
+/** Tela inicial (`/`): saudação com o primeiro nome, a data por extenso, a reflexão do dia, as tarefas de hoje e as finanças do mês atual. */
 export function PainelPage() {
   const { usuario } = useAuth()
   // Fixa a hora da primeira renderização: a saudação não muda sozinha no meio do uso.
@@ -41,8 +41,8 @@ export function PainelPage() {
           Ctrl K
         </kbd>
       </button>
+      <CardReflexao />
       <TarefasDeHoje />
-      <NotaFixada />
       <FinancasDoMes />
     </div>
   )
