@@ -83,20 +83,18 @@ export function LinhaCategoria({
             <Inbox className="size-4" aria-hidden="true" />
           </button>
 
-          {/* Botão + Adicionar Subcategoria */}
-          <button
-            type="button"
-            title="Adicionar subcategoria"
-            aria-label={`Adicionar subcategoria em ${categoria.nome}`}
-            onClick={() => aoAdicionarSubcategoria(categoria)}
-            className={`grid size-7 place-items-center rounded-full shadow-xs transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-1 ${
-              eDespesa
-                ? 'bg-[var(--cor-negativo)] text-[var(--cor-sobre-negativo)] hover:opacity-90 focus-visible:outline-[var(--cor-negativo)]'
-                : 'bg-[var(--cor-positivo)] text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-[var(--cor-positivo)]'
-            }`}
-          >
-            <Plus className="size-4" aria-hidden="true" />
-          </button>
+          {/* Botão + Adicionar Subcategoria (apenas para despesas) */}
+          {eDespesa && (
+            <button
+              type="button"
+              title="Adicionar subcategoria"
+              aria-label={`Adicionar subcategoria em ${categoria.nome}`}
+              onClick={() => aoAdicionarSubcategoria(categoria)}
+              className="grid size-7 place-items-center rounded-full bg-[var(--cor-negativo)] text-[var(--cor-sobre-negativo)] shadow-xs transition-transform hover:scale-110 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--cor-negativo)]"
+            >
+              <Plus className="size-4" aria-hidden="true" />
+            </button>
+          )}
         </div>
       </td>
     </tr>
