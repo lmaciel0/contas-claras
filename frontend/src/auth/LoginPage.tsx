@@ -11,6 +11,7 @@ import { useAuth } from './useAuth'
 export function LoginPage() {
   const { usuario, entrar } = useAuth()
   const [parametros] = useSearchParams()
+  const expirouInatividade = parametros.get('motivo') === 'inatividade'
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
@@ -34,6 +35,14 @@ export function LoginPage() {
 
   return (
     <TelaAuth titulo="Entrar">
+      {expirouInatividade && (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] px-3 py-2 text-sm text-[var(--cor-texto)] font-medium"
+        >
+          Sua sessão expirou por inatividade (30 minutos).
+        </div>
+      )}
       <form onSubmit={enviar} noValidate className="flex flex-col gap-4">
         <CampoTexto
           rotulo="E-mail"
