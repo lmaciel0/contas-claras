@@ -16,19 +16,37 @@ export const item = (parcial: Partial<ItemResponse> & Pick<ItemResponse, 'id' | 
 /** Receitas (Salário), Moradia (Luz dia 10, Condomínio dia 31, Gás arquivado) e Lazer (Cinema sem dia). */
 export function categoriasFicticias(): CategoriaResponse[] {
   return [
-    { id: 1, nome: 'Receitas', tipo: 'RECEITA', ordem: 1, itens: [item({ id: 10, nome: 'Salário', diaVencimento: 5 })] },
+    {
+      id: 1,
+      nome: 'Receitas',
+      tipo: 'RECEITA',
+      ordem: 1,
+      icone: 'salario',
+      cor: '#10b981',
+      itens: [item({ id: 10, nome: 'Salário', diaVencimento: 5 })],
+    },
     {
       id: 2,
       nome: 'Moradia',
       tipo: 'DESPESA',
       ordem: 2,
+      icone: 'casa',
+      cor: '#27187e',
       itens: [
         item({ id: 20, nome: 'Luz', diaVencimento: 10 }),
         item({ id: 21, nome: 'Condomínio', diaVencimento: 31 }),
         item({ id: 22, nome: 'Gás', arquivado: true }),
       ],
     },
-    { id: 3, nome: 'Lazer', tipo: 'DESPESA', ordem: 3, itens: [item({ id: 30, nome: 'Cinema' })] },
+    {
+      id: 3,
+      nome: 'Lazer',
+      tipo: 'DESPESA',
+      ordem: 3,
+      icone: 'praia',
+      cor: '#ec4899',
+      itens: [item({ id: 30, nome: 'Cinema' })],
+    },
   ]
 }
 

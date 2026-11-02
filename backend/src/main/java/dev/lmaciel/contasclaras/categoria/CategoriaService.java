@@ -82,7 +82,7 @@ public class CategoriaService {
             throw new ConflitoException(NOME_DUPLICADO);
         }
         Categoria nova = new Categoria(usuarios.getReferenceById(u.id()), req.nome(), req.tipo(),
-                categorias.maiorOrdem(u.id()) + 1);
+                categorias.maiorOrdem(u.id()) + 1, req.icone(), req.cor());
         // A checagem acima evita o erro no caso comum; a restrição única do banco decide as corridas.
         try {
             categorias.saveAndFlush(nova);
@@ -99,7 +99,7 @@ public class CategoriaService {
         if (categorias.existsByUsuarioIdAndNomeAndIdNot(u.id(), req.nome(), categoriaId)) {
             throw new ConflitoException(NOME_DUPLICADO);
         }
-        categoria.renomear(req.nome());
+        categoria.atualizar(req.nome(), req.icone(), req.cor());
         try {
             categorias.flush();
         } catch (DataIntegrityViolationException e) {

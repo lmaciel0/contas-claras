@@ -60,12 +60,16 @@ export interface CategoriaResponse {
   nome: string
   tipo: TipoCategoria
   ordem: number
+  icone: string
+  cor: string
   itens: ItemResponse[]
 }
 export interface CategoriaRequest {
   nome: string
   /** Obrigatório só na criação. */
   tipo?: TipoCategoria
+  icone?: string
+  cor?: string
 }
 export interface ItemRequest {
   nome: string
