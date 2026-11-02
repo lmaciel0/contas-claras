@@ -71,7 +71,7 @@ describe('useTema', () => {
     const cor = () => document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.content
     expect(cor()).toBe('#27187E')
     act(() => result.current.alternar())
-    expect(cor()).toBe('#0f0b2b')
+    expect(cor()).toBe('#0b0d13')
     act(() => result.current.alternar())
     expect(cor()).toBe('#27187E')
     document.head.innerHTML = ''
