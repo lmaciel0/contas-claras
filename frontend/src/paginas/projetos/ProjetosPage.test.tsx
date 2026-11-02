@@ -89,4 +89,20 @@ describe('ProjetosPage', () => {
       expect(urlRequisicao).toContain('busca=Alpha')
     })
   })
+
+  it('permite alternar para a visão lista e renderiza os projetos em formato de tabela', async () => {
+    servidor.use(http.get('/api/projetos', () => HttpResponse.json([mockProjeto])))
+    const { wrapper } = montar()
+
+    render(<ProjetosPage />, { wrapper })
+
+    expect(await screen.findByRole('heading', { name: 'Projetos' })).toBeInTheDocument()
+
+    const tabLista = screen.getByRole('tab', { name: /lista/i })
+    fireEvent.click(tabLista)
+
+    expect(tabLista).toHaveAttribute('aria-selected', 'true')
+    expect(await screen.findByRole('heading', { name: 'A Fazer' })).toBeInTheDocument()
+    expect(screen.getByText('Projeto Alpha')).toBeInTheDocument()
+  })
 })
