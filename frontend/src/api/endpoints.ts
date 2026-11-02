@@ -1,4 +1,6 @@
 import { api } from './cliente'
+import { projetosApi } from '../paginas/projetos/projetosApi'
+
 import type {
   CadastroRequest,
   CartoesResponse,
@@ -124,6 +126,7 @@ export const endpoints = {
   relatorios: {
     ano: (ano: number) => api<RelatorioAnualResponse>(`/api/relatorios/ano/${ano}`),
   },
+  projetos: projetosApi,
   resumo: (ano: number, mes: number) => api<ResumoResponse>(`/api/resumo?${consulta(ano, mes)}`),
   saude: () => api<{ status: string }>('/api/health'),
 }
