@@ -66,4 +66,18 @@ describe('HeaderPrincipal', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     expect(botaoPerfil).toHaveFocus()
   })
+
+  it('clicar em Preferências no menu chama onAbrirPreferencias', async () => {
+    const user = userEvent.setup()
+    const onAbrirPreferencias = vi.fn()
+    renderComApp(<HeaderPrincipal nomeUsuario="Lucas" onAbrirPreferencias={onAbrirPreferencias} />)
+
+    const botaoPerfil = screen.getByRole('button', { name: /perfil do usuário/i })
+    await user.click(botaoPerfil)
+
+    const botaoPreferencias = screen.getByRole('menuitem', { name: /preferências/i })
+    await user.click(botaoPreferencias)
+
+    expect(onAbrirPreferencias).toHaveBeenCalledTimes(1)
+  })
 })

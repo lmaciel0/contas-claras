@@ -28,6 +28,20 @@ describe('tokens de cor', () => {
     expect(css).toMatch(/\.diferenca-negativa\s*\{\s*color:\s*var\(--cor-negativo-texto\);?\s*\}/)
   })
 
+  it('o tema escuro usa fundo neutro obsidian e card acetinado', () => {
+    const bloco = /:root\[data-tema='escuro'\]\s*\{([^}]*)\}/.exec(css)?.[1]
+    expect(bloco).toBeDefined()
+    expect(bloco).toMatch(/--cor-fundo:\s*#0b0d13;/)
+    expect(bloco).toMatch(/--cor-card:\s*#131622;/)
+    expect(bloco).toMatch(/--cor-linha:\s*#202538;/)
+  })
+
+  it('declara regras para os presets de destaque (lima, esmeralda, indigo)', () => {
+    expect(css).toMatch(/html\[data-preset='lima'\]/)
+    expect(css).toMatch(/html\[data-preset='esmeralda'\]/)
+    expect(css).toMatch(/html\[data-preset='indigo'\]/)
+  })
+
   it('o tema escuro mantém contraste AA entre texto e fundos', () => {
     const bloco = /:root\[data-tema='escuro'\]\s*\{([^}]*)\}/.exec(css)?.[1]
     expect(bloco, "bloco :root[data-tema='escuro'] ausente").toBeDefined()

@@ -6,7 +6,9 @@ import { Logo } from './Logo'
 import { PainelLateralDireito } from './PainelLateralDireito'
 import { PaletaContext } from './paleta'
 import { PaletaNavegacao } from './PaletaNavegacao'
-import { Sidebar } from './Sidebar'
+import { DockLateral } from './DockLateral'
+import { PreferenciasModal } from '../preferencias/PreferenciasModal'
+import { usePreferencias } from '../preferencias/usePreferencias'
 import { travarRolagem } from './travaRolagem'
 import { useEhDesktop } from './useEhDesktop'
 
@@ -21,15 +23,16 @@ const botaoIcone = `grid min-h-11 min-w-11 shrink-0 cursor-pointer place-items-c
 const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
- * Moldura das telas logadas. Em ≥ 1280 px a sidebar fica fixa à esquerda. Abaixo disso há uma barra fina no topo com o
- * botão "Abrir menu"; o menu é a mesma `Sidebar`, num painel que desliza sobre um fundo escurecido (Esc, clique no
- * fundo ou navegar fecham; ao virar desktop ele fecha sozinho).
+ * Moldura das telas logadas. Em ≥ 1280 px a DockLateral fica flutuante à esquerda. Abaixo disso há uma barra fina no topo com o
+ * botão "Abrir menu"; o menu desliza sobre um fundo escurecido (Esc, clique no fundo ou navegar fecham; ao virar desktop fecha sozinho).
  */
 export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const ehDesktop = useEhDesktop()
+  const { preferencias } = usePreferencias()
   const [aberto, setAberto] = useState(false)
   const [paletaAberta, setPaletaAberta] = useState(false)
   const [painelProdutividadeAberto, setPainelProdutividadeAberto] = useState(false)
+  const [modalPreferenciasAberta, setModalPreferenciasAberta] = useState(false)
   const botao = useRef<HTMLButtonElement>(null)
   const painel = useRef<HTMLDivElement>(null)
   const principal = useRef<HTMLElement>(null)
@@ -141,18 +144,19 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
     </header>
   )
 
-  const sidebarFixa = (
-    <aside className="sticky top-0 flex h-dvh flex-col gap-3 overflow-y-auto border-r border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-4">
-      <div className="px-1">
-        <Logo />
+  const dockDesktop = (
+    <div className="sticky top-0 h-dvh p-2 sm:p-3 flex shrink-0">
+      <div className="h-full rounded-3xl border border-[var(--cor-linha)] bg-[var(--cor-card)] shadow-lg overflow-hidden flex flex-col">
+        <DockLateral
+          nomeUsuario={nomeUsuario}
+          aoSair={aoSair}
+          aoAbrirPreferencias={() => setModalPreferenciasAberta(true)}
+        />
       </div>
-      <div className="min-h-0 flex-1">
-        <Sidebar nomeUsuario={nomeUsuario} aoSair={aoSair} />
-      </div>
-    </aside>
+    </div>
   )
 
-  // O `<main>` (e a página dentro dele) fica sempre na mesma posição da árvore: só a sidebar fixa ou a barra do topo
+  // O `<main>` (e a página dentro dele) fica sempre na mesma posição da árvore: só a dock ou a barra do topo
   // trocam, então cruzar 1280 px não remonta a rota nem perde o que foi digitado.
   return (
     <PaletaContext value={paleta}>
@@ -161,22 +165,33 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
         <div
           className={
             ehDesktop
-              ? 'grid min-h-dvh grid-cols-[240px_1fr] 2xl:grid-cols-[240px_1fr_320px]'
+              ? 'grid min-h-dvh grid-cols-[auto_1fr] 2xl:grid-cols-[auto_1fr_320px]'
               : undefined
           }
         >
-          {ehDesktop ? sidebarFixa : barraSuperior}
+          {ehDesktop ? dockDesktop : barraSuperior}
           <div className="flex min-w-0 flex-1 flex-col">
             {ehDesktop && (
-              <HeaderPrincipal
-                nomeUsuario={nomeUsuario}
-                aoSair={aoSair}
-                onAbrirBusca={paleta.abrir}
-                onAlternarPainelProdutividade={() => setPainelProdutividadeAberto((v) => !v)}
-                painelProdutividadeAberto={painelProdutividadeAberto}
-              />
+              <div className={preferencias.barraFixa ? 'sticky top-0 z-20' : 'relative z-20'}>
+                <HeaderPrincipal
+                  nomeUsuario={nomeUsuario}
+                  aoSair={aoSair}
+                  onAbrirBusca={paleta.abrir}
+                  onAlternarPainelProdutividade={() => setPainelProdutividadeAberto((v) => !v)}
+                  painelProdutividadeAberto={painelProdutividadeAberto}
+                  onAbrirPreferencias={() => setModalPreferenciasAberta(true)}
+                />
+              </div>
             )}
-            <main ref={principal} tabIndex={-1} className="mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6">
+            <main
+              ref={principal}
+              tabIndex={-1}
+              className={
+                preferencias.layoutLargura === 'largura-total'
+                  ? 'w-full min-w-0 px-4 py-5 outline-none md:px-8'
+                  : 'mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6'
+              }
+            >
               <Outlet />
             </main>
           </div>
@@ -207,9 +222,9 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
               aria-modal="true"
               aria-label="Menu"
               onKeyDown={prenderFoco}
-              className="menu-painel absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] flex-col gap-3 overflow-y-auto border-r border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-3"
+              className="menu-painel absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] flex-col gap-3 overflow-y-auto border-r border-[var(--cor-linha)] bg-[var(--cor-card)] p-3"
             >
-              <div className="flex items-center justify-between gap-2 px-1">
+              <div className="flex items-center justify-between gap-2 px-1 pb-2 border-b border-[var(--cor-linha)]">
                 <Logo />
                 <button type="button" aria-label="Fechar menu" onClick={fechar} className={botaoIcone}>
                   <svg
@@ -227,13 +242,26 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
                 </button>
               </div>
               <div className="min-h-0 flex-1">
-                <Sidebar nomeUsuario={nomeUsuario} aoSair={aoSair} aoNavegar={fechar} />
+                <DockLateral
+                  forcarExpandida={true}
+                  nomeUsuario={nomeUsuario}
+                  aoSair={aoSair}
+                  aoNavegar={fechar}
+                  aoAbrirPreferencias={() => {
+                    fechar()
+                    setModalPreferenciasAberta(true)
+                  }}
+                />
               </div>
             </div>
           </div>
         )}
 
         <PaletaNavegacao aberta={paletaAberta} aoFechar={fecharPaleta} />
+        <PreferenciasModal
+          aberta={modalPreferenciasAberta}
+          aoFechar={() => setModalPreferenciasAberta(false)}
+        />
       </div>
     </PaletaContext>
   )

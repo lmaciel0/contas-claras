@@ -72,13 +72,16 @@ function MolduraDoUsuario() {
   )
 }
 
+import { PreferenciasProvider } from './preferencias/PreferenciasContext'
+
 /**
  * Rotas do app (dentro de `AuthProvider`). Login e cadastro são públicos; o resto exige sessão
  * (`RotaProtegida`). O formulário de lançamento é rota filha da lista.
  */
 export function App() {
   return (
-    <Routes>
+    <PreferenciasProvider>
+      <Routes>
       <Route element={<LayoutAuth />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<CadastroPage />} />
@@ -104,6 +107,7 @@ export function App() {
           <Route path="*" element={<NaoEncontradaPage />} />
         </Route>
       </Route>
-    </Routes>
+      </Routes>
+    </PreferenciasProvider>
   )
 }
