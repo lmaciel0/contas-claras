@@ -105,4 +105,20 @@ describe('ProjetosPage', () => {
     expect(await screen.findByRole('heading', { name: 'A Fazer' })).toBeInTheDocument()
     expect(screen.getByText('Projeto Alpha')).toBeInTheDocument()
   })
+
+  it('permite alternar para a visão linha do tempo e renderiza a timeline', async () => {
+    servidor.use(http.get('/api/projetos', () => HttpResponse.json([mockProjeto])))
+    const { wrapper } = montar()
+
+    render(<ProjetosPage />, { wrapper })
+
+    expect(await screen.findByRole('heading', { name: 'Projetos' })).toBeInTheDocument()
+
+    const tabTimeline = screen.getByRole('tab', { name: /linha do tempo/i })
+    fireEvent.click(tabTimeline)
+
+    expect(tabTimeline).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('region', { name: /linha do tempo de projetos/i })).toBeInTheDocument()
+    expect(screen.getAllByText('Projeto Alpha').length).toBeGreaterThanOrEqual(1)
+  })
 })
