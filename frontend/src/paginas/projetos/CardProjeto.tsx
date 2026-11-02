@@ -42,7 +42,7 @@ const ESTAGIOS: { valor: EstagioProjeto; rotulo: string }[] = [
   { valor: 'CONCLUIDO', rotulo: 'Concluído' },
 ]
 
-export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: CardProjetoProps) {
+export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: Readonly<CardProjetoProps>) {
   const [menuAberto, setMenuAberto] = useState(false)
   const estiloCor = MAPA_CORES[projeto.cor] || MAPA_CORES.azul
   const prioridadeInfo = ROTULO_PRIORIDADE[projeto.prioridade] || ROTULO_PRIORIDADE.MEDIA
@@ -54,10 +54,16 @@ export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: Ca
 
   return (
     <article
-      role="article"
       draggable
       onDragStart={lidarDragStart}
       onClick={() => aoClicar?.(projeto)}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          aoClicar?.(projeto)
+        }
+      }}
       className={`group relative flex flex-col gap-3 rounded-xl border bg-[var(--cor-card)] p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-grab active:cursor-grabbing border-[var(--cor-linha)] hover:${estiloCor.borda}`}
     >
       {/* Topo: Categoria + Menu de Ações */}
@@ -72,15 +78,18 @@ export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: Ca
         </div>
 
         {/* Menu Acessível */}
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
+        <div className="relative">
           <button
             type="button"
             aria-label="Opções do projeto"
             aria-expanded={menuAberto}
-            onClick={() => setMenuAberto(!menuAberto)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setMenuAberto(!menuAberto)
+            }}
             className="flex size-7 items-center justify-center rounded-lg text-[var(--cor-mutado)] opacity-80 transition-opacity hover:bg-[var(--cor-linha)] hover:text-[var(--cor-texto)] group-hover:opacity-100"
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
               <circle cx="12" cy="5" r="2" />
               <circle cx="12" cy="12" r="2" />
               <circle cx="12" cy="19" r="2" />
@@ -92,18 +101,19 @@ export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: Ca
               <span className="block px-2 py-1 text-[11px] font-semibold text-[var(--cor-mutado)] uppercase tracking-wider">
                 Mover para:
               </span>
-              {ESTAGIOS.filter((e) => e.valor !== projeto.estagio).map((e) => (
+              {ESTAGIOS.filter((itemEstagio) => itemEstagio.valor !== projeto.estagio).map((itemEstagio) => (
                 <button
-                  key={e.valor}
+                  key={itemEstagio.valor}
                   type="button"
-                  onClick={() => {
-                    aoMoverEstagio?.(projeto.id, e.valor)
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    aoMoverEstagio?.(projeto.id, itemEstagio.valor)
                     setMenuAberto(false)
                   }}
                   className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] transition-colors"
                 >
                   <span className="size-1.5 rounded-full bg-[var(--cor-mutado)]" />
-                  Mover para {e.rotulo}
+                  Mover para {itemEstagio.rotulo}
                 </button>
               ))}
               {aoExcluir && (
@@ -111,7 +121,8 @@ export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: Ca
                   <div className="my-1 border-t border-[var(--cor-linha)]" />
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       aoExcluir(projeto.id)
                       setMenuAberto(false)
                     }}
@@ -162,7 +173,7 @@ export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: Ca
 
         {projeto.prazo && (
           <div className="flex items-center gap-1.5 text-[var(--cor-mutado)]">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />

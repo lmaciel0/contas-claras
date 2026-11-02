@@ -9,6 +9,18 @@ import type {
   SubtarefaCriacaoRequisicao,
 } from './tipos'
 
+type ContextoMutacao = {
+  previousProjetos?: [readonly unknown[], Projeto[] | undefined][]
+}
+
+function restaurarCacheProjetos(queryClient: QueryClient, context?: ContextoMutacao) {
+  if (context?.previousProjetos) {
+    for (const [key, data] of context.previousProjetos) {
+      queryClient.setQueryData(key, data)
+    }
+  }
+}
+
 export function invalidarProjetos(queryClient: QueryClient) {
   return queryClient.invalidateQueries({ queryKey: ['projetos'] })
 }
@@ -68,13 +80,7 @@ export function useMoverEstagioProjeto() {
 
       return { previousProjetos }
     },
-    onError: (_err, _vars, context) => {
-      if (context?.previousProjetos) {
-        for (const [key, data] of context.previousProjetos) {
-          queryClient.setQueryData(key, data)
-        }
-      }
-    },
+    onError: (_err, _vars, context) => restaurarCacheProjetos(queryClient, context),
     onSettled: () => invalidarProjetos(queryClient),
   })
 }
@@ -94,13 +100,7 @@ export function useExcluirProjeto() {
 
       return { previousProjetos }
     },
-    onError: (_err, _vars, context) => {
-      if (context?.previousProjetos) {
-        for (const [key, data] of context.previousProjetos) {
-          queryClient.setQueryData(key, data)
-        }
-      }
-    },
+    onError: (_err, _vars, context) => restaurarCacheProjetos(queryClient, context),
     onSettled: () => invalidarProjetos(queryClient),
   })
 }
@@ -146,13 +146,7 @@ export function useAlternarSubtarefa() {
 
       return { previousProjetos }
     },
-    onError: (_err, _vars, context) => {
-      if (context?.previousProjetos) {
-        for (const [key, data] of context.previousProjetos) {
-          queryClient.setQueryData(key, data)
-        }
-      }
-    },
+    onError: (_err, _vars, context) => restaurarCacheProjetos(queryClient, context),
     onSettled: () => invalidarProjetos(queryClient),
   })
 }

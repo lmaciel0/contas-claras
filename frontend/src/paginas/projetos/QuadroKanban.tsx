@@ -22,7 +22,7 @@ export function QuadroKanban({
   aoCriarNoEstagio,
   aoClicarCard,
   aoExcluirCard,
-}: QuadroKanbanProps) {
+}: Readonly<QuadroKanbanProps>) {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 pt-1 items-start">
       {COLUNAS.map((coluna) => {

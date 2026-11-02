@@ -19,7 +19,7 @@ const json = (corpo: unknown): RequestInit => ({
 function montarQuery(filtro?: FiltroProjetos): string {
   if (!filtro) return ''
   const params = new URLSearchParams()
-  if (filtro.busca && filtro.busca.trim()) params.set('busca', filtro.busca.trim())
+  if (filtro.busca?.trim()) params.set('busca', filtro.busca.trim())
   if (filtro.prioridade) params.set('prioridade', filtro.prioridade)
   const texto = params.toString()
   return texto ? `?${texto}` : ''

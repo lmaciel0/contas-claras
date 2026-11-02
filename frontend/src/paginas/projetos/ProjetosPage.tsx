@@ -1,4 +1,4 @@
-import { useDeferredValue, useState } from 'react'
+import { useDeferredValue, useState, type ReactNode } from 'react'
 import { Carregando } from '../../componentes/Carregando'
 import { ProjetoModal } from './ProjetoModal'
 import { QuadroKanban } from './QuadroKanban'
@@ -53,6 +53,32 @@ export function ProjetosPage() {
     setModalAberto(true)
   }
 
+  let conteudoPrincipal: ReactNode
+  if (isLoading && projetos.length === 0) {
+    conteudoPrincipal = (
+      <div className="flex h-64 items-center justify-center">
+        <Carregando />
+      </div>
+    )
+  } else if (isError) {
+    conteudoPrincipal = (
+      <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] p-6 text-center text-xs text-[var(--cor-texto)]">
+        <p className="font-semibold">Erro ao carregar projetos</p>
+        <p className="mt-1 text-[var(--cor-mutado)]">Não foi possível carregar a lista de projetos. Tente novamente mais tarde.</p>
+      </div>
+    )
+  } else {
+    conteudoPrincipal = (
+      <QuadroKanban
+        projetos={projetos}
+        aoMover={(id, novoEstagio) => moverEstagio.mutate({ id, estagio: novoEstagio })}
+        aoCriarNoEstagio={(estagio) => abrirCriacao(estagio)}
+        aoClicarCard={(projeto) => abrirEdicao(projeto)}
+        aoExcluirCard={(id) => excluirProjeto.mutate(id)}
+      />
+    )
+  }
+
   return (
     <div className="flex flex-1 flex-col px-4 py-6 sm:px-8 max-w-7xl mx-auto w-full">
       {/* Cabeçalho */}
@@ -75,7 +101,7 @@ export function ProjetosPage() {
           onClick={() => abrirCriacao('A_FAZER')}
           className="flex items-center justify-center gap-2 rounded-xl bg-[var(--cor-principal)] px-4 py-2.5 text-sm font-semibold text-[var(--cor-sobre-principal)] shadow-sm hover:brightness-110 active:scale-98 transition-all shrink-0"
         >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
@@ -98,7 +124,7 @@ export function ProjetosPage() {
                 : 'text-[var(--cor-mutado)] hover:text-[var(--cor-texto)]'
             }`}
           >
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <line x1="9" y1="3" x2="9" y2="21" />
               <line x1="15" y1="3" x2="15" y2="21" />
@@ -134,6 +160,7 @@ export function ProjetosPage() {
           {/* Campo de Busca */}
           <div className="relative min-w-[200px] flex-1 sm:w-64">
             <svg
+              aria-hidden="true"
               viewBox="0 0 24 24"
               width="14"
               height="14"
@@ -173,24 +200,7 @@ export function ProjetosPage() {
 
       {/* Conteúdo Principal */}
       <div className="mt-6 flex-1">
-        {isLoading && projetos.length === 0 ? (
-          <div className="flex h-64 items-center justify-center">
-            <Carregando />
-          </div>
-        ) : isError ? (
-          <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] p-6 text-center text-xs text-[var(--cor-texto)]">
-            <p className="font-semibold">Erro ao carregar projetos</p>
-            <p className="mt-1 text-[var(--cor-mutado)]">Não foi possível carregar a lista de projetos. Tente novamente mais tarde.</p>
-          </div>
-        ) : (
-          <QuadroKanban
-            projetos={projetos}
-            aoMover={(id, novoEstagio) => moverEstagio.mutate({ id, estagio: novoEstagio })}
-            aoCriarNoEstagio={(estagio) => abrirCriacao(estagio)}
-            aoClicarCard={(projeto) => abrirEdicao(projeto)}
-            aoExcluirCard={(id) => excluirProjeto.mutate(id)}
-          />
-        )}
+        {conteudoPrincipal}
       </div>
 
       {/* Modal de Criação / Edição */}

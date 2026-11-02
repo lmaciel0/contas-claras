@@ -20,7 +20,7 @@ export function ColunaKanban({
   aoCriarNoEstagio,
   aoClicarCard,
   aoExcluirCard,
-}: ColunaKanbanProps) {
+}: Readonly<ColunaKanbanProps>) {
   const [isOver, setIsOver] = useState(false)
 
   function lidarDragOver(e: DragEvent<HTMLDivElement>) {
@@ -66,7 +66,7 @@ export function ColunaKanban({
             onClick={() => aoCriarNoEstagio(estagio)}
             className="flex size-7 items-center justify-center rounded-lg text-[var(--cor-mutado)] transition-colors hover:bg-[var(--cor-card)] hover:text-[var(--cor-texto)] hover:shadow-xs"
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
@@ -89,6 +89,7 @@ export function ColunaKanban({
         {projetos.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-[var(--cor-linha)] p-6 text-center text-xs text-[var(--cor-mutado)]">
             <svg
+              aria-hidden="true"
               viewBox="0 0 24 24"
               width="24"
               height="24"

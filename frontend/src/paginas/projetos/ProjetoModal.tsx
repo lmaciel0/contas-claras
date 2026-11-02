@@ -38,6 +38,8 @@ const OPCOES_PRIORIDADE: { id: PrioridadeProjeto; rotulo: string }[] = [
   { id: 'URGENTE', rotulo: 'Urgente' },
 ]
 
+type SubtarefaCriacaoItem = { id: string; texto: string }
+
 export function ProjetoModal({
   aberto,
   projeto,
@@ -49,7 +51,7 @@ export function ProjetoModal({
   aoAdicionarSubtarefa,
   aoExcluirSubtarefa,
   salvando = false,
-}: ProjetoModalProps) {
+}: Readonly<ProjetoModalProps>) {
   const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
   const [categoria, setCategoria] = useState('')
@@ -57,7 +59,7 @@ export function ProjetoModal({
   const [prioridade, setPrioridade] = useState<PrioridadeProjeto>('MEDIA')
   const [cor, setCor] = useState<CorProjeto>('azul')
   const [prazo, setPrazo] = useState('')
-  const [subtarefasCriacao, setSubtarefasCriacao] = useState<string[]>([])
+  const [subtarefasCriacao, setSubtarefasCriacao] = useState<SubtarefaCriacaoItem[]>([])
   const [novaSubtarefa, setNovaSubtarefa] = useState('')
 
   const modalRef = useRef<HTMLDivElement>(null)
@@ -115,7 +117,7 @@ export function ProjetoModal({
       if (projeto) {
         aoAdicionarSubtarefa?.(projeto.id, texto)
       } else {
-        setSubtarefasCriacao((prev) => [...prev, texto])
+        setSubtarefasCriacao((prev) => [...prev, { id: crypto.randomUUID(), texto }])
       }
       setNovaSubtarefa('')
     }
@@ -143,9 +145,16 @@ export function ProjetoModal({
         prioridade,
         cor,
         prazo: prazo || null,
-        subtarefas: subtarefasCriacao,
+        subtarefas: subtarefasCriacao.map((item) => item.texto),
       })
     }
+  }
+
+  let textoBotaoSalvar = 'Criar projeto'
+  if (salvando) {
+    textoBotaoSalvar = 'Salvando...'
+  } else if (projeto) {
+    textoBotaoSalvar = 'Salvar alterações'
   }
 
   return (
@@ -156,9 +165,12 @@ export function ProjetoModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+      <button
+        type="button"
+        aria-label="Dispensar modal"
+        tabIndex={-1}
         onClick={aoFechar}
+        className="fixed inset-0 h-full w-full border-none bg-black/50 backdrop-blur-xs transition-opacity cursor-default"
       />
 
       {/* Conteúdo do Modal */}
@@ -176,7 +188,7 @@ export function ProjetoModal({
             onClick={aoFechar}
             className="flex size-8 items-center justify-center rounded-lg text-[var(--cor-mutado)] hover:bg-[var(--cor-linha)] hover:text-[var(--cor-texto)]"
           >
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -322,7 +334,7 @@ export function ProjetoModal({
                       onClick={() => aoExcluirSubtarefa?.(projeto.id, sub.id)}
                       className="text-[var(--cor-mutado)] hover:text-red-500"
                     >
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
                         <line x1="18" y1="6" x2="6" y2="18" />
                         <line x1="6" y1="6" x2="18" y2="18" />
                       </svg>
@@ -330,19 +342,19 @@ export function ProjetoModal({
                   </div>
                 ))
               ) : (
-                subtarefasCriacao.map((subTexto, idx) => (
+                subtarefasCriacao.map((item) => (
                   <div
-                    key={idx}
+                    key={item.id}
                     className="flex items-center justify-between gap-2 rounded-lg bg-[var(--cor-card)] px-3 py-2 border border-[var(--cor-linha)] text-xs text-[var(--cor-texto)]"
                   >
-                    <span>{subTexto}</span>
+                    <span>{item.texto}</span>
                     <button
                       type="button"
-                      aria-label={`Remover ${subTexto}`}
-                      onClick={() => setSubtarefasCriacao((prev) => prev.filter((_, i) => i !== idx))}
+                      aria-label={`Remover ${item.texto}`}
+                      onClick={() => setSubtarefasCriacao((prev) => prev.filter((i) => i.id !== item.id))}
                       className="text-[var(--cor-mutado)] hover:text-red-500"
                     >
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
                         <line x1="18" y1="6" x2="6" y2="18" />
                         <line x1="6" y1="6" x2="18" y2="18" />
                       </svg>
@@ -370,7 +382,7 @@ export function ProjetoModal({
                   if (projeto) {
                     aoAdicionarSubtarefa?.(projeto.id, texto)
                   } else {
-                    setSubtarefasCriacao((prev) => [...prev, texto])
+                    setSubtarefasCriacao((prev) => [...prev, { id: crypto.randomUUID(), texto }])
                   }
                   setNovaSubtarefa('')
                 }}
@@ -395,7 +407,7 @@ export function ProjetoModal({
               disabled={salvando || !titulo.trim()}
               className="flex items-center gap-2 rounded-xl bg-[var(--cor-principal)] px-5 py-2 text-sm font-medium text-[var(--cor-sobre-principal)] shadow-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {salvando ? 'Salvando...' : projeto ? 'Salvar alterações' : 'Criar projeto'}
+              {textoBotaoSalvar}
             </button>
           </div>
         </form>
