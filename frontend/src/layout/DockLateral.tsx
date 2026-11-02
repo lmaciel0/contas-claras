@@ -98,7 +98,6 @@ export function DockLateral({
 
   return (
     <aside
-      aria-label="Menu principal"
       className={`relative flex h-full flex-col transition-all duration-200 select-none ${
         recolhida ? 'w-[72px] px-2 py-4' : 'w-60 px-3 py-4'
       }`}
@@ -146,7 +145,7 @@ export function DockLateral({
       </div>
 
       {/* Navegação */}
-      <nav className="mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden">
+      <nav aria-label="Menu principal" className="mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden">
         {GRUPOS_MENU.map((grupo) => (
           <div key={grupo.titulo ?? 'principal'} className="flex flex-col gap-1">
             {!recolhida && grupo.titulo && (

@@ -1,10 +1,18 @@
 import { useContext } from 'react'
 import { PreferenciasContext, type PreferenciasContextValor } from './PreferenciasContext'
+import { PREFERENCIAS_PADRAO } from './preferenciasStorage'
+
+const VALOR_FALLBACK: PreferenciasContextValor = {
+  preferencias: PREFERENCIAS_PADRAO,
+  setModoTema: () => {},
+  setPresetCor: () => {},
+  setLayoutLargura: () => {},
+  setBarraFixa: () => {},
+  setDockRecolhida: () => {},
+  restaurarPadroes: () => {},
+}
 
 export function usePreferencias(): PreferenciasContextValor {
   const contexto = useContext(PreferenciasContext)
-  if (!contexto) {
-    throw new Error('usePreferencias deve ser usado dentro de um PreferenciasProvider')
-  }
-  return contexto
+  return contexto ?? VALOR_FALLBACK
 }

@@ -43,6 +43,16 @@ describe('AppShell no computador (1280 px ou mais)', () => {
     expect(screen.queryByRole('button', { name: 'Abrir menu' })).not.toBeInTheDocument()
     expect(screen.getByText('Conteúdo do Início')).toBeInTheDocument()
   })
+
+  it('clicar em Preferências na dock abre o modal de preferências', async () => {
+    definirLargura(1280)
+    renderizar()
+
+    const botaoPrefs = screen.getByRole('button', { name: /^preferências$/i })
+    await userEvent.click(botaoPrefs)
+
+    expect(screen.getByRole('dialog', { name: /preferências/i })).toBeInTheDocument()
+  })
 })
 
 describe('AppShell abaixo de 1280 px', () => {
