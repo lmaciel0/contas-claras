@@ -55,11 +55,14 @@ class CategoriaControllerTest extends IntegracaoTest {
 
         mvc.perform(get("/api/categorias").cookie(sessao))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(11)))
-                .andExpect(jsonPath("$[0].nome").value("Receitas"))
+                .andExpect(jsonPath("$", hasSize(11)))                .andExpect(jsonPath("$[0].nome").value("Receitas"))
                 .andExpect(jsonPath("$[0].tipo").value("RECEITA"))
                 .andExpect(jsonPath("$[0].ordem").value(0))
+                .andExpect(jsonPath("$[0].icone").value("salario"))
+                .andExpect(jsonPath("$[0].cor").value("#10b981"))
                 .andExpect(jsonPath("$[1].nome").value("Doméstica"))
+                .andExpect(jsonPath("$[1].icone").value("casa"))
+                .andExpect(jsonPath("$[1].cor").value("#06b6d4"))
                 .andExpect(jsonPath("$[10].nome").value("Pessoais"))
                 .andExpect(jsonPath("$[1].itens", hasSize(2)))
                 .andExpect(jsonPath("$[1].itens[0].nome").value("Aluguel"))
@@ -67,6 +70,20 @@ class CategoriaControllerTest extends IntegracaoTest {
                 .andExpect(jsonPath("$[1].itens[1].cartao").value(false))
                 .andExpect(jsonPath("$[1].itens[1].arquivado").value(false))
                 .andExpect(jsonPath("$[2].itens", hasSize(0)));
+    }
+
+    @Test
+    void cria_categoria_com_icone_e_cor_customizados() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+
+        mvc.perform(post("/api/categorias").cookie(sessao).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"nome":"Educação","tipo":"DESPESA","icone":"livro","cor":"#7c3aed"}"""))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nome").value("Educação"))
+                .andExpect(jsonPath("$.tipo").value("DESPESA"))
+                .andExpect(jsonPath("$.icone").value("livro"))
+                .andExpect(jsonPath("$.cor").value("#7c3aed"));
     }
 
     @Test
@@ -79,12 +96,31 @@ class CategoriaControllerTest extends IntegracaoTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nome").value("Viagens"))
                 .andExpect(jsonPath("$.tipo").value("DESPESA"))
+                .andExpect(jsonPath("$.icone").value("outros"))
+                .andExpect(jsonPath("$.cor").value("#7d7a99"))
                 .andExpect(jsonPath("$.ordem").value(11))
                 .andExpect(jsonPath("$.itens", hasSize(0)));
 
         mvc.perform(get("/api/categorias").cookie(sessao))
                 .andExpect(jsonPath("$", hasSize(12)))
-                .andExpect(jsonPath("$[11].nome").value("Viagens"));
+                .andExpect(jsonPath("$[11].nome").value("Viagens"))
+                .andExpect(jsonPath("$[11].icone").value("outros"))
+                .andExpect(jsonPath("$[11].cor").value("#7d7a99"));
+    }
+
+    @Test
+    void renomeia_e_atualiza_icone_e_cor_da_categoria() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long id = categoriaId(DONO, "Pessoais");
+
+        mvc.perform(put("/api/categorias/" + id).cookie(sessao).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"nome":"Comigo","icone":"estrela","cor":"#a855f7"}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.nome").value("Comigo"))
+                .andExpect(jsonPath("$.icone").value("estrela"))
+                .andExpect(jsonPath("$.cor").value("#a855f7"));
     }
 
     @Test
