@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
   Music,
   PawPrint,
+  Phone,
   Plane,
   ShoppingCart,
   Star,
