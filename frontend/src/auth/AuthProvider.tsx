@@ -1,11 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useNavigate } from 'react-router'
 import { aoNaoAutenticado, ErroApi } from '../api/cliente'
 import { endpoints } from '../api/endpoints'
 import type { UsuarioResponse } from '../api/tipos'
 import { AuthContexto } from './useAuth'
 import type { Auth } from './useAuth'
+import { useTimeoutInatividade } from './useTimeoutInatividade'
 
 /**
  * Guarda quem está logado. Na montagem confere a sessão em `GET /api/auth/me`; depois disso o cookie
@@ -17,8 +19,18 @@ import type { Auth } from './useAuth'
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
+  const navegar = useNavigate()
   const [usuario, setUsuario] = useState<UsuarioResponse | null>(null)
   const [carregando, setCarregando] = useState(true)
+
+  useTimeoutInatividade({
+    ativo: usuario !== null,
+    aoExpirar: () => {
+      void endpoints.auth.logout().catch(() => undefined)
+      setUsuario(null)
+      navegar('/login?motivo=inatividade', { replace: true })
+    },
+  })
 
   useEffect(() => {
     let ativo = true

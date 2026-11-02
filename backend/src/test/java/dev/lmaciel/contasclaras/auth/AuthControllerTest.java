@@ -419,7 +419,7 @@ class AuthControllerTest extends IntegracaoTest {
                         containsString("cc_session="),
                         containsString("HttpOnly"),
                         containsString("SameSite=Strict"),
-                        containsString("Max-Age=2592000"))))
+                        containsString("Max-Age=86400"))))
                 .andReturn();
         Cookie novo = cookieDe(resposta);
 

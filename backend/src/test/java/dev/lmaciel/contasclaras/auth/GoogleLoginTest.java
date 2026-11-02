@@ -133,7 +133,7 @@ class GoogleLoginTest extends IntegracaoTest {
                         containsString("HttpOnly"),
                         containsString("Secure"),
                         containsString("SameSite=Strict"),
-                        containsString("Max-Age=2592000"))))
+                        containsString("Max-Age=86400"))))
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.nome").value("Pessoa Google"))
                 .andExpect(jsonPath("$.email").value("dono@exemplo.com"))

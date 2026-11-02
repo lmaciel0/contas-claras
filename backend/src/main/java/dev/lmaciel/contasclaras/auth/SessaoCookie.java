@@ -5,7 +5,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 /**
- * Cookie da sessão: HttpOnly, SameSite=Strict, Path=/, 30 dias. {@code Secure} fica ligado, exceto
+ * Cookie da sessão: HttpOnly, SameSite=Strict, Path=/, 24 horas. {@code Secure} fica ligado, exceto
  * no profile dev ({@code app.cookie.secure=false}).
  */
 @Component

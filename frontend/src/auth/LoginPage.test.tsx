@@ -162,4 +162,13 @@ describe('LoginPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Esqueci a senha' })).toBeInTheDocument()
   })
+
+  it('mostra_alerta_quando_sessao_expirou_por_inatividade', async () => {
+    semSessao()
+    renderizar('/login?motivo=inatividade')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Sua sessão expirou por inatividade (30 minutos).',
+    )
+  })
 })

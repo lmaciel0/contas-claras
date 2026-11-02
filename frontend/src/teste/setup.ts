@@ -40,6 +40,7 @@ beforeAll(() => servidor.listen({ onUnhandledFrame: 'error' }))
 
 afterEach(() => {
   cleanup()
+  localStorage.clear()
   servidor.resetHandlers()
 })
 
