@@ -18,6 +18,7 @@ export const GRUPOS_MENU: GrupoMenu[] = [
     titulo: null,
     itens: [
       { rotulo: 'Início', caminho: '/', exata: true },
+      { rotulo: 'Projetos', caminho: '/projetos' },
       { rotulo: 'Tarefas', caminho: '/tarefas' },
       { rotulo: 'Notas', caminho: '/notas' },
     ],

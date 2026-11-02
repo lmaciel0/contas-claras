@@ -155,3 +155,15 @@ describe('toast de saída', () => {
     expect(aviso.parentElement).not.toHaveClass('bottom-24')
   })
 })
+
+describe('rota de projetos', () => {
+  it('projetos_mostra_a_tela_de_projetos_dentro_da_moldura', async () => {
+    comSessao()
+    responderTudo()
+    servidor.use(http.get('/api/projetos', () => HttpResponse.json([])))
+    renderizar('/projetos')
+
+    expect(await screen.findByRole('heading', { name: 'Projetos' })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
+  })
+})

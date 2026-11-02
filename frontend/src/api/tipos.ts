@@ -268,3 +268,5 @@ export interface NotaRequest {
 export interface NotaFixadaResponse {
   nota: NotaResponse | null
 }
+
+export * from '../paginas/projetos/tipos'
