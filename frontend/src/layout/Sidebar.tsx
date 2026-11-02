@@ -23,6 +23,13 @@ const ICONES: Record<string, ReactNode> = {
       <path d="M5 10v10h14V10" />
     </svg>
   ),
+  '/projetos': (
+    <svg {...iconeProps}>
+      <rect x="3" y="3" width="5" height="18" rx="1" />
+      <rect x="11" y="3" width="5" height="12" rx="1" />
+      <rect x="19" y="3" width="5" height="15" rx="1" />
+    </svg>
+  ),
   '/financeiro': (
     <svg {...iconeProps}>
       <rect x="3" y="3" width="7" height="9" rx="1.5" />

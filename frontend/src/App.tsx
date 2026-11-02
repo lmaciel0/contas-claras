@@ -19,6 +19,7 @@ import { PainelPage } from './paginas/painel/PainelPage'
 import { RelatoriosPage } from './paginas/relatorios/RelatoriosPage'
 import { NotaPage } from './paginas/notas/NotaPage'
 import { NotasPage } from './paginas/notas/NotasPage'
+import { ProjetosPage } from './paginas/projetos/ProjetosPage'
 import { TarefasPage } from './paginas/tarefas/TarefasPage'
 
 /**
@@ -91,6 +92,7 @@ export function App() {
       <Route element={<RotaProtegida />}>
         <Route element={<MolduraDoUsuario />}>
           <Route path="/" element={<PainelPage />} />
+          <Route path="/projetos" element={<ProjetosPage />} />
           <Route path="/tarefas" element={<TarefasPage />} />
           <Route path="/notas" element={<NotasPage />}>
             <Route path=":id" element={<NotaPage />} />
