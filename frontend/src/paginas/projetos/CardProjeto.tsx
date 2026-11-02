@@ -56,7 +56,6 @@ export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: Re
     <article
       draggable
       onDragStart={lidarDragStart}
-      onClick={() => aoClicar?.(projeto)}
       className={`group relative flex flex-col gap-3 rounded-xl border bg-[var(--cor-card)] p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-grab active:cursor-grabbing border-[var(--cor-linha)] hover:${estiloCor.borda}`}
     >
       {/* Topo: Categoria + Menu de Ações */}
@@ -132,9 +131,13 @@ export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: Re
 
       {/* Título e Descrição */}
       <div>
-        <h3 className="line-clamp-2 text-sm font-semibold text-[var(--cor-texto)] group-hover:text-[var(--cor-principal)] transition-colors">
-          {projeto.titulo}
-        </h3>
+        <button
+          type="button"
+          onClick={() => aoClicar?.(projeto)}
+          className="w-full text-left font-semibold text-sm text-[var(--cor-texto)] hover:text-[var(--cor-principal)] transition-colors focus:outline-hidden cursor-pointer"
+        >
+          <span className="line-clamp-2">{projeto.titulo}</span>
+        </button>
         {projeto.descricao && (
           <p className="mt-1 line-clamp-2 text-xs text-[var(--cor-mutado)] leading-relaxed">
             {projeto.descricao}
