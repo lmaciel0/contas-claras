@@ -17,6 +17,9 @@ import jakarta.persistence.Table;
 @Table(name = "categoria")
 public class Categoria {
 
+    public static final String ICONE_PADRAO = "outros";
+    public static final String COR_PADRAO = "#7d7a99";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,14 +38,26 @@ public class Categoria {
     @Column(nullable = false)
     private int ordem;
 
+    @Column(nullable = false, length = 50)
+    private String icone;
+
+    @Column(nullable = false, length = 30)
+    private String cor;
+
     protected Categoria() {
     }
 
     public Categoria(Usuario usuario, String nome, TipoCategoria tipo, int ordem) {
+        this(usuario, nome, tipo, ordem, ICONE_PADRAO, COR_PADRAO);
+    }
+
+    public Categoria(Usuario usuario, String nome, TipoCategoria tipo, int ordem, String icone, String cor) {
         this.usuario = usuario;
         this.nome = nome;
         this.tipo = tipo;
         this.ordem = ordem;
+        this.icone = normalizarIcone(icone);
+        this.cor = normalizarCor(cor);
     }
 
     public Long getId() {
@@ -65,11 +80,37 @@ public class Categoria {
         return ordem;
     }
 
+    public String getIcone() {
+        return icone;
+    }
+
+    public String getCor() {
+        return cor;
+    }
+
     public void renomear(String nome) {
         this.nome = nome;
     }
 
     public void moverPara(int ordem) {
         this.ordem = ordem;
+    }
+
+    public void atualizar(String nome, String icone, String cor) {
+        this.nome = nome;
+        if (icone != null && !icone.isBlank()) {
+            this.icone = icone.trim();
+        }
+        if (cor != null && !cor.isBlank()) {
+            this.cor = cor.trim();
+        }
+    }
+
+    private static String normalizarIcone(String icone) {
+        return (icone == null || icone.isBlank()) ? ICONE_PADRAO : icone.trim();
+    }
+
+    private static String normalizarCor(String cor) {
+        return (cor == null || cor.isBlank()) ? COR_PADRAO : cor.trim();
     }
 }

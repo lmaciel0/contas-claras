@@ -13,9 +13,19 @@ import dev.lmaciel.contasclaras.usuario.Usuario;
 @Component
 public class CategoriasPadrao {
 
-    private static final List<String> DESPESAS = List.of(
-            "Doméstica", "Transporte", "Entretenimento", "Saúde", "Dívidas/Empréstimos",
-            "Cartões de crédito", "Bancos", "Obrigações financeiras", "Pagamentos diversos", "Pessoais");
+    private record DefinicaoPadrao(String nome, String icone, String cor) {}
+
+    private static final List<DefinicaoPadrao> DESPESAS = List.of(
+            new DefinicaoPadrao("Doméstica", "casa", "#06b6d4"),
+            new DefinicaoPadrao("Transporte", "transporte", "#3b82f6"),
+            new DefinicaoPadrao("Entretenimento", "praia", "#f97316"),
+            new DefinicaoPadrao("Saúde", "saude", "#84cc16"),
+            new DefinicaoPadrao("Dívidas/Empréstimos", "servicos", "#b45309"),
+            new DefinicaoPadrao("Cartões de crédito", "outros", "#f43f5e"),
+            new DefinicaoPadrao("Bancos", "servicos", "#6366f1"),
+            new DefinicaoPadrao("Obrigações financeiras", "servicos", "#059669"),
+            new DefinicaoPadrao("Pagamentos diversos", "outros", "#64748b"),
+            new DefinicaoPadrao("Pessoais", "outros", "#a855f7"));
 
     private final CategoriaRepository categorias;
 
@@ -25,9 +35,10 @@ public class CategoriasPadrao {
 
     public void criarPara(Usuario usuario) {
         List<Categoria> novas = new ArrayList<>();
-        novas.add(new Categoria(usuario, "Receitas", TipoCategoria.RECEITA, 0));
+        novas.add(new Categoria(usuario, "Receitas", TipoCategoria.RECEITA, 0, "salario", "#10b981"));
         for (int i = 0; i < DESPESAS.size(); i++) {
-            novas.add(new Categoria(usuario, DESPESAS.get(i), TipoCategoria.DESPESA, i + 1));
+            DefinicaoPadrao def = DESPESAS.get(i);
+            novas.add(new Categoria(usuario, def.nome(), TipoCategoria.DESPESA, i + 1, def.icone(), def.cor()));
         }
         categorias.saveAll(novas);
     }
