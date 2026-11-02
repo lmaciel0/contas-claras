@@ -57,13 +57,6 @@ export function CardProjeto({ projeto, aoClicar, aoMoverEstagio, aoExcluir }: Re
       draggable
       onDragStart={lidarDragStart}
       onClick={() => aoClicar?.(projeto)}
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          aoClicar?.(projeto)
-        }
-      }}
       className={`group relative flex flex-col gap-3 rounded-xl border bg-[var(--cor-card)] p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-grab active:cursor-grabbing border-[var(--cor-linha)] hover:${estiloCor.borda}`}
     >
       {/* Topo: Categoria + Menu de Ações */}
