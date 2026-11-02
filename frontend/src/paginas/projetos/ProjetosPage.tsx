@@ -3,6 +3,7 @@ import { Carregando } from '../../componentes/Carregando'
 import { ListaProjetos } from './ListaProjetos'
 import { ProjetoModal } from './ProjetoModal'
 import { QuadroKanban } from './QuadroKanban'
+import { TimelineProjetos } from './TimelineProjetos'
 import type { EstagioProjeto, PrioridadeProjeto, Projeto } from './tipos'
 import {
   useAdicionarSubtarefa,
@@ -77,6 +78,14 @@ export function ProjetosPage() {
         aoClicarProjeto={(projeto) => abrirEdicao(projeto)}
         aoExcluirProjeto={(id) => excluirProjeto.mutate(id)}
         aoAlternarSubtarefa={(id, subId) => alternarSubtarefa.mutate({ projetoId: id, subtarefaId: subId })}
+      />
+    )
+  } else if (visao === 'timeline') {
+    conteudoPrincipal = (
+      <TimelineProjetos
+        projetos={projetos}
+        aoClicarProjeto={(projeto) => abrirEdicao(projeto)}
+        aoCriarProjeto={() => abrirCriacao('A_FAZER')}
       />
     )
   } else {
@@ -169,12 +178,22 @@ export function ProjetosPage() {
           <button
             type="button"
             role="tab"
-            aria-selected={false}
-            disabled
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--cor-mutado)] opacity-60 cursor-not-allowed"
+            aria-selected={visao === 'timeline'}
+            onClick={() => setVisao('timeline')}
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+              visao === 'timeline'
+                ? 'bg-[var(--cor-card)] text-[var(--cor-texto)] shadow-xs'
+                : 'text-[var(--cor-mutado)] hover:text-[var(--cor-texto)]'
+            }`}
           >
-            <span>Linha do Tempo</span>
-            <span className="rounded bg-[var(--cor-linha)] px-1 py-0.2 text-[10px]">Em breve</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="12" y2="6" />
+              <line x1="9" y1="18" x2="21" y2="18" />
+              <circle cx="15" cy="6" r="2" />
+              <circle cx="7" cy="18" r="2" />
+            </svg>
+            Linha do Tempo
           </button>
         </div>
 
