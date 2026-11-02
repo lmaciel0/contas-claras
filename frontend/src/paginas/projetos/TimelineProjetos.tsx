@@ -138,9 +138,9 @@ export function TimelineProjetos({
     fimPeriodo = new Date(ano, mesInicioTri + 3, 0, 23, 59, 59, 999)
 
     colunas = [
-      { rotulo: NOMES_MESES[mesInicioTri], subrotulo: 'Mês 1' },
-      { rotulo: NOMES_MESES[mesInicioTri + 1], subrotulo: 'Mês 2' },
-      { rotulo: NOMES_MESES[mesInicioTri + 2], subrotulo: 'Mês 3' },
+      { rotulo: NOMES_MESES[mesInicioTri] ?? '', subrotulo: 'Mês 1' },
+      { rotulo: NOMES_MESES[mesInicioTri + 1] ?? '', subrotulo: 'Mês 2' },
+      { rotulo: NOMES_MESES[mesInicioTri + 2] ?? '', subrotulo: 'Mês 3' },
     ]
   }
 
@@ -156,8 +156,8 @@ export function TimelineProjetos({
   // Rótulo textual do período
   const rotuloPeriodo =
     escala === 'mes'
-      ? `${NOMES_MESES[mesIndex]} de ${ano}`
-      : `${NOMES_MESES[inicioPeriodo.getMonth()]} - ${NOMES_MESES[fimPeriodo.getMonth()]} de ${ano}`
+      ? `${NOMES_MESES[mesIndex] ?? ''} de ${ano}`
+      : `${NOMES_MESES[inicioPeriodo.getMonth()] ?? ''} - ${NOMES_MESES[fimPeriodo.getMonth()] ?? ''} de ${ano}`
 
   if (projetos.length === 0) {
     return (
@@ -428,7 +428,7 @@ export function TimelineProjetos({
                       />
 
                       {/* Conteúdo textual da barra */}
-                      <div className="relative z-2 flex items-center justify-between w-full px-2 text-[11px] font-medium text-white drop-shadow-xs truncate">
+                      <div className="relative z-2 flex items-center justify-between w-full px-2 text-[11px] font-medium text-[var(--cor-texto)] drop-shadow-xs truncate">
                         <span className="truncate">{projeto.titulo}</span>
                         {!temPrazo && (
                           <span className="ml-1 shrink-0 rounded bg-black/40 px-1 py-0.2 text-[9px] text-[var(--cor-mutado)]">
