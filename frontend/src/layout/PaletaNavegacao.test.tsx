@@ -70,7 +70,17 @@ describe('PaletaNavegacao', () => {
     expect(dialogo).toHaveAttribute('aria-modal', 'true')
     expect(disparo.defaultPrevented).toBe(true)
     expect(screen.getByRole('combobox')).toHaveFocus()
-    expect(opcoes()).toEqual(['Início', 'Tarefas', 'Notas', 'Visão geral', 'Orçamento', 'Cartões', 'Categorias', 'Relatórios'])
+    expect(opcoes()).toEqual([
+      'Início',
+      'Projetos',
+      'Tarefas',
+      'Notas',
+      'Visão geral',
+      'Orçamento',
+      'Cartões',
+      'Categorias',
+      'Relatórios',
+    ])
   })
 
   it('digitar "orc" filtra para Orçamento, ignorando acento e caixa', async () => {
@@ -135,7 +145,7 @@ describe('PaletaNavegacao', () => {
     await user.keyboard('{ArrowUp}{ArrowUp}')
     expect(screen.getAllByRole('option').at(-1)).toHaveAttribute('aria-selected', 'true')
 
-    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{Enter}')
+    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{Enter}')
     expect(paleta()).not.toBeInTheDocument()
     expect(screen.getByTestId('local')).toHaveTextContent('/financeiro?ano=2026&mes=7')
   })
