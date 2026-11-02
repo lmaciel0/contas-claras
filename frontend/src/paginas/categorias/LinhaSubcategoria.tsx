@@ -66,7 +66,7 @@ export function LinhaSubcategoria({
             className="group relative grid size-8 place-items-center rounded-full text-[var(--cor-mutado)] hover:bg-[var(--cor-linha)]/60 hover:text-[var(--cor-texto)] focus-visible:outline-2 focus-visible:outline-[var(--cor-principal)]"
           >
             <FileText className="size-3.5" aria-hidden="true" />
-            <span className="pointer-events-none absolute -top-8 z-20 hidden rounded-md bg-neutral-800 px-2 py-0.5 text-[11px] font-medium text-white shadow-md group-hover:block">
+            <span className="pointer-events-none absolute -top-8 z-20 hidden rounded-md border border-[var(--cor-linha)] bg-[var(--cor-card)] px-2 py-0.5 text-[11px] font-medium text-[var(--cor-texto)] shadow-md group-hover:block">
               Relatórios
             </span>
           </button>

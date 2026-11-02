@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { endpoints } from '../../api/endpoints'
 import type { CategoriaRequest, CategoriaResponse, TipoCategoria } from '../../api/tipos'
@@ -26,7 +26,6 @@ export function EditorCategoria({ tipo, existente, aoFechar }: Props) {
   const [icone, setIcone] = useState(existente?.icone ?? 'outros')
   const [erro, setErro] = useState<string | null>(null)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
-  const inputNomeRef = useRef<HTMLInputElement>(null)
 
   const salvar = useMutation({
     mutationFn: (req: CategoriaRequest) =>
@@ -46,7 +45,6 @@ export function EditorCategoria({ tipo, existente, aoFechar }: Props) {
       void invalidarCadastro(queryClient)
       setNome('')
       setErro(null)
-      inputNomeRef.current?.focus()
     },
     onError: (falha) => setErro(mensagemDoErro(falha)),
   })
@@ -103,7 +101,6 @@ export function EditorCategoria({ tipo, existente, aoFechar }: Props) {
           value={nome}
           maxLength={80}
           autoComplete="off"
-          ref={inputNomeRef}
           onChange={(evento) => {
             setNome(evento.target.value)
             setErro(null)

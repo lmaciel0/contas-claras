@@ -36,7 +36,7 @@ export function CategoriasPage() {
   })
 
   const alternarArquivamentoItem = useMutation({
-    mutationFn: ({ item, categoriaId }: { item: ItemResponse; categoriaId: number }) =>
+    mutationFn: ({ item }: { item: ItemResponse }) =>
       endpoints.itens.atualizar(item.id, {
         nome: item.nome,
         diaVencimento: item.diaVencimento,
@@ -152,7 +152,7 @@ export function CategoriasPage() {
                           aoEditar={() => setEditor({ alvo: 'item', categoria: cat, existente: item })}
                           aoRelatorios={() => navigate(`/relatorios?categoriaId=${cat.id}&itemId=${item.id}`)}
                           aoArquivar={() =>
-                            alternarArquivamentoItem.mutate({ item, categoriaId: cat.id })
+                            alternarArquivamentoItem.mutate({ item })
                           }
                         />
                       ))}

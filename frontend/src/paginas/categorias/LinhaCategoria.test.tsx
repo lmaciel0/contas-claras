@@ -69,4 +69,23 @@ describe('LinhaCategoria', () => {
 
     expect(aoAdicionar).toHaveBeenCalled()
   })
+
+  it('renderiza categoria de receita sem o botao + de subcategoria', () => {
+    render(
+      <table>
+        <tbody>
+          <LinhaCategoria
+            categoria={catReceita}
+            aoEditar={vi.fn()}
+            aoRelatorios={vi.fn()}
+            aoArquivar={vi.fn()}
+            aoAdicionarSubcategoria={vi.fn()}
+          />
+        </tbody>
+      </table>,
+    )
+
+    expect(screen.getByText('Salário')).toBeInTheDocument()
+    expect(screen.queryByTitle(/adicionar subcategoria/i)).not.toBeInTheDocument()
+  })
 })

@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { CATALOGO_ICONES, ICONE_PADRAO, renderizarIcone } from './catalogoIcones'
+import { CATALOGO_ICONES, renderizarIcone } from './catalogoIcones'
 
 describe('catalogoIcones', () => {
   it('contem todos os icones das referencias', () => {

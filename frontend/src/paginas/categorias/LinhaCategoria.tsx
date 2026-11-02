@@ -56,7 +56,7 @@ export function LinhaCategoria({
             className="group relative grid size-9 place-items-center rounded-full text-[var(--cor-mutado)] hover:bg-[var(--cor-linha)]/60 hover:text-[var(--cor-texto)] focus-visible:outline-2 focus-visible:outline-[var(--cor-principal)]"
           >
             <FileText className="size-4" aria-hidden="true" />
-            <span className="pointer-events-none absolute -top-8 z-20 hidden rounded-md bg-neutral-800 px-2 py-0.5 text-[11px] font-medium text-white shadow-md group-hover:block">
+            <span className="pointer-events-none absolute -top-8 z-20 hidden rounded-md border border-[var(--cor-linha)] bg-[var(--cor-card)] px-2 py-0.5 text-[11px] font-medium text-[var(--cor-texto)] shadow-md group-hover:block">
               Relatórios
             </span>
           </button>
@@ -89,10 +89,10 @@ export function LinhaCategoria({
             title="Adicionar subcategoria"
             aria-label={`Adicionar subcategoria em ${categoria.nome}`}
             onClick={() => aoAdicionarSubcategoria(categoria)}
-            className={`grid size-7 place-items-center rounded-full text-white shadow-xs transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-1 ${
+            className={`grid size-7 place-items-center rounded-full shadow-xs transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-1 ${
               eDespesa
-                ? 'bg-[#c52828] hover:bg-[#b02222] focus-visible:outline-[#c52828]'
-                : 'bg-[#15803d] hover:bg-[#166534] focus-visible:outline-[#15803d]'
+                ? 'bg-[var(--cor-negativo)] text-[var(--cor-sobre-negativo)] hover:opacity-90 focus-visible:outline-[var(--cor-negativo)]'
+                : 'bg-[var(--cor-positivo)] text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-[var(--cor-positivo)]'
             }`}
           >
             <Plus className="size-4" aria-hidden="true" />

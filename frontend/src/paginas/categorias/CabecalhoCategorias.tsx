@@ -53,10 +53,10 @@ export function CabecalhoCategorias({
           aria-haspopup="true"
           aria-expanded={menuAberto}
           onClick={() => setMenuAberto((prev) => !prev)}
-          className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-white shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 ${
+          className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 ${
             eDespesa
-              ? 'bg-[#c52828] hover:bg-[#b02222] focus-visible:outline-[#c52828]'
-              : 'bg-[#15803d] hover:bg-[#166534] focus-visible:outline-[#15803d]'
+              ? 'bg-[var(--cor-negativo)] text-[var(--cor-sobre-negativo)] hover:opacity-90 focus-visible:outline-[var(--cor-negativo)]'
+              : 'bg-[var(--cor-positivo)] text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-[var(--cor-positivo)]'
           }`}
         >
           <span>{eDespesa ? 'Categoria de Despesas' : 'Categorias de Receitas'}</span>
@@ -80,11 +80,11 @@ export function CabecalhoCategorias({
               }}
               className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold transition-colors ${
                 eDespesa
-                  ? 'bg-[var(--cor-linha)]/50 text-[#c52828]'
+                  ? 'bg-[var(--cor-linha)]/50 text-[var(--cor-negativo-texto)]'
                   : 'text-[var(--cor-texto)] hover:bg-[var(--cor-linha)]/40'
               }`}
             >
-              <span className="size-2.5 rounded-full bg-[#c52828]" aria-hidden="true" />
+              <span className="size-2.5 rounded-full bg-[var(--cor-negativo)]" aria-hidden="true" />
               <span>Categoria de Despesas</span>
             </button>
 
@@ -97,11 +97,11 @@ export function CabecalhoCategorias({
               }}
               className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold transition-colors ${
                 !eDespesa
-                  ? 'bg-[var(--cor-linha)]/50 text-[#15803d]'
+                  ? 'bg-[var(--cor-linha)]/50 text-[var(--cor-positivo-texto)]'
                   : 'text-[var(--cor-texto)] hover:bg-[var(--cor-linha)]/40'
               }`}
             >
-              <span className="size-2.5 rounded-full bg-[#15803d]" aria-hidden="true" />
+              <span className="size-2.5 rounded-full bg-[var(--cor-positivo)]" aria-hidden="true" />
               <span>Categorias de Receitas</span>
             </button>
           </div>

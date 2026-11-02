@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, Palette } from 'lucide-react'
-import { CORES_CATEGORIA, COR_PADRAO, obterCorValida } from './paletaCores'
+import { CORES_CATEGORIA, obterCorValida } from './paletaCores'
 
 interface Props {
   valor?: string
@@ -39,7 +39,7 @@ export function SeletorCor({ valor, aoMudar }: Props) {
               className="relative grid size-8 place-items-center rounded-full transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
               style={{ backgroundColor: cor.hex }}
             >
-              {selecionado && <Check className="size-4 text-white drop-shadow-sm" aria-hidden="true" />}
+              {selecionado && <Check className="size-4 text-[var(--cor-sobre-principal)] drop-shadow-sm" aria-hidden="true" />}
             </button>
           )
         })}
@@ -70,7 +70,7 @@ export function SeletorCor({ valor, aoMudar }: Props) {
                   className="relative grid size-7 place-items-center rounded-full transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
                   style={{ backgroundColor: cor.hex }}
                 >
-                  {selecionado && <Check className="size-3.5 text-white drop-shadow-sm" aria-hidden="true" />}
+                  {selecionado && <Check className="size-3.5 text-[var(--cor-sobre-principal)] drop-shadow-sm" aria-hidden="true" />}
                 </button>
               )
             })}
