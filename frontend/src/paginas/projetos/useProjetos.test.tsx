@@ -79,7 +79,7 @@ describe('useProjetos', () => {
     }), { wrapper })
 
     await waitFor(() => expect(result.current.consulta.isSuccess).toBe(true))
-    expect(result.current.consulta.data?.[0].estagio).toBe('A_FAZER')
+    expect(result.current.consulta.data?.[0]?.estagio).toBe('A_FAZER')
 
     // Dispara a mutação sem esperar a resposta do servidor
     act(() => {
@@ -89,7 +89,7 @@ describe('useProjetos', () => {
     // Otimisticamente, o cache já deve refletir EM_ANDAMENTO
     await waitFor(() => {
       const dadosOtimistas = queryClient.getQueryData<Projeto[]>(['projetos', undefined])
-      expect(dadosOtimistas?.[0].estagio).toBe('EM_ANDAMENTO')
+      expect(dadosOtimistas?.[0]?.estagio).toBe('EM_ANDAMENTO')
     })
 
     // Libera a resposta do servidor
@@ -124,7 +124,7 @@ describe('useProjetos', () => {
 
     // Rollback deve restaurar estagio 'A_FAZER'
     const dadosAposErro = queryClient.getQueryData<Projeto[]>(['projetos', undefined])
-    expect(dadosAposErro?.[0].estagio).toBe('A_FAZER')
+    expect(dadosAposErro?.[0]?.estagio).toBe('A_FAZER')
   })
 
   it('alternarSubtarefa recalcula percentual otimisticamente', async () => {
@@ -142,7 +142,7 @@ describe('useProjetos', () => {
     }), { wrapper })
 
     await waitFor(() => expect(result.current.consulta.isSuccess).toBe(true))
-    expect(result.current.consulta.data?.[0].porcentagemProgresso).toBe(50)
+    expect(result.current.consulta.data?.[0]?.porcentagemProgresso).toBe(50)
 
     act(() => {
       result.current.alternar.mutate({ projetoId: 1, subtarefaId: 102 })

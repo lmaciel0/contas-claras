@@ -1,6 +1,6 @@
 import { api } from '../../api/cliente'
 import type {
-  PrioridadeProjeto,
+  FiltroProjetos,
   Projeto,
   ProjetoCriacaoRequisicao,
   ProjetoEdicaoRequisicao,
@@ -9,15 +9,12 @@ import type {
   SubtarefaCriacaoRequisicao,
 } from './tipos'
 
+export type { FiltroProjetos }
+
 const json = (corpo: unknown): RequestInit => ({
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(corpo),
 })
-
-export interface FiltroProjetos {
-  busca?: string
-  prioridade?: PrioridadeProjeto
-}
 
 function montarQuery(filtro?: FiltroProjetos): string {
   if (!filtro) return ''

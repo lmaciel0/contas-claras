@@ -57,3 +57,8 @@ export interface ProjetoMoverEstagioRequisicao {
 export interface SubtarefaCriacaoRequisicao {
   titulo: string
 }
+
+export interface FiltroProjetos {
+  busca?: string
+  prioridade?: PrioridadeProjeto
+}
