@@ -25,7 +25,7 @@ export function gravarTema(tema: Tema): void {
 }
 
 /** Cor da barra do navegador (`<meta name="theme-color">`) em cada tema: o roxo da marca e o `--cor-fundo` escuro. */
-export const COR_BARRA: Record<Tema, string> = { claro: '#27187E', escuro: '#0f0b2b' }
+export const COR_BARRA: Record<Tema, string> = { claro: '#27187E', escuro: '#0b0d13' }
 
 /** Aplica o tema em `<html data-tema>` e na cor da barra do navegador, respeitando a escolha explícita. */
 export function aplicarTema(tema: Tema): void {
