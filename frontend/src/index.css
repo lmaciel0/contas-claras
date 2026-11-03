@@ -294,7 +294,7 @@ body {
 /* Painel do menu no celular: desliza da esquerda e o fundo escurecido aparece. */
 @keyframes menu-painel-entra {
   from {
-    transform: translateX(-100%);
+    transform: translateX(calc(-100% - 1rem));
   }
   to {
     transform: translateX(0);
