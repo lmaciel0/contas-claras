@@ -1,8 +1,10 @@
+import { Calendar, CreditCard, Plus, Wifi } from 'lucide-react'
 import { useId } from 'react'
 import { Link } from 'react-router'
 import type { CartaoResponse, FaixaUso } from '../../api/tipos'
 import { formatarMoeda } from '../../formato/moeda'
 import { formatarPercentual, larguraDaBarra } from '../inicio/valores'
+import './CardCartao.css'
 
 /** Cor do preenchimento da barra por faixa de uso (a faixa vem pronta da API). */
 const COR_DA_BARRA: Record<Exclude<FaixaUso, 'SEM_LIMITE'>, string> = {
@@ -21,72 +23,216 @@ const CLASSE_DO_CHIP: Record<Exclude<FaixaUso, 'SEM_LIMITE'>, string> = {
 const classeFoco =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
 
+function getVisualMiniCartao(nome: string): { background: string; bandeira: string } {
+  const n = nome.toLowerCase()
+  if (n.includes('nu') || n.includes('roxo') || n.includes('ultravioleta')) {
+    return {
+      background: 'linear-gradient(135deg, #820ad1 0%, #430468 100%)',
+      bandeira: 'Nubank',
+    }
+  }
+  if (n.includes('inter')) {
+    return {
+      background: 'linear-gradient(135deg, #ff7a00 0%, #c44d00 100%)',
+      bandeira: 'Inter',
+    }
+  }
+  if (n.includes('itau') || n.includes('itaú') || n.includes('uniclass') || n.includes('personnalite')) {
+    return {
+      background: 'linear-gradient(135deg, #0d3b66 0%, #001833 100%)',
+      bandeira: 'Itaú',
+    }
+  }
+  if (n.includes('bradesco')) {
+    return {
+      background: 'linear-gradient(135deg, #cc092f 0%, #730315 100%)',
+      bandeira: 'Bradesco',
+    }
+  }
+  if (n.includes('santander')) {
+    return {
+      background: 'linear-gradient(135deg, #ec0000 0%, #8b0000 100%)',
+      bandeira: 'Santander',
+    }
+  }
+  if (n.includes('amex') || n.includes('american express')) {
+    return {
+      background: 'linear-gradient(135deg, #0077b6 0%, #023e8a 100%)',
+      bandeira: 'AMEX',
+    }
+  }
+  if (n.includes('c6')) {
+    return {
+      background: 'linear-gradient(135deg, #2b2b2b 0%, #111111 100%)',
+      bandeira: 'C6 Bank',
+    }
+  }
+  if (n.includes('verde')) {
+    return {
+      background: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)',
+      bandeira: 'Cartão',
+    }
+  }
+  if (n.includes('vermelho')) {
+    return {
+      background: 'linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%)',
+      bandeira: 'Cartão',
+    }
+  }
+  if (n.includes('azul')) {
+    return {
+      background: 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)',
+      bandeira: 'Cartão',
+    }
+  }
+  return {
+    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+    bandeira: 'Cartão',
+  }
+}
+
 interface Props {
   cartao: CartaoResponse
 }
 
-/** Um cartão: nome, vencimento, fatura do mês e, havendo limite, a barra de uso com o percentual. */
+/** Um cartão: mini cartão físico estético no topo, nome, vencimento, fatura do mês e barra de uso com limite. */
 export function CardCartao({ cartao }: Props) {
   const idTitulo = useId()
   const { faixa, uso, limite } = cartao
   const comLimite = faixa !== 'SEM_LIMITE' && uso !== null && limite !== null
+  const visual = getVisualMiniCartao(cartao.nome)
+  const ultimosDigitos = String(cartao.itemId).padStart(4, '0').slice(-4)
 
   return (
-    <section aria-labelledby={idTitulo} data-faixa={faixa} className="card flex flex-col gap-1">
-      <div className="flex items-center justify-between gap-2 text-sm font-semibold">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <h3 id={idTitulo} className="m-0 min-w-0 truncate text-sm font-semibold">
-            {cartao.nome}
-          </h3>
-          {cartao.titular && (
-            <span className="inline-flex shrink-0 items-center rounded-full border border-[var(--cor-linha)] bg-[var(--cor-fundo)] px-2 py-0.5 text-[11px] font-semibold text-[var(--cor-principal)]">
-              {cartao.titular}
-            </span>
+    <section
+      aria-labelledby={idTitulo}
+      data-faixa={faixa}
+      className="cartao-premium p-4 sm:p-4.5"
+    >
+      {/* Efeitos de feixe de luz e brilho de fundo */}
+      <div className="cartao-premium__shine" aria-hidden="true" />
+      <div className="cartao-premium__glow" aria-hidden="true" />
+
+      {/* Mini cartão visual realista no topo */}
+      <div
+        className="cartao-premium__mini-card mb-3.5 select-none"
+        style={{ background: visual.background }}
+        aria-hidden="true"
+      >
+        <div className="flex items-center justify-between">
+          {/* Chip metálico dourado */}
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-7 rounded-sm bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 shadow-inner flex items-center justify-center p-0.5">
+              <div className="h-full w-full border border-amber-800/40 rounded-sm grid grid-cols-2 gap-0.5">
+                <div className="border-r border-b border-amber-800/30" />
+                <div className="border-b border-amber-800/30" />
+                <div className="border-r border-amber-800/30" />
+                <div />
+              </div>
+            </div>
+            <Wifi className="size-4 rotate-90 opacity-70" />
+          </div>
+
+          <span className="text-[11px] font-bold tracking-wider uppercase opacity-90 drop-shadow-sm">
+            {visual.bandeira}
+          </span>
+        </div>
+
+        <div className="mt-auto flex items-end justify-between">
+          <span className="cartao-premium__mini-number">
+            •••• •••• •••• {ultimosDigitos}
+          </span>
+          <CreditCard className="size-4 opacity-40" />
+        </div>
+      </div>
+
+      {/* Conteúdo principal */}
+      <div className="relative z-[2] flex flex-1 flex-col justify-between">
+        <div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <h3 id={idTitulo} className="m-0 truncate text-base font-bold text-[var(--cor-texto)]">
+                  {cartao.nome}
+                </h3>
+                {cartao.titular && (
+                  <span className="inline-flex shrink-0 items-center rounded-full border border-[var(--cor-linha)] bg-[var(--cor-fundo)] px-2 py-0.5 text-[11px] font-semibold text-[var(--cor-principal)]">
+                    {cartao.titular}
+                  </span>
+                )}
+              </div>
+              {cartao.diaVencimento !== null && (
+                <p className="m-0 mt-1 flex items-center gap-1 text-[11px] text-[var(--cor-mutado)]">
+                  <Calendar className="size-3 shrink-0" />
+                  <span>vence dia {String(cartao.diaVencimento).padStart(2, '0')}</span>
+                </p>
+              )}
+            </div>
+
+            {comLimite && (
+              <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${CLASSE_DO_CHIP[faixa]}`}>
+                {formatarPercentual(uso)}
+              </span>
+            )}
+          </div>
+
+          {/* Barra de progresso de uso do limite */}
+          {comLimite ? (
+            <div
+              role="meter"
+              aria-label={`Uso do limite de ${cartao.nome}`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(larguraDaBarra(uso))}
+              aria-valuetext={`${formatarPercentual(uso)} do limite`}
+              className="my-3 h-2 overflow-hidden rounded-full bg-[var(--cor-linha)]"
+            >
+              <div
+                className="h-full rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${larguraDaBarra(uso)}%`, backgroundColor: COR_DA_BARRA[faixa] }}
+              />
+            </div>
+          ) : (
+            <div className="my-3" />
           )}
         </div>
-        {comLimite && (
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${CLASSE_DO_CHIP[faixa]}`}>
-            {formatarPercentual(uso)}
-          </span>
-        )}
-      </div>
-      {cartao.diaVencimento !== null && (
-        <p className="m-0 text-[11px] text-[var(--cor-mutado)]">
-          vence dia {String(cartao.diaVencimento).padStart(2, '0')}
-        </p>
-      )}
-      {comLimite ? (
-        <div
-          role="meter"
-          aria-label={`Uso do limite de ${cartao.nome}`}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(larguraDaBarra(uso))}
-          aria-valuetext={`${formatarPercentual(uso)} do limite`}
-          className="my-2.5 mb-1.5 h-[9px] overflow-hidden rounded-full bg-[var(--cor-linha)]"
-        >
-          <div
-            className="h-full rounded-full"
-            style={{ width: `${larguraDaBarra(uso)}%`, backgroundColor: COR_DA_BARRA[faixa] }}
-          />
+
+        {/* Rodapé com fatura, limite e botão de ação */}
+        <div className="mt-2 flex items-center justify-between gap-2 border-t border-[var(--cor-linha)]/60 pt-3">
+          <div className="flex flex-col">
+            <span className="text-[11px] text-[var(--cor-mutado)]">Fatura do mês</span>
+            <span className="valor text-sm font-bold text-[var(--cor-texto)]">
+              {formatarMoeda(cartao.fatura)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {comLimite ? (
+              <div className="text-right">
+                <span className="text-[11px] text-[var(--cor-mutado)]">Limite</span>
+                <p className="valor m-0 text-xs font-semibold text-[var(--cor-texto)]">
+                  de {formatarMoeda(limite)}
+                </p>
+              </div>
+            ) : (
+              <Link
+                to="/categorias"
+                className={`inline-flex min-h-6 items-center text-xs font-semibold text-[var(--cor-principal)] hover:underline ${classeFoco}`}
+              >
+                Cadastrar limite
+              </Link>
+            )}
+
+            <button
+              type="button"
+              title="Ação rápida no cartão"
+              aria-label={`Ação rápida para ${cartao.nome}`}
+              className="cartao-premium__action-btn shrink-0 ml-1"
+            >
+              <Plus className="size-4" />
+            </button>
+          </div>
         </div>
-      ) : (
-        <div className="my-2.5 mb-1.5" />
-      )}
-      <div className="flex items-baseline justify-between gap-2 text-xs text-[var(--cor-mutado)]">
-        <span className="valor">
-          <b className="text-[var(--cor-texto)]">{formatarMoeda(cartao.fatura)}</b> fatura
-        </span>
-        {comLimite ? (
-          <span className="valor">de {formatarMoeda(limite)}</span>
-        ) : (
-          <Link
-            to="/categorias"
-            className={`inline-flex min-h-6 items-center font-semibold text-[var(--cor-principal)] ${classeFoco}`}
-          >
-            Cadastrar limite
-          </Link>
-        )}
       </div>
     </section>
   )
