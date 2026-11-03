@@ -22,6 +22,15 @@ const botaoIcone = `grid min-h-11 min-w-11 shrink-0 cursor-pointer place-items-c
 
 const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
+/** No desktop o vão vem do `gap-3 p-3` do grid, então o `main` não tem padding; abaixo de 1280 px mantém o de antes. */
+function classesMain(larguraTotal: boolean, ehDesktop: boolean): string {
+  const largura = larguraTotal ? 'w-full min-w-0 outline-none' : 'mx-auto w-full max-w-6xl min-w-0 outline-none'
+  if (ehDesktop) {
+    return `${largura} col-start-2 row-start-2`
+  }
+  return `${largura} px-4 py-5 ${larguraTotal ? 'md:px-8' : 'md:px-6'}`
+}
+
 /**
  * Moldura das telas logadas. Em ≥ 1280 px a DockLateral fica flutuante à esquerda. Abaixo disso há uma barra fina no topo com o
  * botão "Abrir menu"; o menu desliza sobre um fundo escurecido (Esc, clique no fundo ou navegar fecham; ao virar desktop fecha sozinho).
@@ -95,6 +104,20 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
     document.addEventListener('keydown', abrirComAtalho)
     return () => document.removeEventListener('keydown', abrirComAtalho)
   }, [painelAberto])
+
+  // Barra fixa no desktop: quem rola é o documento, então o `scroll-padding-top` vai no <html>. Sem ele, o foco por
+  // teclado (e âncoras) levaria o elemento para baixo das pílulas (WCAG 2.4.11).
+  const reservaTopo = ehDesktop && preferencias.barraFixa
+  useEffect(() => {
+    if (!reservaTopo) {
+      return
+    }
+    const raiz = document.documentElement
+    raiz.style.scrollPaddingTop = '5rem'
+    return () => {
+      raiz.style.scrollPaddingTop = ''
+    }
+  }, [reservaTopo])
 
   const paleta = useMemo(() => ({ abrir: () => setPaletaAberta(true) }), [])
   const fecharPaleta = useCallback(() => setPaletaAberta(false), [])
@@ -199,11 +222,7 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
           <main
             ref={principal}
             tabIndex={-1}
-            className={`${
-              preferencias.layoutLargura === 'largura-total'
-                ? 'w-full min-w-0 px-4 py-5 outline-none md:px-8'
-                : 'mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6'
-            } ${ehDesktop ? 'col-start-2 row-start-2' : ''}`}
+            className={classesMain(preferencias.layoutLargura === 'largura-total', ehDesktop)}
           >
             <Outlet />
           </main>

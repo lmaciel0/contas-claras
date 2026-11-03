@@ -20,18 +20,24 @@ function definirLargura(largura: number) {
   window.dispatchEvent(new Event('resize'))
 }
 
-function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn(), Envoltorio: (p: { children: ReactNode }) => ReactNode = ({ children }) => children) {
+type Envoltorio = (props: { children: ReactNode }) => ReactNode
+
+const semEnvoltorio: Envoltorio = ({ children }) => children
+
+function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn(), Envoltorio: Envoltorio = semEnvoltorio) {
   renderComApp(
-    <Envoltorio><Routes>
-      <Route element={<AppShell nomeUsuario="Ana" aoSair={aoSair} />}>
-        <Route path="/" element={<p>Conteúdo do Início</p>} />
-        <Route path="/formulario" element={<input aria-label="Descrição" />} />
-        <Route path="/lancamentos" element={<p>Conteúdo dos Lançamentos</p>} />
-        <Route path="/cartoes" element={<p>Conteúdo dos Cartões</p>} />
-        <Route path="/categorias" element={<p>Conteúdo das Categorias</p>} />
-        <Route path="/relatorios" element={<p>Conteúdo dos Relatórios</p>} />
-      </Route>
-    </Routes></Envoltorio>,
+    <Envoltorio>
+      <Routes>
+        <Route element={<AppShell nomeUsuario="Ana" aoSair={aoSair} />}>
+          <Route path="/" element={<p>Conteúdo do Início</p>} />
+          <Route path="/formulario" element={<input aria-label="Descrição" />} />
+          <Route path="/lancamentos" element={<p>Conteúdo dos Lançamentos</p>} />
+          <Route path="/cartoes" element={<p>Conteúdo dos Cartões</p>} />
+          <Route path="/categorias" element={<p>Conteúdo das Categorias</p>} />
+          <Route path="/relatorios" element={<p>Conteúdo dos Relatórios</p>} />
+        </Route>
+      </Routes>
+    </Envoltorio>,
     rota,
   )
   return { aoSair }
@@ -106,6 +112,78 @@ describe('barra do topo fixa', () => {
 
     expect(screen.getByRole('banner').parentElement).toHaveClass('relative', 'z-20')
     expect(screen.queryByTestId('fundo-da-barra-fixa')).not.toBeInTheDocument()
+  })
+
+  it('barraFixa ligada no desktop: o scroll reserva espaço no topo para o foco não ficar sob as pílulas', () => {
+    gravarPreferencias({ ...PREFERENCIAS_PADRAO, barraFixa: true })
+    definirLargura(1400)
+    renderizar(undefined, undefined, PreferenciasProvider)
+
+    expect(document.documentElement.style.scrollPaddingTop).toBe('5rem')
+  })
+
+  it('barraFixa desligada, ou abaixo de 1280 px, não reserva espaço no topo', () => {
+    gravarPreferencias({ ...PREFERENCIAS_PADRAO, barraFixa: false })
+    definirLargura(1400)
+    const { unmount } = renderComApp(
+      <PreferenciasProvider>
+        <Routes>
+          <Route element={<AppShell nomeUsuario="Ana" />}>
+            <Route path="/" element={<p>Início</p>} />
+          </Route>
+        </Routes>
+      </PreferenciasProvider>,
+    )
+    expect(document.documentElement.style.scrollPaddingTop).toBe('')
+    unmount()
+
+    gravarPreferencias({ ...PREFERENCIAS_PADRAO, barraFixa: true })
+    definirLargura(390)
+    renderizar(undefined, undefined, PreferenciasProvider)
+    expect(document.documentElement.style.scrollPaddingTop).toBe('')
+  })
+
+  it('ao sair do shell o scroll-padding é removido', () => {
+    gravarPreferencias({ ...PREFERENCIAS_PADRAO, barraFixa: true })
+    definirLargura(1400)
+    const { unmount } = renderComApp(
+      <PreferenciasProvider>
+        <Routes>
+          <Route element={<AppShell nomeUsuario="Ana" />}>
+            <Route path="/" element={<p>Início</p>} />
+          </Route>
+        </Routes>
+      </PreferenciasProvider>,
+    )
+    expect(document.documentElement.style.scrollPaddingTop).toBe('5rem')
+    unmount()
+    expect(document.documentElement.style.scrollPaddingTop).toBe('')
+  })
+})
+
+describe('padding do main', () => {
+  it('desktop: sem padding próprio (o vão vem do grid), nos dois modos de largura', () => {
+    definirLargura(1400)
+    renderizar()
+    const main = screen.getByRole('main')
+    expect(main.className).not.toMatch(/(^|\s)(md:)?p[xy]-\d/)
+    expect(main).toHaveClass('max-w-6xl', 'mx-auto')
+  })
+
+  it('desktop com largura-total: sem padding e sem max-w', () => {
+    gravarPreferencias({ ...PREFERENCIAS_PADRAO, layoutLargura: 'largura-total' })
+    definirLargura(1400)
+    renderizar(undefined, undefined, PreferenciasProvider)
+    const main = screen.getByRole('main')
+    expect(main.className).not.toMatch(/(^|\s)(md:)?p[xy]-\d/)
+    expect(main).not.toHaveClass('max-w-6xl')
+    expect(main).toHaveClass('w-full')
+  })
+
+  it('abaixo de 1280 px mantém o padding original', () => {
+    definirLargura(390)
+    renderizar()
+    expect(screen.getByRole('main')).toHaveClass('px-4', 'py-5', 'md:px-6')
   })
 })
 

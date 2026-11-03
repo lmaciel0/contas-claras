@@ -88,7 +88,7 @@ describe('HeaderPrincipal', () => {
     expect(header).not.toHaveClass('border-b')
     expect(header).not.toHaveClass('bg-[var(--cor-card)]')
     expect(screen.getByRole('button', { name: 'Buscar páginas e atalhos' })).toHaveClass('superficie')
-    expect(screen.getByRole('button', { name: 'Perfil do usuário' }).closest('.superficie')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Perfil do usuário' }).parentElement?.parentElement).toHaveClass('superficie')
   })
 
   it('botao_de_painel_fica_no_mesmo_grupo_do_sino', () => {
