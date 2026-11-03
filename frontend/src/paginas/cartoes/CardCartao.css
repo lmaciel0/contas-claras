@@ -3,7 +3,7 @@
   --card-bg: var(--cor-card, #ffffff);
   --card-accent: var(--cor-principal, #27187e);
   --card-text: var(--cor-texto, #16123a);
-  --card-mutado: var(--cor-mutado, #7d7a99);
+  --card-mutado: var(--cor-mutado, #706e8a);
   --card-linha: var(--cor-linha, #e9e8f5);
   --card-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
 
