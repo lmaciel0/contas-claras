@@ -10,6 +10,7 @@ import { formatarMoeda } from '../../formato/moeda'
 import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { formatarPercentual } from '../inicio/valores'
+import { Plus } from 'lucide-react'
 import { CardCartao } from './CardCartao'
 import { EditorCartao } from './EditorCartao'
 
@@ -146,7 +147,23 @@ function ListaCartoes({ totalCartoes, cartoesExibidos, titularFiltro, aoCriarCar
   }
 
   return (
-    <div className="item-entra grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 md:gap-3.5">
+    <div className="item-entra grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+      {/* Botão/card pontilhado para adicionar novo cartão de forma intuitiva */}
+      <button
+        type="button"
+        onClick={aoCriarCartao}
+        aria-label="Cadastrar novo cartão na grade"
+        className="cartao-novo-dashed"
+      >
+        <div className="cartao-novo-dashed__icon" aria-hidden="true">
+          <Plus className="size-6 stroke-[2.5]" />
+        </div>
+        <div className="text-center">
+          <span className="block text-sm font-bold text-[var(--cor-texto)]">Novo cartão</span>
+          <span className="block mt-0.5 text-xs text-[var(--cor-mutado)]">Adicionar cartão de crédito</span>
+        </div>
+      </button>
+
       {cartoesExibidos.map((cartao) => (
         <CardCartao key={cartao.itemId} cartao={cartao} />
       ))}
