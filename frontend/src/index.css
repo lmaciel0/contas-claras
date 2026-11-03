@@ -16,7 +16,8 @@
   --cor-positivo-texto: #1f7a45;
   --cor-negativo-texto: #b73333;
   --cor-texto: #16123a;
-  --cor-mutado: #7d7a99;
+  /* Escurecido de #7d7a99 (3,8:1) para passar de 4,5:1 sobre a superfície translúcida (ver estilos.test.ts). */
+  --cor-mutado: #706e8a;
   --cor-linha: #e9e8f5;
   --cor-card: #fff;
   --cor-erro-fundo: #fdecec;
@@ -49,6 +50,16 @@
   --cor-nota-rosa: #be185d;
   --cor-nota-cinza: #5b5876;
   --raio-card: 22px;
+  /* Superfícies flutuantes: card a 75% sobre o fundo em degradê, com borda e sombra leves. */
+  --superficie: color-mix(in srgb, var(--cor-card) 75%, transparent);
+  --superficie-borda: color-mix(in srgb, var(--cor-card) 90%, transparent);
+  --sombra-flutuante: 0 2px 8px color-mix(in srgb, var(--cor-principal) 10%, transparent);
+  --fundo-degrade: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--cor-principal) 10%, var(--cor-fundo)) 0%,
+    var(--cor-fundo) 45%,
+    color-mix(in srgb, var(--cor-principal) 12%, var(--cor-fundo)) 100%
+  );
 }
 
 /* Tema escuro: fundo neutro obsidian (#0b0d13), card acetinado (#131622) e detalhes em azul moderno.
@@ -89,6 +100,9 @@
   --cor-nota-roxo: #a78bfa;
   --cor-nota-rosa: #f472b6;
   --cor-nota-cinza: #9ca3af;
+  /* Escuro: borda vira a linha do tema e a sombra fica mais forte para destacar do fundo. */
+  --superficie-borda: var(--cor-linha);
+  --sombra-flutuante: 0 2px 8px rgb(0 0 0 / 35%);
 }
 
 /* Presets de cor de destaque */
@@ -146,11 +160,22 @@ body {
 }
 
 @layer components {
-  /* Card branco padrão das telas (mockups: cantos de 20 a 24 px). */
+  /* Superfície flutuante translúcida: base do shell e do .card. */
+  .superficie {
+    background: var(--superficie);
+    border: 1px solid var(--superficie-borda);
+    box-shadow: var(--sombra-flutuante);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Card padrão das telas (mockups: cantos de 20 a 24 px): a mesma superfície com raio e padding. */
   .card {
-    background: var(--cor-card);
+    background: var(--superficie);
+    border: 1px solid var(--superficie-borda);
     border-radius: var(--raio-card);
+    box-shadow: var(--sombra-flutuante);
     padding: 1rem;
+    backdrop-filter: blur(8px);
   }
 
   /* Valores monetários alinhados em coluna. */
