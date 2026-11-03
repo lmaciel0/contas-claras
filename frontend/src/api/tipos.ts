@@ -92,6 +92,7 @@ export interface CartaoResponse {
   uso: string | null
   faixa: FaixaUso
   titular: string | null
+  categoriaId?: number
 }
 export interface CartoesResponse {
   totalFaturas: string

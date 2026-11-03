@@ -70,7 +70,7 @@ describe('LinhaCategoria', () => {
     expect(aoAdicionar).toHaveBeenCalled()
   })
 
-  it('renderiza categoria de receita sem o botao + de subcategoria', () => {
+  it('renderiza categoria de receita com o botao + de subcategoria', () => {
     render(
       <table>
         <tbody>
@@ -86,6 +86,6 @@ describe('LinhaCategoria', () => {
     )
 
     expect(screen.getByText('Salário')).toBeInTheDocument()
-    expect(screen.queryByTitle(/adicionar subcategoria/i)).not.toBeInTheDocument()
+    expect(screen.getByTitle(/adicionar subcategoria/i)).toBeInTheDocument()
   })
 })

@@ -11,6 +11,7 @@ import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { formatarPercentual } from '../inicio/valores'
 import { Plus } from 'lucide-react'
+import { LancamentoForm } from '../lancamentos/LancamentoForm'
 import { CardCartao } from './CardCartao'
 import { EditorCartao } from './EditorCartao'
 
@@ -115,9 +116,18 @@ interface ListaCartoesProps {
   cartoesExibidos: CartaoResponse[]
   titularFiltro: string
   aoCriarCartao: () => void
+  aoEditarCartao: (cartao: CartaoResponse) => void
+  aoLancarCartao: (cartao: CartaoResponse) => void
 }
 
-function ListaCartoes({ totalCartoes, cartoesExibidos, titularFiltro, aoCriarCartao }: ListaCartoesProps) {
+function ListaCartoes({
+  totalCartoes,
+  cartoesExibidos,
+  titularFiltro,
+  aoCriarCartao,
+  aoEditarCartao,
+  aoLancarCartao,
+}: ListaCartoesProps) {
   if (totalCartoes === 0) {
     return (
       <div className="card flex flex-col items-start gap-3 text-sm text-[var(--cor-mutado)]">
@@ -165,20 +175,29 @@ function ListaCartoes({ totalCartoes, cartoesExibidos, titularFiltro, aoCriarCar
       </button>
 
       {cartoesExibidos.map((cartao) => (
-        <CardCartao key={cartao.itemId} cartao={cartao} />
+        <CardCartao
+          key={cartao.itemId}
+          cartao={cartao}
+          aoEditar={aoEditarCartao}
+          aoLancar={aoLancarCartao}
+        />
       ))}
     </div>
   )
 }
 
 /**
- * `/cartoes`: fatura do mês de cada cartão contra o limite cadastrado. Cartão é um item marcado como tal em
- * Categorias; sem limite a barra não existe e o card leva para lá. A API já manda a ordem (maior fatura primeiro).
+ * `/cartoes`: fatura do mês de cada cartão contra o limite cadastrado.
+ * Permite cadastrar limite e editar dados in-place, além de realizar lançamentos diretamente no cartão.
  */
 export function CartoesPage() {
   const { ano, mes } = useMesSelecionado()
   const [criandoCartao, setCriandoCartao] = useState(false)
+  const [cartaoParaEditar, setCartaoParaEditar] = useState<CartaoResponse | null>(null)
+  const [cartaoParaLancamento, setCartaoParaLancamento] = useState<CartaoResponse | null>(null)
+  const [lancandoGeral, setLancandoGeral] = useState(false)
   const [titularFiltro, setTitularFiltro] = useState<string>('todos')
+
   const consulta = useQuery({
     queryKey: ['cartoes', ano, mes],
     queryFn: () => endpoints.cartoes.listar(ano, mes),
@@ -196,7 +215,7 @@ export function CartoesPage() {
 
   const titulo = (
     <>
-      <FaixaFinanceira />
+      <FaixaFinanceira aoLancar={() => setLancandoGeral(true)} />
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3 md:mb-5">
         <div>
           <h1 className="m-0 text-[28px] font-bold tracking-tight">Cartões</h1>
@@ -309,6 +328,8 @@ export function CartoesPage() {
           cartoesExibidos={cartoesExibidos}
           titularFiltro={titularFiltro}
           aoCriarCartao={() => setCriandoCartao(true)}
+          aoEditarCartao={(c) => setCartaoParaEditar(c)}
+          aoLancarCartao={(c) => setCartaoParaLancamento(c)}
         />
         <p className="mx-1 mt-2.5 mb-0 text-xs text-[var(--cor-mutado)]">
           O limite do banco também desconta parcelas futuras, que o app não conhece.
@@ -325,6 +346,37 @@ export function CartoesPage() {
         <EditorCartao
           aoFechar={() => setCriandoCartao(false)}
           titularesSugeridos={titularesPresentes}
+        />
+      )}
+      {cartaoParaEditar && (
+        <EditorCartao
+          cartaoParaEditar={cartaoParaEditar}
+          aoFechar={() => setCartaoParaEditar(null)}
+          titularesSugeridos={titularesPresentes}
+        />
+      )}
+      {cartaoParaLancamento && (
+        <LancamentoForm
+          aoFechar={() => setCartaoParaLancamento(null)}
+          aoSalvar={() => {
+            void consulta.refetch()
+            setCartaoParaLancamento(null)
+          }}
+          itemPreSelecionado={{
+            itemId: cartaoParaLancamento.itemId,
+            categoriaId: cartaoParaLancamento.categoriaId,
+          }}
+          mesInicial={{ ano, mes }}
+        />
+      )}
+      {lancandoGeral && (
+        <LancamentoForm
+          aoFechar={() => setLancandoGeral(false)}
+          aoSalvar={() => {
+            void consulta.refetch()
+            setLancandoGeral(false)
+          }}
+          mesInicial={{ ano, mes }}
         />
       )}
     </>

@@ -16,5 +16,6 @@ public record CartaoUso(
         BigDecimal limite,
         BigDecimal uso,
         FaixaUso faixa,
-        String titular) {
+        String titular,
+        long categoriaId) {
 }

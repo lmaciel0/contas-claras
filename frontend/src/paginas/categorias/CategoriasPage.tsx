@@ -144,18 +144,25 @@ export function CategoriasPage() {
                     />
 
                     {todosExpandidos &&
-                      itensExibidos.map((item) => (
-                        <LinhaSubcategoria
-                          key={item.id}
-                          item={item}
-                          corPai={cat.cor}
-                          aoEditar={() => setEditor({ alvo: 'item', categoria: cat, existente: item })}
-                          aoRelatorios={() => navigate(`/relatorios?categoriaId=${cat.id}&itemId=${item.id}`)}
-                          aoArquivar={() =>
-                            alternarArquivamentoItem.mutate({ item })
+                      itensExibidos
+                        .filter(() => {
+                          if (cat.tipo === 'RECEITA' && cat.itens.length === 1 && cat.itens[0]?.nome === cat.nome) {
+                            return false
                           }
-                        />
-                      ))}
+                          return true
+                        })
+                        .map((item) => (
+                          <LinhaSubcategoria
+                            key={item.id}
+                            item={item}
+                            corPai={cat.cor}
+                            aoEditar={() => setEditor({ alvo: 'item', categoria: cat, existente: item })}
+                            aoRelatorios={() => navigate(`/relatorios?categoriaId=${cat.id}&itemId=${item.id}`)}
+                            aoArquivar={() =>
+                              alternarArquivamentoItem.mutate({ item })
+                            }
+                          />
+                        ))}
                   </tbody>
                 )
               })

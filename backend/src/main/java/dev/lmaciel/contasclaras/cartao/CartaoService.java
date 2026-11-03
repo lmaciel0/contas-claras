@@ -58,7 +58,7 @@ public class CartaoService {
     private static CartaoUso cartao(Item item, BigDecimal fatura) {
         BigDecimal uso = item.getLimite() == null ? null : uso(fatura, item.getLimite());
         return new CartaoUso(item.getId(), item.getNome(), item.getDiaVencimento(), fatura, item.getLimite(),
-                uso, FaixaUso.de(uso), item.getTitular());
+                uso, FaixaUso.de(uso), item.getTitular(), item.getCategoria().getId());
     }
 
     private static BigDecimal uso(BigDecimal fatura, BigDecimal limite) {
