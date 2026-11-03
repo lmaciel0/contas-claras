@@ -218,11 +218,12 @@ export function CartoesPage() {
       titulo="Cartões"
       subtitulo="Quanto da fatura do mês ocupa o limite de cada cartão."
       aoLancar={() => setLancandoGeral(true)}
+      tituloVisivelNoCelular
       acaoExtra={
         <button
           type="button"
           onClick={() => setCriandoCartao(true)}
-          className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-[var(--cor-principal)] px-4 text-sm font-semibold text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+          className="flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-[var(--cor-principal)] px-4 text-sm font-semibold whitespace-nowrap text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
         >
           + Novo cartão
         </button>

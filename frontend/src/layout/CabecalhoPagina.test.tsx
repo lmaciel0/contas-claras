@@ -90,6 +90,14 @@ describe('CabecalhoPagina', () => {
     expect(bloco).toHaveClass('sr-only', 'md:not-sr-only')
   })
 
+  it('tituloVisivelNoCelular_mantem_titulo_e_subtitulo_visiveis_abaixo_de_md', () => {
+    renderizar(<CabecalhoPagina titulo="Cartões" subtitulo="Subtítulo." tituloVisivelNoCelular />)
+
+    const bloco = screen.getByRole('heading', { level: 1 }).parentElement
+    expect(bloco).not.toHaveClass('sr-only')
+    expect(bloco).not.toHaveClass('md:not-sr-only')
+  })
+
   it('alvos_de_toque_de_44px', () => {
     renderizar(<CabecalhoPagina titulo="Orçamento" />)
 
