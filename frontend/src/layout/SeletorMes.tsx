@@ -10,7 +10,7 @@ export function SeletorMes() {
   const { ano, mes, anterior, seguinte } = useMesSelecionado()
 
   return (
-    <div className="flex items-center gap-1 rounded-full bg-[var(--cor-card)] px-1 text-sm font-semibold shadow-sm">
+    <div className="flex items-center gap-1 superficie rounded-full px-1 text-sm font-semibold">
       <button type="button" className={botao} aria-label="Mês anterior" onClick={anterior}>
         <span aria-hidden="true">‹</span>
       </button>

@@ -7,7 +7,7 @@ import type { CartaoResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { Esqueleto } from '../../componentes/Esqueleto'
 import { formatarMoeda } from '../../formato/moeda'
-import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
+import { CabecalhoPagina } from '../../layout/CabecalhoPagina'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { formatarPercentual } from '../inicio/valores'
 import { Plus } from 'lucide-react'
@@ -214,24 +214,21 @@ export function CartoesPage() {
   ).sort((a, b) => a.localeCompare(b))
 
   const titulo = (
-    <>
-      <FaixaFinanceira aoLancar={() => setLancandoGeral(true)} />
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 md:mb-5">
-        <div>
-          <h1 className="m-0 text-[28px] font-bold tracking-tight">Cartões</h1>
-          <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">
-            Quanto da fatura do mês ocupa o limite de cada cartão.
-          </p>
-        </div>
+    <CabecalhoPagina
+      titulo="Cartões"
+      subtitulo="Quanto da fatura do mês ocupa o limite de cada cartão."
+      aoLancar={() => setLancandoGeral(true)}
+      tituloVisivelNoCelular
+      acaoExtra={
         <button
           type="button"
           onClick={() => setCriandoCartao(true)}
-          className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-[var(--cor-principal)] px-4 text-sm font-semibold text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+          className="flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-[var(--cor-principal)] px-4 text-sm font-semibold whitespace-nowrap text-[var(--cor-sobre-principal)] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
         >
           + Novo cartão
         </button>
-      </div>
-    </>
+      }
+    />
   )
 
   let conteudo: ReactNode

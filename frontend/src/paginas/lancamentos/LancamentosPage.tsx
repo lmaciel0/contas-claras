@@ -5,7 +5,7 @@ import { endpoints } from '../../api/endpoints'
 import type { LancamentoResponse, StatusLancamento } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { Esqueleto } from '../../componentes/Esqueleto'
-import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
+import { CabecalhoPagina } from '../../layout/CabecalhoPagina'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { GrupoCategoria } from './GrupoCategoria'
 import { invalidarLancamentos } from './invalidar'
@@ -48,15 +48,7 @@ export function LancamentosPage() {
     onSuccess: () => invalidarLancamentos(queryClient),
   })
 
-  const titulo = (
-    <>
-      <FaixaFinanceira />
-      <div className="mb-3 sr-only md:not-sr-only md:mb-5">
-        <h1 className="m-0 text-[28px] font-bold tracking-tight">Orçamento</h1>
-        <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">Tudo o que entra e sai no mês, por categoria.</p>
-      </div>
-    </>
-  )
+  const titulo = <CabecalhoPagina titulo="Orçamento" subtitulo="Tudo o que entra e sai no mês, por categoria." />
 
   let conteudo: ReactNode
   if (consulta.isPending) {
