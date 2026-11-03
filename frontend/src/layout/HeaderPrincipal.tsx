@@ -68,24 +68,34 @@ export function HeaderPrincipal({
           type="button"
           aria-label="Buscar páginas e atalhos"
           onClick={onAbrirBusca}
-          className={`group flex h-10 w-full items-center gap-2.5 rounded-full border border-[var(--cor-linha)] bg-[var(--cor-fundo)] px-3.5 text-sm text-[var(--cor-mutado)] shadow-xs transition-colors hover:border-[var(--cor-principal-clara)] ${foco}`}
+          className={`group flex h-10 w-full items-center justify-between gap-2.5 rounded-full border border-[var(--cor-linha)]/80 bg-[var(--cor-fundo)]/60 px-3.5 text-sm text-[var(--cor-mutado)] shadow-2xs backdrop-blur-xs transition-all duration-200 hover:border-[var(--cor-principal-clara)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)] ${foco}`}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <div className="flex items-center gap-2.5 min-w-0">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="text-[var(--cor-mutado)] transition-colors group-hover:text-[var(--cor-principal)]"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <span className="truncate text-left text-sm text-[var(--cor-mutado)] transition-colors group-hover:text-[var(--cor-texto)]">
+              Buscar…
+            </span>
+          </div>
+          <kbd
             aria-hidden="true"
-            className="text-[var(--cor-mutado)] group-hover:text-[var(--cor-principal)] transition-colors"
+            className="hidden sm:inline-flex items-center gap-1 rounded-md border border-[var(--cor-linha)] bg-[var(--cor-card)] px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-[var(--cor-mutado)] shadow-2xs transition-colors group-hover:border-[var(--cor-principal-clara)]/60 group-hover:text-[var(--cor-principal)]"
           >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <span className="flex-1 text-left">Buscar…</span>
+            Ctrl K
+          </kbd>
         </button>
       </div>
 
@@ -125,7 +135,7 @@ export function HeaderPrincipal({
         <button
           type="button"
           aria-label="Notificações"
-          className={`relative grid size-10 place-items-center rounded-full text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] ${foco}`}
+          className={`relative grid size-10 place-items-center rounded-full text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] active:scale-95 ${foco}`}
         >
           <svg
             width="20"
@@ -147,58 +157,89 @@ export function HeaderPrincipal({
           />
         </button>
 
-        {/* Perfil e Menu Suspenso */}
+        {/* Perfil e Menu Suspenso (Avatar Puro na Barra) */}
         <div ref={menuRef} className="relative">
           <button
             ref={botaoRef}
             type="button"
             aria-label="Perfil do usuário"
+            title={nomeUsuario ? `Perfil de ${nomeUsuario}` : 'Perfil do usuário'}
             aria-expanded={menuAberto}
             aria-haspopup="menu"
             onClick={() => setMenuAberto((prev) => !prev)}
-            className={`flex items-center gap-2.5 rounded-full p-1 pl-2 text-left transition-colors hover:bg-[var(--cor-fundo)] ${foco}`}
+            className={`group relative grid size-10 shrink-0 place-items-center rounded-full transition-all duration-200 hover:scale-105 active:scale-95 ${foco}`}
           >
-            <div className="hidden flex-col text-right sm:flex">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--cor-mutado)]">
-                Aprumo
-              </span>
-              <span className="max-w-[140px] truncate text-sm font-semibold text-[var(--cor-texto)]">
-                {nomeUsuario}
-              </span>
-            </div>
+            {/* Informações acessíveis para leitores de tela e testes */}
+            {nomeUsuario && <span className="sr-only">{nomeUsuario}</span>}
+            <span className="sr-only">Aprumo</span>
+
             <span
               aria-hidden="true"
-              className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--cor-principal)] text-sm font-bold text-[var(--cor-sobre-principal)] ring-2 ring-[var(--cor-linha)]"
+              className="grid size-9.5 place-items-center rounded-full bg-[var(--cor-principal)] text-sm font-bold text-[var(--cor-sobre-principal)] shadow-xs ring-2 ring-[var(--cor-linha)] transition-all duration-200 group-hover:ring-[var(--cor-principal-clara)] group-hover:shadow-sm"
             >
               {inicial}
             </span>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              className={`text-[var(--cor-mutado)] transition-transform duration-200 ${menuAberto ? 'rotate-180' : ''}`}
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
           </button>
 
-          {/* Menu Suspenso (Dropdown) */}
+          {/* Menu Suspenso (Dropdown Rico) */}
           {menuAberto && (
             <div
               role="menu"
               aria-label="Opções da conta"
-              className="item-entra absolute top-full right-0 mt-2 w-60 rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-2 shadow-lg"
+              className="item-entra absolute top-full right-0 mt-2.5 w-64 rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-2 shadow-xl backdrop-blur-md"
             >
-              <div className="flex items-center justify-between border-b border-[var(--cor-linha)] px-3 py-2.5 mb-1">
-                <span className="text-xs font-semibold text-[var(--cor-mutado)]">Tema</span>
+              {/* Cabeçalho do Perfil */}
+              <div className="flex items-center gap-3 border-b border-[var(--cor-linha)] p-2.5 pb-3 mb-1">
+                <span
+                  aria-hidden="true"
+                  className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--cor-principal)] text-base font-bold text-[var(--cor-sobre-principal)] ring-2 ring-[var(--cor-linha)]"
+                >
+                  {inicial}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-[var(--cor-texto)]">
+                    {nomeUsuario || 'Usuário'}
+                  </p>
+                  <span className="inline-flex items-center rounded-md bg-[var(--cor-fundo)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cor-mutado)]">
+                    Conta Aprumo
+                  </span>
+                </div>
+              </div>
+
+              {/* Tema */}
+              <div className="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-[var(--cor-fundo)]">
+                <div className="flex items-center gap-2.5">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    className="text-[var(--cor-mutado)]"
+                  >
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                  </svg>
+                  <span className="text-xs font-semibold text-[var(--cor-mutado)]">Tema</span>
+                </div>
                 <BotaoTema />
               </div>
+
+              {/* Divisória sutil */}
+              <div className="my-1 border-t border-[var(--cor-linha)]" />
+
+              {/* Preferências */}
               <button
                 role="menuitem"
                 type="button"
@@ -206,7 +247,7 @@ export function HeaderPrincipal({
                   setMenuAberto(false)
                   onAbrirPreferencias?.()
                 }}
-                className={`flex w-full min-h-11 items-center gap-3 rounded-xl px-3 text-left text-sm text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] ${foco}`}
+                className={`flex w-full min-h-10 items-center gap-2.5 rounded-xl px-3 text-left text-sm text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] ${foco}`}
               >
                 <svg
                   width="18"
@@ -225,11 +266,13 @@ export function HeaderPrincipal({
                 </svg>
                 <span>Preferências</span>
               </button>
+
+              {/* Alterar senha */}
               <Link
                 role="menuitem"
                 to="/conta/senha"
                 onClick={() => setMenuAberto(false)}
-                className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] ${foco}`}
+                className={`flex min-h-10 items-center gap-2.5 rounded-xl px-3 text-sm text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] ${foco}`}
               >
                 <svg
                   width="18"
@@ -248,6 +291,11 @@ export function HeaderPrincipal({
                 </svg>
                 <span>Alterar senha</span>
               </Link>
+
+              {/* Divisória sutil */}
+              <div className="my-1 border-t border-[var(--cor-linha)]" />
+
+              {/* Sair */}
               <button
                 role="menuitem"
                 type="button"
@@ -255,7 +303,7 @@ export function HeaderPrincipal({
                   setMenuAberto(false)
                   aoSair?.()
                 }}
-                className={`flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-sm text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] ${foco}`}
+                className={`flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 text-left text-sm text-[var(--cor-negativo-texto)] transition-colors hover:bg-[var(--cor-erro-fundo)] ${foco}`}
               >
                 <svg
                   width="18"
@@ -267,13 +315,13 @@ export function HeaderPrincipal({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden="true"
-                  className="text-[var(--cor-mutado)]"
+                  className="text-[var(--cor-negativo-texto)]"
                 >
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
-                <span>Sair</span>
+                <span className="font-medium">Sair</span>
               </button>
             </div>
           )}
