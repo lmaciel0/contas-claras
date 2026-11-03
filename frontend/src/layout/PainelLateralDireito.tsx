@@ -254,7 +254,7 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
   return (
     <aside
       aria-label="Painel de Produtividade"
-      className={`flex flex-col gap-4 border-l border-[var(--cor-linha)] bg-[var(--cor-fundo)] p-4 text-[var(--cor-texto)] ${className}`}
+      className={`flex min-w-0 flex-col gap-3 text-[var(--cor-texto)] ${className}`}
     >
       {/* Botão de fechar se exibido como gaveta/drawer */}
       {aoFechar && (
@@ -276,10 +276,10 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
       <section
         aria-label="Meu Calendário"
         aria-labelledby="titulo-calendario"
-        className="rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-3.5 shadow-xs"
+        className="superficie rounded-2xl p-3.5"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h2 id="titulo-calendario" className="text-sm font-bold tracking-tight text-[var(--cor-texto)]">
+          <h2 id="titulo-calendario" className="text-[11px] font-semibold uppercase tracking-wide text-[var(--cor-mutado)]">
             Meu Calendário
           </h2>
           <div className="flex items-center gap-1">
@@ -354,11 +354,11 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
       <section
         aria-label="Minhas Tarefas de Hoje"
         aria-labelledby="titulo-tarefas-hoje"
-        className="rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-3.5 shadow-xs"
+        className="superficie rounded-2xl p-3.5"
       >
         <div className="mb-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 id="titulo-tarefas-hoje" className="text-sm font-bold tracking-tight text-[var(--cor-texto)]">
+            <h2 id="titulo-tarefas-hoje" className="text-[11px] font-semibold uppercase tracking-wide text-[var(--cor-mutado)]">
               Minhas Tarefas de Hoje
             </h2>
             {tarefasHojeEAtrazadas.length > 0 && (
@@ -420,10 +420,10 @@ export function PainelLateralDireito({ className = '', aoFechar }: PainelLateral
       <section
         aria-label="Próximas Tarefas"
         aria-labelledby="titulo-proximas-tarefas"
-        className="rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-3.5 shadow-xs"
+        className="superficie rounded-2xl p-3.5"
       >
         <div className="mb-2 flex items-center justify-between">
-          <h2 id="titulo-proximas-tarefas" className="text-sm font-bold tracking-tight text-[var(--cor-texto)]">
+          <h2 id="titulo-proximas-tarefas" className="text-[11px] font-semibold uppercase tracking-wide text-[var(--cor-mutado)]">
             Próximas Tarefas
           </h2>
           {proximasTarefas.length > 0 && (

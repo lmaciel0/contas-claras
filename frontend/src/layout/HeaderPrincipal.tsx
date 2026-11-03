@@ -61,46 +61,44 @@ export function HeaderPrincipal({
   }, [menuAberto])
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-[var(--cor-linha)] bg-[var(--cor-card)] px-4 md:px-6 shadow-xs">
-      {/* Campo de busca conectado à paleta rápida (Ctrl+K) */}
-      <div className="flex-1 max-w-md">
-        <button
-          type="button"
-          aria-label="Buscar páginas e atalhos"
-          onClick={onAbrirBusca}
-          className={`group flex h-10 w-full items-center justify-between gap-2.5 rounded-full border border-[var(--cor-linha)]/80 bg-[var(--cor-fundo)]/60 px-3.5 text-sm text-[var(--cor-mutado)] shadow-2xs backdrop-blur-xs transition-all duration-200 hover:border-[var(--cor-principal-clara)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)] ${foco}`}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              className="text-[var(--cor-mutado)] transition-colors group-hover:text-[var(--cor-principal)]"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <span className="truncate text-left text-sm text-[var(--cor-mutado)] transition-colors group-hover:text-[var(--cor-texto)]">
-              Buscar…
-            </span>
-          </div>
-          <kbd
+    <header className="flex items-center gap-3">
+      {/* Pílula de busca conectada à paleta rápida (Ctrl+K) */}
+      <button
+        type="button"
+        aria-label="Buscar páginas e atalhos"
+        onClick={onAbrirBusca}
+        className={`superficie group flex h-11 min-w-0 flex-1 cursor-pointer items-center justify-between gap-2.5 rounded-full px-4 text-sm text-[var(--cor-mutado)] transition-colors duration-200 hover:border-[var(--cor-principal-clara)] hover:text-[var(--cor-texto)] ${foco}`}
+      >
+        <span className="flex min-w-0 items-center gap-2.5">
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             aria-hidden="true"
-            className="hidden sm:inline-flex items-center gap-1 rounded-md border border-[var(--cor-linha)] bg-[var(--cor-card)] px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-[var(--cor-mutado)] shadow-2xs transition-colors group-hover:border-[var(--cor-principal-clara)]/60 group-hover:text-[var(--cor-principal)]"
+            className="text-[var(--cor-mutado)] transition-colors group-hover:text-[var(--cor-principal)]"
           >
-            Ctrl K
-          </kbd>
-        </button>
-      </div>
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <span className="truncate text-left text-sm text-[var(--cor-mutado)] transition-colors group-hover:text-[var(--cor-texto)]">
+            Buscar…
+          </span>
+        </span>
+        <kbd
+          aria-hidden="true"
+          className="hidden sm:inline-flex items-center gap-1 rounded-md border border-[var(--cor-linha)] bg-[var(--cor-card)] px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-[var(--cor-mutado)] shadow-2xs transition-colors group-hover:border-[var(--cor-principal-clara)]/60 group-hover:text-[var(--cor-principal)]"
+        >
+          Ctrl K
+        </kbd>
+      </button>
 
-      {/* Cluster à direita: Alternar Painel + Notificações + Perfil do Usuário */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      {/* Pílula à direita: Alternar Painel + Notificações + Perfil do Usuário. Sem overflow para o menu não ser cortado. */}
+      <div className="superficie flex h-11 shrink-0 items-center rounded-full">
         {/* Alternar Painel de Produtividade */}
         {onAlternarPainelProdutividade && (
           <button
@@ -108,7 +106,7 @@ export function HeaderPrincipal({
             aria-label="Alternar painel de produtividade"
             aria-pressed={painelProdutividadeAberto}
             onClick={onAlternarPainelProdutividade}
-            className={`grid size-10 place-items-center rounded-full text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] 2xl:hidden ${
+            className={`grid min-h-11 min-w-11 cursor-pointer place-items-center rounded-full text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] 2xl:hidden ${
               painelProdutividadeAberto ? 'bg-[var(--cor-principal-clara)] text-[var(--cor-principal)] font-bold' : ''
             } ${foco}`}
           >
@@ -135,7 +133,7 @@ export function HeaderPrincipal({
         <button
           type="button"
           aria-label="Notificações"
-          className={`relative grid size-10 place-items-center rounded-full text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] active:scale-95 ${foco}`}
+          className={`relative grid min-h-11 min-w-11 cursor-pointer place-items-center rounded-full text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] active:scale-95 ${foco}`}
         >
           <svg
             width="20"
@@ -152,7 +150,7 @@ export function HeaderPrincipal({
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
           <span
-            className="absolute top-2.5 right-2.5 size-2 rounded-full bg-[var(--cor-negativo)] ring-2 ring-[var(--cor-card)]"
+            className="absolute top-3 right-3 size-2 rounded-full bg-[var(--cor-negativo)] ring-2 ring-[var(--cor-card)]"
             aria-hidden="true"
           />
         </button>
@@ -167,7 +165,7 @@ export function HeaderPrincipal({
             aria-expanded={menuAberto}
             aria-haspopup="menu"
             onClick={() => setMenuAberto((prev) => !prev)}
-            className={`group relative grid size-10 shrink-0 place-items-center rounded-full transition-all duration-200 hover:scale-105 active:scale-95 ${foco}`}
+            className={`group relative grid min-h-11 min-w-11 shrink-0 cursor-pointer place-items-center rounded-full transition-all duration-200 hover:scale-105 active:scale-95 ${foco}`}
           >
             {/* Informações acessíveis para leitores de tela e testes */}
             {nomeUsuario && <span className="sr-only">{nomeUsuario}</span>}

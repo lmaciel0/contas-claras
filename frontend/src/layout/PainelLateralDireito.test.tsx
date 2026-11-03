@@ -85,4 +85,15 @@ describe('PainelLateralDireito', () => {
 
     expect(screen.getByText(/outubro,? 2026/i)).toBeInTheDocument()
   })
+
+  it('painel_nao_tem_borda_lateral_nem_fundo_proprio', async () => {
+    responder(resposta({}))
+
+    renderizar()
+
+    const painel = await screen.findByRole('complementary', { name: 'Painel de Produtividade' })
+    expect(painel).not.toHaveClass('border-l')
+    expect(painel).not.toHaveClass('bg-[var(--cor-fundo)]')
+    expect(screen.getByRole('region', { name: /calendário/i })).toHaveClass('superficie')
+  })
 })
