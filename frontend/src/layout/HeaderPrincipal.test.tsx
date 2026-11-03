@@ -80,4 +80,23 @@ describe('HeaderPrincipal', () => {
 
     expect(onAbrirPreferencias).toHaveBeenCalledTimes(1)
   })
+
+  it('header_nao_tem_faixa_nem_borda', () => {
+    renderComApp(<HeaderPrincipal nomeUsuario="Lucas" />)
+
+    const header = screen.getByRole('banner')
+    expect(header).not.toHaveClass('border-b')
+    expect(header).not.toHaveClass('bg-[var(--cor-card)]')
+    expect(screen.getByRole('button', { name: 'Buscar páginas e atalhos' })).toHaveClass('superficie')
+    expect(screen.getByRole('button', { name: 'Perfil do usuário' }).closest('.superficie')).not.toBeNull()
+  })
+
+  it('botao_de_painel_fica_no_mesmo_grupo_do_sino', () => {
+    renderComApp(<HeaderPrincipal nomeUsuario="Lucas" onAlternarPainelProdutividade={vi.fn()} />)
+
+    const painel = screen.getByRole('button', { name: 'Alternar painel de produtividade' })
+    const sino = screen.getByRole('button', { name: 'Notificações' })
+    expect(painel.parentElement).toBe(sino.parentElement)
+    expect(sino.parentElement).toHaveClass('superficie')
+  })
 })

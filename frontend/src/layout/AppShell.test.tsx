@@ -1,9 +1,12 @@
 import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
+import type { ReactNode } from 'react'
 import { Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../api/cliente'
+import { PreferenciasProvider } from '../preferencias/PreferenciasContext'
+import { gravarPreferencias, PREFERENCIAS_PADRAO } from '../preferencias/preferenciasStorage'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AppShell } from './AppShell'
@@ -17,9 +20,9 @@ function definirLargura(largura: number) {
   window.dispatchEvent(new Event('resize'))
 }
 
-function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn()) {
+function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn(), Envoltorio: (p: { children: ReactNode }) => ReactNode = ({ children }) => children) {
   renderComApp(
-    <Routes>
+    <Envoltorio><Routes>
       <Route element={<AppShell nomeUsuario="Ana" aoSair={aoSair} />}>
         <Route path="/" element={<p>Conteúdo do Início</p>} />
         <Route path="/formulario" element={<input aria-label="Descrição" />} />
@@ -28,7 +31,7 @@ function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn()) {
         <Route path="/categorias" element={<p>Conteúdo das Categorias</p>} />
         <Route path="/relatorios" element={<p>Conteúdo dos Relatórios</p>} />
       </Route>
-    </Routes>,
+    </Routes></Envoltorio>,
     rota,
   )
   return { aoSair }
@@ -52,6 +55,57 @@ describe('AppShell no computador (1280 px ou mais)', () => {
     await userEvent.click(botaoPrefs)
 
     expect(screen.getByRole('dialog', { name: /preferências/i })).toBeInTheDocument()
+  })
+})
+
+describe('grid do desktop', () => {
+  it('desktop_usa_grid_de_duas_linhas', () => {
+    definirLargura(1400)
+    renderizar()
+
+    const main = screen.getByRole('main')
+    const grid = main.closest('.grid-rows-\\[auto_1fr\\]')
+    expect(grid).not.toBeNull()
+    const banner = screen.getByRole('banner')
+    expect(main.parentElement).toBe(grid)
+    expect(banner.parentElement?.parentElement).toBe(grid)
+    expect(banner.parentElement).toHaveClass('row-start-1')
+    expect(main).toHaveClass('row-start-2')
+    expect(banner.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('painel_aberto_abaixo_de_2xl_ganha_terceira_coluna', async () => {
+    definirLargura(1400)
+    renderizar()
+    const grid = screen.getByRole('main').closest('.grid-rows-\\[auto_1fr\\]')
+    expect(grid).not.toHaveClass('grid-cols-[auto_1fr_20rem]')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Alternar painel de produtividade' }))
+
+    expect(grid).toHaveClass('grid-cols-[auto_1fr_20rem]')
+  })
+})
+
+describe('barra do topo fixa', () => {
+  it('barraFixa ligada: topo sticky com camada de esmaecimento separada do header', () => {
+    gravarPreferencias({ ...PREFERENCIAS_PADRAO, barraFixa: true })
+    definirLargura(1400)
+    renderizar(undefined, undefined, PreferenciasProvider)
+
+    const envoltorio = screen.getByRole('banner').parentElement
+    expect(envoltorio).toHaveClass('sticky', 'top-3', 'z-20')
+    const camada = screen.getByTestId('fundo-da-barra-fixa')
+    expect(envoltorio).toContainElement(camada)
+    expect(screen.getByRole('banner')).not.toContainElement(camada)
+  })
+
+  it('barraFixa desligada: topo relative e sem camada de esmaecimento', () => {
+    gravarPreferencias({ ...PREFERENCIAS_PADRAO, barraFixa: false })
+    definirLargura(1400)
+    renderizar(undefined, undefined, PreferenciasProvider)
+
+    expect(screen.getByRole('banner').parentElement).toHaveClass('relative', 'z-20')
+    expect(screen.queryByTestId('fundo-da-barra-fixa')).not.toBeInTheDocument()
   })
 })
 

@@ -145,62 +145,74 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   )
 
   const dockDesktop = (
-    <div className="sticky top-0 h-dvh p-2 sm:p-3 flex shrink-0">
-      <div className="h-full rounded-3xl border border-[var(--cor-linha)] bg-[var(--cor-card)] shadow-lg overflow-hidden flex flex-col">
-        <DockLateral
-          nomeUsuario={nomeUsuario}
-          aoSair={aoSair}
-          aoAbrirPreferencias={() => setModalPreferenciasAberta(true)}
-        />
-      </div>
+    <div className="superficie row-span-2 row-start-1 col-start-1 sticky top-3 flex h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-3xl">
+      <DockLateral
+        nomeUsuario={nomeUsuario}
+        aoSair={aoSair}
+        aoAbrirPreferencias={() => setModalPreferenciasAberta(true)}
+      />
     </div>
   )
+
+  // Com o painel de produtividade aberto abaixo de 2xl o grid ganha a 3ª coluna; de 2xl em diante ela é sempre fixa.
+  const colunasDesktop = painelProdutividadeAberto
+    ? 'grid-cols-[auto_1fr_20rem]'
+    : 'grid-cols-[auto_1fr] 2xl:grid-cols-[auto_1fr_20rem]'
 
   // O `<main>` (e a página dentro dele) fica sempre na mesma posição da árvore: só a dock ou a barra do topo
   // trocam, então cruzar 1280 px não remonta a rota nem perde o que foi digitado.
   return (
     <PaletaContext value={paleta}>
-      <div className="min-h-dvh bg-[var(--cor-fundo)]">
+      <div className="min-h-dvh" style={{ background: 'var(--fundo-degrade)' }}>
         <AvisoServidor />
-        <div
-          className={
-            ehDesktop
-              ? 'grid min-h-dvh grid-cols-[auto_1fr] 2xl:grid-cols-[auto_1fr_320px]'
-              : undefined
-          }
-        >
+        <div className={ehDesktop ? `grid min-h-dvh grid-rows-[auto_1fr] gap-3 p-3 ${colunasDesktop}` : undefined}>
           {ehDesktop ? dockDesktop : barraSuperior}
-          <div className="flex min-w-0 flex-1 flex-col">
-            {ehDesktop && (
-              <div className={preferencias.barraFixa ? 'sticky top-0 z-20' : 'relative z-20'}>
-                <HeaderPrincipal
-                  nomeUsuario={nomeUsuario}
-                  aoSair={aoSair}
-                  onAbrirBusca={paleta.abrir}
-                  onAlternarPainelProdutividade={() => setPainelProdutividadeAberto((v) => !v)}
-                  painelProdutividadeAberto={painelProdutividadeAberto}
-                  onAbrirPreferencias={() => setModalPreferenciasAberta(true)}
-                />
-              </div>
-            )}
-            <main
-              ref={principal}
-              tabIndex={-1}
-              className={
-                preferencias.layoutLargura === 'largura-total'
-                  ? 'w-full min-w-0 px-4 py-5 outline-none md:px-8'
-                  : 'mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6'
-              }
+          {ehDesktop && (
+            <div
+              className={`col-[2/-1] row-start-1 min-w-0 ${
+                preferencias.barraFixa ? 'sticky top-3 z-20' : 'relative z-20'
+              }`}
             >
-              <Outlet />
-            </main>
-          </div>
+              {/* Em modo fixo, esta camada esmaece o conteúdo que rola por baixo das pílulas. Fica separada do
+                  <header> porque a máscara cortaria o menu do avatar, que se estende para fora do cabeçalho. */}
+              {preferencias.barraFixa && (
+                <div
+                  aria-hidden="true"
+                  data-testid="fundo-da-barra-fixa"
+                  className="pointer-events-none absolute -inset-x-3 -top-3 -bottom-5 -z-10 bg-[var(--cor-fundo)]/60 backdrop-blur-md"
+                  style={{
+                    maskImage: 'linear-gradient(to bottom, black 85%, transparent)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent)',
+                  }}
+                />
+              )}
+              <HeaderPrincipal
+                nomeUsuario={nomeUsuario}
+                aoSair={aoSair}
+                onAbrirBusca={paleta.abrir}
+                onAlternarPainelProdutividade={() => setPainelProdutividadeAberto((v) => !v)}
+                painelProdutividadeAberto={painelProdutividadeAberto}
+                onAbrirPreferencias={() => setModalPreferenciasAberta(true)}
+              />
+            </div>
+          )}
+          <main
+            ref={principal}
+            tabIndex={-1}
+            className={`${
+              preferencias.layoutLargura === 'largura-total'
+                ? 'w-full min-w-0 px-4 py-5 outline-none md:px-8'
+                : 'mx-auto w-full max-w-6xl min-w-0 px-4 py-5 outline-none md:px-6'
+            } ${ehDesktop ? 'col-start-2 row-start-2' : ''}`}
+          >
+            <Outlet />
+          </main>
           {ehDesktop && (
             <PainelLateralDireito
               className={
                 painelProdutividadeAberto
-                  ? 'w-80 shrink-0'
-                  : 'hidden 2xl:flex 2xl:w-80 2xl:shrink-0'
+                  ? 'col-start-3 row-start-2'
+                  : 'col-start-3 row-start-2 hidden 2xl:flex'
               }
               aoFechar={() => setPainelProdutividadeAberto(false)}
             />
