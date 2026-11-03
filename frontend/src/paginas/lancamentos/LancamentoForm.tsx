@@ -55,18 +55,25 @@ interface FormularioProps {
   mesInicial: MesAno
   aoFechar: () => void
   aoSalvar: (mes: MesAno) => void
+  itemPreSelecionado?: { itemId: number; categoriaId?: number }
 }
 
-function Formulario({ categorias, existente, mesInicial, aoFechar, aoSalvar }: FormularioProps) {
+function Formulario({ categorias, existente, mesInicial, aoFechar, aoSalvar, itemPreSelecionado }: FormularioProps) {
   const queryClient = useQueryClient()
   const editando = existente !== undefined
   const inicio: MesAno = existente === undefined ? mesInicial : { ano: existente.ano, mes: existente.mes }
 
+  const categoriaPadrao =
+    itemPreSelecionado?.categoriaId ??
+    categorias.find((c) => (itemPreSelecionado ? c.itens.some((i) => i.id === itemPreSelecionado.itemId) : c.tipo === 'DESPESA'))?.id ??
+    categorias.find((c) => c.tipo === 'DESPESA')?.id ??
+    null
+
   const [tipo, setTipo] = useState<TipoCategoria>(existente?.tipo ?? 'DESPESA')
   const [categoriaId, setCategoriaId] = useState<number | null>(
-    existente?.categoriaId ?? categorias.find((c) => c.tipo === 'DESPESA')?.id ?? null,
+    existente?.categoriaId ?? categoriaPadrao,
   )
-  const [itemId, setItemId] = useState<number | null>(existente?.itemId ?? null)
+  const [itemId, setItemId] = useState<number | null>(existente?.itemId ?? itemPreSelecionado?.itemId ?? null)
   const [mesAno, setMesAno] = useState<MesAno>(inicio)
   const [valorTexto, setValorTexto] = useState(existente === undefined ? '' : paraTexto(existente.valor))
   const [erroValor, setErroValor] = useState<string | null>(null)
@@ -140,7 +147,11 @@ function Formulario({ categorias, existente, mesInicial, aoFechar, aoSalvar }: F
 
   const categoriasDoTipo = categorias.filter((c) => c.tipo === tipo)
   const categoriasReceita = categorias.filter((c) => c.tipo === 'RECEITA')
-  const itensReceita = categoriasReceita.flatMap((c) => c.itens)
+  const itensReceita = categoriasReceita.flatMap((c) =>
+    c.itens.length > 0
+      ? c.itens
+      : [{ id: c.id, nome: c.nome, diaVencimento: null, cartao: false, limite: null, arquivado: false, titular: null }],
+  )
   const categoriaReceitaPadrao = categoriasReceita[0]?.id ?? null
   const ocupado = salvar.isPending || excluir.isPending
 
@@ -195,7 +206,9 @@ function Formulario({ categorias, existente, mesInicial, aoFechar, aoSalvar }: F
           aoEscolher={(escolhido) => {
             setItemId(escolhido?.id ?? null)
             if (escolhido) {
-              const catDoItem = categoriasReceita.find((c) => c.itens.some((i) => i.id === escolhido.id))
+              const catDoItem = categoriasReceita.find(
+                (c) => c.id === escolhido.id || c.itens.some((i) => i.id === escolhido.id),
+              )
               if (catDoItem) setCategoriaId(catDoItem.id)
             }
           }}
@@ -317,11 +330,26 @@ function Formulario({ categorias, existente, mesInicial, aoFechar, aoSalvar }: F
  * Não existe GET por id; a edição procura o lançamento na lista do mês da URL (`?ano=&mes=`, que os links da
  * lista mantêm), a mesma consulta da tela de trás, então costuma vir do cache.
  */
-export function LancamentoForm() {
+export interface LancamentoFormProps {
+  aoFechar?: () => void
+  aoSalvar?: (destino: MesAno) => void
+  itemPreSelecionado?: { itemId: number; categoriaId?: number }
+  mesInicial?: MesAno
+}
+
+export function LancamentoForm({
+  aoFechar,
+  aoSalvar,
+  itemPreSelecionado,
+  mesInicial: mesInicialProp,
+}: LancamentoFormProps = {}) {
   const { id } = useParams()
-  const { ano, mes, busca } = useMesSelecionado()
+  const { ano: anoUrl, mes: mesUrl, busca } = useMesSelecionado()
   const navigate = useNavigate()
   const editando = id !== undefined
+
+  const ano = mesInicialProp?.ano ?? anoUrl
+  const mes = mesInicialProp?.mes ?? mesUrl
 
   const categorias = useQuery({ queryKey: ['categorias'], queryFn: endpoints.categorias.listar })
   const doMes = useQuery({
@@ -330,9 +358,21 @@ export function LancamentoForm() {
     enabled: editando,
   })
 
-  const fechar = () => void navigate({ pathname: '/lancamentos', search: busca })
-  const voltarParaMes = (destino: MesAno) =>
-    void navigate({ pathname: '/lancamentos', search: `?ano=${destino.ano}&mes=${destino.mes}` })
+  const fechar = () => {
+    if (aoFechar) {
+      aoFechar()
+    } else {
+      void navigate({ pathname: '/lancamentos', search: busca })
+    }
+  }
+
+  const voltarParaMes = (destino: MesAno) => {
+    if (aoSalvar) {
+      aoSalvar(destino)
+    } else {
+      void navigate({ pathname: '/lancamentos', search: `?ano=${destino.ano}&mes=${destino.mes}` })
+    }
+  }
 
   let conteudo: ReactNode
   if (categorias.isError || (editando && doMes.isError)) {
@@ -355,6 +395,7 @@ export function LancamentoForm() {
           mesInicial={{ ano, mes }}
           aoFechar={fechar}
           aoSalvar={voltarParaMes}
+          itemPreSelecionado={itemPreSelecionado}
         />
       )
   }

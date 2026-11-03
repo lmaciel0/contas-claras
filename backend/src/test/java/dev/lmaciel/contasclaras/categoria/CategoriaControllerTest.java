@@ -156,6 +156,27 @@ class CategoriaControllerTest extends IntegracaoTest {
     }
 
     @Test
+    void permite_mesmo_nome_em_categorias_de_tipos_diferentes() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+
+        // Cria categoria de RECEITA chamada "Camila"
+        mvc.perform(post("/api/categorias").cookie(sessao).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"nome":"Camila","tipo":"RECEITA"}"""))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nome").value("Camila"))
+                .andExpect(jsonPath("$.tipo").value("RECEITA"));
+
+        // Agora cria categoria de DESPESA também chamada "Camila" (deve ser permitido com sucesso)
+        mvc.perform(post("/api/categorias").cookie(sessao).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"nome":"Camila","tipo":"DESPESA"}"""))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nome").value("Camila"))
+                .andExpect(jsonPath("$.tipo").value("DESPESA"));
+    }
+
+    @Test
     void categoria_sem_nome_ou_tipo_retorna_400() throws Exception {
         Cookie sessao = cadastrarEEntrar(DONO);
 
@@ -300,6 +321,24 @@ class CategoriaControllerTest extends IntegracaoTest {
                 .andExpect(jsonPath("$[0].nome").value("Receitas"));
         mvc.perform(get("/api/categorias").cookie(outra))
                 .andExpect(jsonPath("$[0].nome").value("Receitas"));
+    }
+
+    @Test
+    void cria_categoria_de_receita_gera_item_padrao_com_mesmo_nome() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+
+        mvc.perform(post("/api/categorias").cookie(sessao).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"nome":"Investimentos","tipo":"RECEITA","icone":"grafico","cor":"#10b981"}"""))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nome").value("Investimentos"))
+                .andExpect(jsonPath("$.tipo").value("RECEITA"))
+                .andExpect(jsonPath("$.itens", hasSize(1)))
+                .andExpect(jsonPath("$.itens[0].nome").value("Investimentos"));
+
+        mvc.perform(get("/api/categorias").cookie(sessao))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.nome == 'Investimentos')].itens[0].nome").value("Investimentos"));
     }
 
     @Test

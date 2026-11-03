@@ -245,6 +245,28 @@ describe('LancamentoForm (novo)', () => {
     expect(within(fonte).getByRole('option', { name: 'Salário' })).toBeInTheDocument()
   })
 
+  it('exibe_categorias_de_receita_mesmo_quando_nao_possuem_subcategorias', async () => {
+    responderCategorias([
+      { id: 1, nome: 'Salário', tipo: 'RECEITA', ordem: 1, icone: 'computador', cor: '#10b981', itens: [] },
+      { id: 2, nome: 'Camila', tipo: 'RECEITA', ordem: 2, icone: 'outros', cor: '#64748b', itens: [] },
+    ])
+    renderComApp(
+      <Routes>
+        <Route path="/lancamentos" element={<LancamentosPage />}>
+          <Route path="novo" element={<LancamentoForm />} />
+        </Route>
+      </Routes>,
+      '/lancamentos/novo?ano=2026&mes=10',
+    )
+
+    const radioReceita = await screen.findByRole('radio', { name: 'Receita' })
+    await userEvent.click(radioReceita)
+
+    const fonte = await screen.findByLabelText('Fonte da receita')
+    expect(within(fonte).getByRole('option', { name: 'Salário' })).toBeInTheDocument()
+    expect(within(fonte).getByRole('option', { name: 'Camila' })).toBeInTheDocument()
+  })
+
   it('mostra_o_erro_da_api_e_continua_no_formulario', async () => {
     renderizar('/lancamentos/novo?ano=2026&mes=10')
     servidor.use(http.put('/api/lancamentos', () => HttpResponse.json({ erro: 'Item arquivado.' }, { status: 409 })))

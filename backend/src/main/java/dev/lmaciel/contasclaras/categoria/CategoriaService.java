@@ -1,6 +1,7 @@
 package dev.lmaciel.contasclaras.categoria;
 
 import java.text.Collator;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -78,7 +79,7 @@ public class CategoriaService {
         if (req.tipo() == null) {
             throw new RequisicaoInvalidaException(TIPO_OBRIGATORIO);
         }
-        if (categorias.existsByUsuarioIdAndNome(u.id(), req.nome())) {
+        if (categorias.existsByUsuarioIdAndTipoAndNome(u.id(), req.tipo(), req.nome())) {
             throw new ConflitoException(NOME_DUPLICADO);
         }
         Categoria nova = new Categoria(usuarios.getReferenceById(u.id()), req.nome(), req.tipo(),
@@ -89,6 +90,10 @@ public class CategoriaService {
         } catch (DataIntegrityViolationException e) {
             throw duplicada(e);
         }
+        if (req.tipo() == TipoCategoria.RECEITA) {
+            Item itemPadrao = itens.save(new Item(nova, req.nome(), null, false, null));
+            return CategoriaResponse.de(nova, List.of(ItemResponse.de(itemPadrao)));
+        }
         return CategoriaResponse.de(nova, List.of());
     }
 
@@ -96,10 +101,17 @@ public class CategoriaService {
     public CategoriaResponse renomear(long categoriaId, CategoriaRequest req, UsuarioLogado u) {
         Categoria categoria = buscarDoUsuario(categoriaId, u);
         // Antes de mexer na entidade: a consulta faria o flush da mudança e estouraria a restrição do banco.
-        if (categorias.existsByUsuarioIdAndNomeAndIdNot(u.id(), req.nome(), categoriaId)) {
+        if (categorias.existsByUsuarioIdAndTipoAndNomeAndIdNot(u.id(), categoria.getTipo(), req.nome(), categoriaId)) {
             throw new ConflitoException(NOME_DUPLICADO);
         }
+        String nomeAntigo = categoria.getNome();
         categoria.atualizar(req.nome(), req.icone(), req.cor());
+        if (categoria.getTipo() == TipoCategoria.RECEITA) {
+            itens.findDoUsuario(u.id()).stream()
+                    .filter(i -> i.getCategoria().getId().equals(categoriaId) && i.getNome().equals(nomeAntigo))
+                    .findFirst()
+                    .ifPresent(i -> i.atualizar(req.nome(), i.getDiaVencimento(), i.isCartao(), i.getLimite(), i.isArquivado(), i.getTitular()));
+        }
         try {
             categorias.flush();
         } catch (DataIntegrityViolationException e) {

@@ -154,16 +154,16 @@ describe('CartoesPage', () => {
     renderizar()
 
     const cinza = await screen.findByRole('region', { name: 'Cartão Cinza' })
-    const link = within(cinza).getByRole('link', { name: 'Cadastrar limite' })
-    expect(link).toHaveAttribute('href', '/categorias')
+    const botao = within(cinza).getByRole('button', { name: 'Cadastrar limite' })
     expect(cinza).toHaveTextContent('R$ 321,50')
     expect(cinza).toHaveTextContent('vence dia 08')
     // Sem limite não há barra nem percentual.
     expect(within(cinza).queryByRole('meter')).not.toBeInTheDocument()
     expect(within(cinza).queryByText(/%/)).not.toBeInTheDocument()
 
-    await userEvent.click(link)
-    expect(await screen.findByRole('heading', { name: 'Tela de categorias' })).toBeInTheDocument()
+    await userEvent.click(botao)
+    expect(await screen.findByRole('dialog', { name: 'Cadastrar limite' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Cadastrar limite' })).toBeInTheDocument()
   })
 
   it('uso_geral_null_mostra_traco', async () => {

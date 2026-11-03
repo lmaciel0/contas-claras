@@ -19,8 +19,13 @@ node_modules/
 dist/
 .vercel/
 
-# IDE / SO
+# IDE / SO / Agentes
 .idea/
 *.iml
 .vscode/
 .DS_Store
+AGENTS.md
+GEMINI.md
+HANDOFF.md
+.vercelignore
+

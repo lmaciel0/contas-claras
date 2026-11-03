@@ -14,9 +14,9 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
     Optional<Categoria> findByIdAndUsuarioId(long id, long usuarioId);
 
-    boolean existsByUsuarioIdAndNome(long usuarioId, String nome);
+    boolean existsByUsuarioIdAndTipoAndNome(long usuarioId, TipoCategoria tipo, String nome);
 
-    boolean existsByUsuarioIdAndNomeAndIdNot(long usuarioId, String nome, long id);
+    boolean existsByUsuarioIdAndTipoAndNomeAndIdNot(long usuarioId, TipoCategoria tipo, String nome, long id);
 
     /** Maior {@code ordem} do usuário, ou -1 se ele não tem categorias. */
     @Query("select coalesce(max(c.ordem), -1) from Categoria c where c.usuario.id = :usuarioId")

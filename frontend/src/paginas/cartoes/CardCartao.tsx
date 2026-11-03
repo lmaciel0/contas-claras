@@ -1,6 +1,5 @@
-import { Calendar, CreditCard, Plus, Wifi } from 'lucide-react'
+import { Calendar, CreditCard, Pencil, Plus, Wifi } from 'lucide-react'
 import { useId } from 'react'
-import { Link } from 'react-router'
 import type { CartaoResponse, FaixaUso } from '../../api/tipos'
 import { formatarMoeda } from '../../formato/moeda'
 import { formatarPercentual, larguraDaBarra } from '../inicio/valores'
@@ -93,10 +92,12 @@ function getVisualMiniCartao(nome: string): { background: string; bandeira: stri
 
 interface Props {
   cartao: CartaoResponse
+  aoEditar?: (cartao: CartaoResponse) => void
+  aoLancar?: (cartao: CartaoResponse) => void
 }
 
 /** Um cartão: mini cartão físico estético no topo, nome, vencimento, fatura do mês e barra de uso com limite. */
-export function CardCartao({ cartao }: Props) {
+export function CardCartao({ cartao, aoEditar, aoLancar }: Props) {
   const idTitulo = useId()
   const { faixa, uso, limite } = cartao
   const comLimite = faixa !== 'SEM_LIMITE' && uso !== null && limite !== null
@@ -160,6 +161,17 @@ export function CardCartao({ cartao }: Props) {
                     {cartao.titular}
                   </span>
                 )}
+                {aoEditar && (
+                  <button
+                    type="button"
+                    onClick={() => aoEditar(cartao)}
+                    title={`Editar ${cartao.nome}`}
+                    aria-label={`Editar ${cartao.nome}`}
+                    className="inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-[var(--cor-linha)] bg-[var(--cor-fundo)] text-[var(--cor-mutado)] transition-colors hover:border-[var(--cor-principal)] hover:text-[var(--cor-principal)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+                  >
+                    <Pencil className="size-3" />
+                  </button>
+                )}
               </div>
               {cartao.diaVencimento !== null && (
                 <p className="m-0 mt-1 flex items-center gap-1 text-[11px] text-[var(--cor-mutado)]">
@@ -215,19 +227,21 @@ export function CardCartao({ cartao }: Props) {
                 </p>
               </div>
             ) : (
-              <Link
-                to="/categorias"
-                className={`inline-flex min-h-6 items-center text-xs font-semibold text-[var(--cor-principal)] hover:underline ${classeFoco}`}
+              <button
+                type="button"
+                onClick={() => aoEditar?.(cartao)}
+                className={`inline-flex min-h-6 cursor-pointer items-center text-xs font-semibold text-[var(--cor-principal)] hover:underline ${classeFoco}`}
               >
                 Cadastrar limite
-              </Link>
+              </button>
             )}
 
             <button
               type="button"
-              title="Ação rápida no cartão"
-              aria-label={`Ação rápida para ${cartao.nome}`}
-              className="cartao-premium__action-btn shrink-0 ml-1"
+              onClick={() => aoLancar?.(cartao)}
+              title={`Lançar despesa em ${cartao.nome}`}
+              aria-label={`Lançar despesa em ${cartao.nome}`}
+              className="cartao-premium__action-btn shrink-0 ml-1 cursor-pointer"
             >
               <Plus className="size-4" />
             </button>
