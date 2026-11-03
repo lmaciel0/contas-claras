@@ -12,6 +12,35 @@ function token(nome: string): string | undefined {
   return achado?.[1]?.trim().toLowerCase()
 }
 
+/** Expande `#rgb`/`#rrggbb` para `[r, g, b]` (0 a 255). */
+function rgbDeHex(hex: string): [number, number, number] {
+  const cheio = hex.length === 4 ? '#' + [...hex.slice(1)].map((c) => c + c).join('') : hex
+  return [1, 3, 5].map((i) => parseInt(cheio.slice(i, i + 2), 16)) as [number, number, number]
+}
+
+function luminanciaRgb([r, g, b]: [number, number, number]): number {
+  const [lr, lg, lb] = [r, g, b].map((v) => {
+    const canal = v / 255
+    return canal <= 0.03928 ? canal / 12.92 : ((canal + 0.055) / 1.055) ** 2.4
+  }) as [number, number, number]
+  return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb
+}
+
+function contrasteRgb(a: [number, number, number], b: [number, number, number]): number {
+  const [maior, menor] = [luminanciaRgb(a), luminanciaRgb(b)].sort((x, y) => y - x) as [number, number]
+  return (maior + 0.05) / (menor + 0.05)
+}
+
+/** Contraste WCAG entre duas cores `#rgb`/`#rrggbb`. */
+function contrasteHex(a: string, b: string): number {
+  return contrasteRgb(rgbDeHex(a), rgbDeHex(b))
+}
+
+/** `color-mix(in srgb, frente <pct>%, tras)`: mistura linear por canal, como o navegador. */
+function misturar(frente: [number, number, number], pct: number, tras: [number, number, number]): [number, number, number] {
+  return frente.map((c, i) => c * pct + (tras[i] as number) * (1 - pct)) as [number, number, number]
+}
+
 describe('tokens de cor', () => {
   it('verde e vermelho da paleta ficam para barras e fundos', () => {
     expect(token('cor-positivo')).toBe('#2e9e5b')
@@ -50,20 +79,9 @@ describe('tokens de cor', () => {
       if (!valor) throw new Error(`token --${nome} ausente no tema escuro`)
       return valor
     }
-    const luminancia = (hex: string): number => {
-      const [r, g, b] = [1, 3, 5].map((i) => {
-        const canal = parseInt(hex.slice(i, i + 2), 16) / 255
-        return canal <= 0.03928 ? canal / 12.92 : ((canal + 0.055) / 1.055) ** 2.4
-      }) as [number, number, number]
-      return 0.2126 * r + 0.7152 * g + 0.0722 * b
-    }
-    const contraste = (a: string, b: string): number => {
-      const [maior, menor] = [luminancia(a), luminancia(b)].sort((x, y) => y - x) as [number, number]
-      return (maior + 0.05) / (menor + 0.05)
-    }
     for (const texto of ['cor-texto', 'cor-mutado', 'cor-positivo-texto', 'cor-negativo-texto']) {
       for (const fundo of ['cor-card', 'cor-fundo']) {
-        expect(contraste(escuro(texto), escuro(fundo)), `${texto} sobre ${fundo}`).toBeGreaterThanOrEqual(4.5)
+        expect(contrasteHex(escuro(texto), escuro(fundo)), `${texto} sobre ${fundo}`).toBeGreaterThanOrEqual(4.5)
       }
     }
   })
@@ -109,17 +127,6 @@ describe('cores fixas', () => {
       if (!valor) throw new Error(`token --${nome} ausente no tema escuro`)
       return valor
     }
-    const lum = (h: string): number => {
-      const [r, g, b] = [1, 3, 5].map((i) => {
-        const c = parseInt(h.slice(i, i + 2), 16) / 255
-        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-      }) as [number, number, number]
-      return 0.2126 * r + 0.7152 * g + 0.0722 * b
-    }
-    const ratio = (a: string, b: string): number => {
-      const [mx, mn] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]
-      return (mx + 0.05) / (mn + 0.05)
-    }
     const pares: Array<[string, string]> = [
       ['cor-sobre-principal', 'cor-principal'],
       ['cor-sobre-principal', 'cor-principal-fim'],
@@ -127,7 +134,7 @@ describe('cores fixas', () => {
       ['cor-sobre-negativo', 'cor-negativo'],
     ]
     for (const [texto, fundo] of pares) {
-      expect(ratio(hex(texto), hex(fundo)), `${texto} sobre ${fundo}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrasteHex(hex(texto), hex(fundo)), `${texto} sobre ${fundo}`).toBeGreaterThanOrEqual(4.5)
     }
   })
 })
@@ -139,21 +146,10 @@ describe('campos das telas de auth: contraste não textual (WCAG 1.4.11, 3:1)', 
     if (!valor) throw new Error(`token --${nome} ausente no tema escuro`)
     return valor
   }
-  const lum = (h: string): number => {
-    const [r, g, b] = [1, 3, 5].map((i) => {
-      const c = parseInt(h.slice(i, i + 2), 16) / 255
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-    }) as [number, number, number]
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-  }
-  const ratio = (a: string, b: string): number => {
-    const [mx, mn] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]
-    return (mx + 0.05) / (mn + 0.05)
-  }
 
   it('no escuro, a borda do campo passa de 3:1 sobre o início e o fim do degradê do card', () => {
     for (const fundo of ['cor-card', 'cor-auth-fundo-fim']) {
-      expect(ratio(hex('cor-auth-campo-borda'), hex(fundo)), `cor-auth-campo-borda sobre ${fundo}`).toBeGreaterThanOrEqual(3)
+      expect(contrasteHex(hex('cor-auth-campo-borda'), hex(fundo)), `cor-auth-campo-borda sobre ${fundo}`).toBeGreaterThanOrEqual(3)
     }
   })
 
@@ -165,17 +161,6 @@ describe('campos das telas de auth: contraste não textual (WCAG 1.4.11, 3:1)', 
 
 describe('botão de tema: contraste não textual (WCAG 1.4.11, 3:1)', () => {
   const botao = readFileSync(resolve(process.cwd(), 'src/tema/botao-tema.css'), 'utf8')
-  const lum = (h: string): number => {
-    const [r, g, b] = [1, 3, 5].map((i) => {
-      const c = parseInt(h.slice(i, i + 2), 16) / 255
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-    }) as [number, number, number]
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-  }
-  const ratio = (a: string, b: string): number => {
-    const [mx, mn] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]
-    return (mx + 0.05) / (mn + 0.05)
-  }
   const tokens = (bloco: string) => (nome: string): string => {
     const valor = new RegExp(`--${nome}:\\s*(#[0-9a-fA-F]{3,6})\\s*;`).exec(bloco)?.[1]
     if (!valor) throw new Error(`token --${nome} ausente`)
@@ -200,15 +185,15 @@ describe('botão de tema: contraste não textual (WCAG 1.4.11, 3:1)', () => {
     const trilho = t(usado('.theme__toggle', 'background-color'))
     const bolinha = t(usado('.theme__toggle::before', 'background-color'))
     for (const fundo of ['cor-card', 'cor-fundo']) {
-      expect(ratio(anel, t(fundo)), `anel sobre ${fundo}`).toBeGreaterThanOrEqual(3)
+      expect(contrasteHex(anel, t(fundo)), `anel sobre ${fundo}`).toBeGreaterThanOrEqual(3)
     }
-    expect(ratio(bolinha, trilho), 'bolinha sobre trilho').toBeGreaterThanOrEqual(3)
+    expect(contrasteHex(bolinha, trilho), 'bolinha sobre trilho').toBeGreaterThanOrEqual(3)
   })
 
   it('marcado (escuro): a bolinha continua com 3:1 sobre o trilho marcado', () => {
     const bloco = /\.theme__toggle:checked\s*\{([^}]*)\}/.exec(botao)?.[1] ?? ''
     const marcado = /background-color:\s*var\(--([a-z-]+)\)/.exec(bloco)?.[1] ?? usado('.theme__toggle', 'background-color')
-    expect(ratio(escuro(usado('.theme__toggle::before', 'background-color')), escuro(marcado))).toBeGreaterThanOrEqual(3)
+    expect(contrasteHex(escuro(usado('.theme__toggle::before', 'background-color')), escuro(marcado))).toBeGreaterThanOrEqual(3)
   })
 })
 
@@ -222,5 +207,63 @@ describe('fluidez e animações', () => {
   it('elementos interativos possuem transições suaves que respeitam prefers-reduced-motion', () => {
     expect(css).toMatch(/transition-duration:\s*150ms/)
     expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*?transition:\s*none/)
+  })
+})
+
+describe('superfícies flutuantes', () => {
+  it('declara_os_tokens_de_superficie', () => {
+    for (const nome of ['superficie', 'superficie-borda', 'sombra-flutuante', 'fundo-degrade']) {
+      expect(token(nome), `--${nome} ausente em :root`).toBeDefined()
+    }
+    expect(token('superficie')).toContain('color-mix')
+    expect(token('superficie')).toContain('var(--cor-card)')
+  })
+
+  it('card_e_superficie_usam_os_tokens', () => {
+    for (const classe of ['superficie', 'card']) {
+      const bloco = new RegExp(`\\.${classe}\\s*\\{([^}]*)\\}`).exec(css)?.[1]
+      expect(bloco, `.${classe} ausente`).toBeDefined()
+      expect(bloco).toMatch(/background:\s*var\(--superficie\)/)
+      expect(bloco).toMatch(/border:\s*1px solid var\(--superficie-borda\)/)
+      expect(bloco).toMatch(/box-shadow:\s*var\(--sombra-flutuante\)/)
+      expect(bloco).toMatch(/backdrop-filter:\s*blur\(8px\)/)
+    }
+  })
+
+  it('card_mantem_raio_e_padding', () => {
+    const bloco = /\.card\s*\{([^}]*)\}/.exec(css)?.[1] ?? ''
+    expect(bloco).toMatch(/border-radius:\s*var\(--raio-card\)/)
+    expect(bloco).toMatch(/padding:\s*1rem/)
+  })
+
+  const presets = ['lima', 'esmeralda', 'indigo']
+  const casos = [
+    ...['claro', 'escuro'].map((tema) => [tema, 'base'] as const),
+    ...['claro', 'escuro'].flatMap((tema) => presets.map((preset) => [tema, preset] as const)),
+  ]
+
+  it.each(casos)('superficie_translucida_mantem_contraste_AA (%s, %s)', (tema, preset) => {
+    const bloco = (regex: RegExp): string => regex.exec(css)?.[1] ?? ''
+    const base =
+      tema === 'claro' ? bloco(/:root\s*\{([^}]*)\}/) : bloco(/:root\[data-tema='escuro'\]\s*\{([^}]*)\}/)
+    const sobreposto =
+      preset === 'base'
+        ? ''
+        : tema === 'claro'
+          ? bloco(new RegExp(`html\\[data-preset='${preset}'\\]\\s*\\{([^}]*)\\}`))
+          : bloco(new RegExp(`html\\[data-tema='escuro'\\]\\[data-preset='${preset}'\\]\\s*\\{([^}]*)\\}`))
+    if (preset !== 'base') expect(sobreposto, `bloco do preset ${preset} (${tema}) ausente`).not.toBe('')
+    const cor = (nome: string): [number, number, number] => {
+      const re = new RegExp(`--${nome}:\\s*(#[0-9a-fA-F]{3,6})\\s*;`)
+      const valor = re.exec(sobreposto)?.[1] ?? re.exec(base)?.[1]
+      if (!valor) throw new Error(`token --${nome} ausente`)
+      return rgbDeHex(valor)
+    }
+    // Pior ponto do degradê: principal a 12% sobre o fundo. Sobre ele, o card entra a 75% (a superfície).
+    const piorFundo = misturar(cor('cor-principal'), 0.12, cor('cor-fundo'))
+    const superficie = misturar(cor('cor-card'), 0.75, piorFundo)
+    for (const texto of ['cor-texto', 'cor-mutado']) {
+      expect(contrasteRgb(cor(texto), superficie), `${texto} sobre a superfície`).toBeGreaterThanOrEqual(4.5)
+    }
   })
 })
