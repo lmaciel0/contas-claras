@@ -7,7 +7,7 @@ import type { CartaoResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { Esqueleto } from '../../componentes/Esqueleto'
 import { formatarMoeda } from '../../formato/moeda'
-import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
+import { CabecalhoPagina } from '../../layout/CabecalhoPagina'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { formatarPercentual } from '../inicio/valores'
 import { Plus } from 'lucide-react'
@@ -214,15 +214,11 @@ export function CartoesPage() {
   ).sort((a, b) => a.localeCompare(b))
 
   const titulo = (
-    <>
-      <FaixaFinanceira aoLancar={() => setLancandoGeral(true)} />
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 md:mb-5">
-        <div>
-          <h1 className="m-0 text-[28px] font-bold tracking-tight">Cartões</h1>
-          <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">
-            Quanto da fatura do mês ocupa o limite de cada cartão.
-          </p>
-        </div>
+    <CabecalhoPagina
+      titulo="Cartões"
+      subtitulo="Quanto da fatura do mês ocupa o limite de cada cartão."
+      aoLancar={() => setLancandoGeral(true)}
+      acaoExtra={
         <button
           type="button"
           onClick={() => setCriandoCartao(true)}
@@ -230,8 +226,8 @@ export function CartoesPage() {
         >
           + Novo cartão
         </button>
-      </div>
-    </>
+      }
+    />
   )
 
   let conteudo: ReactNode

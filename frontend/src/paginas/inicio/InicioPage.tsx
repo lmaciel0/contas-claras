@@ -3,7 +3,7 @@ import { ErroApi } from '../../api/cliente'
 import { endpoints } from '../../api/endpoints'
 import { Esqueleto } from '../../componentes/Esqueleto'
 import { mesAnterior, nomeMes } from '../../formato/mes'
-import { FaixaFinanceira } from '../../layout/FaixaFinanceira'
+import { CabecalhoPagina } from '../../layout/CabecalhoPagina'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { CardSobra } from './CardSobra'
 import { CardsTotais } from './CardsTotais'
@@ -25,15 +25,7 @@ export function InicioPage() {
     placeholderData: keepPreviousData,
   })
 
-  const titulo = (
-    <>
-      <FaixaFinanceira />
-      <div className="mb-3 sr-only md:not-sr-only md:mb-5">
-        <h1 className="m-0 text-[28px] font-bold tracking-tight">Visão geral</h1>
-        <p className="m-0 mt-1 text-[13px] text-[var(--cor-mutado)]">Quanto sobra e para onde vai o seu dinheiro.</p>
-      </div>
-    </>
-  )
+  const titulo = <CabecalhoPagina titulo="Visão geral" subtitulo="Quanto sobra e para onde vai o seu dinheiro." />
 
   if (consulta.isPending) {
     return (
