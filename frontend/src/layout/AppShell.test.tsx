@@ -200,6 +200,30 @@ describe('AppShell abaixo de 1280 px', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu principal' })).not.toBeInTheDocument()
   })
 
+  it('barra_fina_usa_superficie_flutuante', () => {
+    definirLargura(900)
+    renderizar()
+
+    const barra = screen.getByRole('banner')
+
+    expect(barra).toHaveClass('superficie', 'sticky', 'top-3', 'rounded-2xl', 'm-3')
+    expect(barra).not.toHaveClass('border-b')
+    expect(barra).not.toHaveClass('bg-[var(--cor-card)]')
+    expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveClass('min-h-11')
+  })
+
+  it('gaveta_do_menu_usa_superficie_flutuante', async () => {
+    definirLargura(390)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    const painel = screen.getByRole('dialog', { name: 'Menu' })
+
+    expect(painel).toHaveClass('superficie', 'rounded-3xl')
+    expect(painel).not.toHaveClass('border-r')
+    expect(painel).not.toHaveClass('bg-[var(--cor-card)]')
+  })
+
   it('abrir o menu mostra o painel; Esc fecha e devolve o foco ao botão', async () => {
     definirLargura(390)
     renderizar()

@@ -140,7 +140,7 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   }
 
   const barraSuperior = (
-    <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-[var(--cor-linha)] bg-[var(--cor-card)] px-3 py-2">
+    <header className="superficie sticky top-3 z-30 m-3 flex items-center gap-2 rounded-2xl px-3 py-2">
       <button
         ref={botao}
         type="button"
@@ -253,7 +253,7 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
               aria-modal="true"
               aria-label="Menu"
               onKeyDown={prenderFoco}
-              className="menu-painel absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] flex-col gap-3 overflow-y-auto border-r border-[var(--cor-linha)] bg-[var(--cor-card)] p-3"
+              className="menu-painel superficie absolute inset-y-3 left-3 flex w-[min(20rem,calc(100vw-1.5rem))] flex-col gap-3 overflow-y-auto rounded-3xl p-3"
             >
               <div className="flex items-center justify-between gap-2 px-1 pb-2 border-b border-[var(--cor-linha)]">
                 <Logo />
