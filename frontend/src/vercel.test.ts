@@ -105,17 +105,13 @@ describe('vercel.json: projeto com Vercel Services', () => {
     expect(vercel.services['web']?.rewrites).toEqual([{ source: '/(.*)', destination: '/index.html' }])
   })
 
-  it('api_e_o_container_do_backend', () => {
-    expect(vercel.services['api']).toEqual({
-      root: 'backend/',
-      runtime: 'container',
-      entrypoint: 'Dockerfile',
-    })
+  it('nao_tem_mais_o_service_api', () => {
+    expect(Object.keys(vercel.services)).toEqual(['web'])
   })
 
-  it('roteia_api_para_o_servico_api_e_o_resto_para_o_web_nessa_ordem', () => {
+  it('repassa_api_ao_render_e_o_resto_ao_web_nessa_ordem', () => {
     expect(vercel.rewrites).toEqual([
-      { source: '/api/(.*)', destination: { service: 'api' } },
+      { source: '/api/(.*)', destination: 'https://api.useaprumo.com.br/api/$1' },
       { source: '/(.*)', destination: { service: 'web' } },
     ])
   })
@@ -132,7 +128,7 @@ describe('vercel.json: projeto com Vercel Services', () => {
     }
   })
 
-  it('nao_referencia_mais_o_render', () => {
+  it('nao_expoe_a_url_tecnica_do_render', () => {
     expect(JSON.stringify(vercel)).not.toContain('onrender.com')
   })
 
