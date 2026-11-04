@@ -106,6 +106,27 @@ describe('InicioPage', () => {
     expect(within(sobra).getByText('R$ 6,20 pior que setembro')).toBeInTheDocument()
   })
 
+  it('sobra_mostra_percentual_da_receita', async () => {
+    responderResumo(resumo())
+    renderizar()
+
+    expect(within(await bloco('Sobra do mês')).getByText('+16% da receita')).toBeInTheDocument()
+  })
+
+  it('sobra_negativa_mostra_percentual_com_sinal_menos', async () => {
+    responderResumo(resumo({ sobra: '-1884.20', receitas: '5270.00' }))
+    renderizar()
+
+    expect(within(await bloco('Sobra do mês')).getByText('−36% da receita')).toBeInTheDocument()
+  })
+
+  it('esconde_percentual_quando_receita_e_zero', async () => {
+    responderResumo(resumo({ sobra: '-100.00', receitas: '0.00' }))
+    renderizar()
+
+    expect(within(await bloco('Sobra do mês')).queryByText(/da receita/)).not.toBeInTheDocument()
+  })
+
   it('chips_de_variacao_receita_que_cai_e_vermelha_despesa_que_cai_e_verde', async () => {
     responderResumo(
       resumo({

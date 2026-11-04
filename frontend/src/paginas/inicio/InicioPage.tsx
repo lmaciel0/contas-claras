@@ -90,6 +90,7 @@ export function InicioPage() {
         <CardSobra
           sobra={resumo.sobra}
           sobraAno={resumo.sobraAno}
+          receitas={resumo.receitas}
           anterior={resumo.anterior}
           nomeMesAnterior={nomeAnterior}
         />
