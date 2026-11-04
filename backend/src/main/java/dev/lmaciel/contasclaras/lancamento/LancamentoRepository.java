@@ -47,6 +47,21 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
             group by l.mes, c.tipo, l.status""")
     List<TotalMensal> totaisDoAno(@Param("usuarioId") long usuarioId, @Param("ano") int ano);
 
+    /**
+     * Totais dos lançamentos pagos do usuário entre dois meses (índices de {@code MesAno.indice()}, inclusive),
+     * por tipo da categoria. Considera todos os itens, inclusive cartões e arquivados; tipo sem lançamento
+     * não aparece.
+     */
+    @Query("""
+            select new dev.lmaciel.contasclaras.lancamento.TotalTipo(c.tipo, sum(l.valor))
+            from Lancamento l join l.item i join i.categoria c
+            where c.usuario.id = :usuarioId
+              and l.status = dev.lmaciel.contasclaras.lancamento.StatusLancamento.PAGO
+              and (l.ano * 12 + l.mes - 1) between :de and :ate
+            group by c.tipo""")
+    List<TotalTipo> totaisPagosPorTipo(@Param("usuarioId") long usuarioId, @Param("de") int de,
+            @Param("ate") int ate);
+
     /** Totais por categoria do tipo informado no mês, do maior para o menor (empate: ordem da categoria). */
     @Query("""
             select new dev.lmaciel.contasclaras.lancamento.TotalCategoria(c.id, c.nome, sum(l.valor))

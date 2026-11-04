@@ -42,6 +42,9 @@ app:
     client-id: ${GOOGLE_CLIENT_ID:}
   cookie:
     secure: true
+  saldo:
+    # Primeiro mês (AAAA-MM) em que o saldo do Itaú passa a ser calculado; antes dele o saldo fica inativo.
+    inicio: 2026-11
 
 server:
   # Vercel (e qualquer PaaS) define PORT; sem ela, 8080.

@@ -24,6 +24,7 @@ import type {
   RedefinirSenhaRequest,
   RelatorioAnualResponse,
   ResumoResponse,
+  SaldoResponse,
   SalvarLancamentoRequest,
   StatusLancamento,
   TarefaRequest,
@@ -128,5 +129,6 @@ export const endpoints = {
   },
   projetos: projetosApi,
   resumo: (ano: number, mes: number) => api<ResumoResponse>(`/api/resumo?${consulta(ano, mes)}`),
+  saldo: (ano: number, mes: number) => api<SaldoResponse>(`/api/saldo?${consulta(ano, mes)}`),
   saude: () => api<{ status: string }>('/api/health'),
 }
