@@ -39,7 +39,7 @@ O dono liberou o implementador para ajustar espaçamentos e ícones onde o mocku
 
 - Qualquer módulo novo (tarefas, notas, projetos, calendário) e qualquer endpoint ou migration nova. Este módulo é só frontend.
 - "Contas a pagar" e "contas vencendo hoje": entram no módulo 5.
-- Renomear o repositório, a URL do Vercel, o pacote Java `dev.lmaciel.aprumo` e os textos de e-mail do backend. Ficam para uma etapa própria.
+- Renomear o repositório, a URL do Vercel, o pacote Java `dev.lmaciel.contasclaras` e os textos de e-mail do backend. Ficam para uma etapa própria.
 - Busca de conteúdo (lançamentos, tarefas, notas). Ver decisão sobre o Ctrl K abaixo.
 - Página de Configurações. Só o que já existe (trocar senha, sair).
 - Copiar as cores da foto de referência. A identidade visual é a do Aprumo.

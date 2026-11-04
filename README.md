@@ -66,7 +66,7 @@ Front e API ficam no **mesmo domínio**, então o cookie de sessão é de primei
 Pré-requisitos: Java 21, Node 22, Docker.
 
 ```bash
-docker compose up -d                       # Postgres 17 em 127.0.0.1:5432 (usuário/senha "contas")
+docker compose up -d                       # Postgres 17 em 127.0.0.1:5432 (usuário/senha "aprumo")
 
 cd backend
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,demo   # API em :8080 + conta demo
