@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
-import type { PontoSerie, ResumoResponse } from '../../api/tipos'
+import type { CartaoResponse, CartoesResponse, PontoSerie, ResumoResponse } from '../../api/tipos'
 import { renderComApp } from '../../teste/render'
 import { servidor } from '../../teste/servidor'
 import { InicioPage } from './InicioPage'
@@ -55,6 +55,29 @@ function responderResumo(corpo: ResumoResponse) {
   const consultas: string[] = []
   servidor.use(
     http.get('/api/resumo', ({ request }) => {
+      consultas.push(new URL(request.url).search)
+      return HttpResponse.json(corpo)
+    }),
+  )
+  return consultas
+}
+
+const cartaoAurora: CartaoResponse = {
+  itemId: 1,
+  nome: 'Aurora',
+  diaVencimento: 10,
+  fatura: '2558.05',
+  limite: '3000.00',
+  uso: '0.8527',
+  faixa: 'AMARELO',
+  titular: null,
+}
+
+function responderCartoes(cartoes: CartaoResponse[] = [cartaoAurora]) {
+  const consultas: string[] = []
+  const corpo: CartoesResponse = { totalFaturas: '2558.05', limiteTotal: '3000.00', usoGeral: '0.8527', cartoes }
+  servidor.use(
+    http.get('/api/cartoes', ({ request }) => {
       consultas.push(new URL(request.url).search)
       return HttpResponse.json(corpo)
     }),
@@ -221,10 +244,12 @@ describe('InicioPage', () => {
     expect(within(emDia!).queryByText('atrasada')).not.toBeInTheDocument()
   })
 
-  it('no_celular_os_blocos_seguem_a_ordem_sobra_totais_gastos_proximas_grafico', async () => {
+  it('no_celular_os_blocos_seguem_a_ordem_sobra_totais_resultado_gastos_proximas_cartoes', async () => {
     responderResumo(resumo())
+    responderCartoes()
     renderizar()
     await bloco('Sobra do mês')
+    await bloco('Cartões')
 
     const nomes = screen.getAllByRole('region').map((r) => r.getAttribute('aria-label') ?? r.querySelector('h2')?.textContent)
 
@@ -232,10 +257,45 @@ describe('InicioPage', () => {
       'Sobra do mês',
       'Receitas',
       'Despesas',
+      'Resultado de cada mês em 2026',
       'Onde você mais gastou em outubro',
       'Próximas contas',
-      'Resultado de cada mês em 2026',
+      'Cartões',
     ])
+  })
+
+  it('mostra_o_bloco_de_cartoes_do_mes_selecionado', async () => {
+    responderResumo(resumo())
+    const consultas = responderCartoes()
+    renderizar('/?ano=2026&mes=10')
+
+    const cartoes = await bloco('Cartões')
+    expect(within(cartoes).getByText('Aurora')).toBeInTheDocument()
+    expect(consultas).toEqual(['?ano=2026&mes=10'])
+  })
+
+  it('sem_cartoes_o_bloco_nao_aparece_e_a_pagina_continua', async () => {
+    responderResumo(resumo())
+    responderCartoes([])
+    renderizar()
+
+    await bloco('Sobra do mês')
+    expect(await bloco('Onde você mais gastou em outubro')).toBeInTheDocument()
+    expect(await bloco('Próximas contas')).toBeInTheDocument()
+    expect(await bloco('Resultado de cada mês em 2026')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Cartões' })).not.toBeInTheDocument())
+  })
+
+  it('falha_na_consulta_de_cartoes_nao_derruba_a_pagina', async () => {
+    responderResumo(resumo())
+    servidor.use(http.get('/api/cartoes', () => HttpResponse.json({ erro: 'Falha nos cartões.' }, { status: 500 })))
+    renderizar()
+
+    expect(await bloco('Sobra do mês')).toBeInTheDocument()
+    expect(await bloco('Onde você mais gastou em outubro')).toBeInTheDocument()
+    expect(await bloco('Próximas contas')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Cartões' })).not.toBeInTheDocument())
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('trocar_mes_refaz_a_consulta_com_ano_e_mes', async () => {
