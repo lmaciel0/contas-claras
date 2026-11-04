@@ -10,6 +10,11 @@ const COR_DO_SENTIDO: Record<PontoDoResultado['sentido'], string> = {
   zero: 'var(--cor-mutado)',
 }
 
+/** O rótulo "0" (resultado que arredonda para zero) não leva cor de alerta, mesmo que o sentido seja sobrou/faltou. */
+function corDoRotulo(ponto: PontoDoResultado): string {
+  return Math.round(Math.abs(ponto.resultado)) === 0 ? COR_DO_SENTIDO.zero : COR_DO_SENTIDO[ponto.sentido]
+}
+
 interface PadraoProps {
   id: string
   cor: string
@@ -54,7 +59,7 @@ function MesNoEixo({ x = 0, y = 0, payload, dados, mesSelecionado, compacto }: M
       >
         {ponto.rotulo}
       </text>
-      <text y={28} textAnchor="middle" fontSize={compacto ? 9 : 10} fontWeight={600} fill={COR_DO_SENTIDO[ponto.sentido]}>
+      <text y={28} textAnchor="middle" fontSize={compacto ? 9 : 10} fontWeight={600} fill={corDoRotulo(ponto)}>
         {resultadoCurto(ponto.resultado, compacto)}
       </text>
     </g>

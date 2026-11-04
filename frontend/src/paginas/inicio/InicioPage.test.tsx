@@ -276,25 +276,34 @@ describe('InicioPage', () => {
 
   it('sem_cartoes_o_bloco_nao_aparece_e_a_pagina_continua', async () => {
     responderResumo(resumo())
-    responderCartoes([])
+    const consultas = responderCartoes([])
     renderizar()
 
     await bloco('Sobra do mês')
-    expect(await bloco('Onde você mais gastou em outubro')).toBeInTheDocument()
+    await waitFor(() => expect(consultas).toHaveLength(1))
+    // Só depois de a consulta responder o bloco de gastos ocupa a largura toda: aí a ausência de "Cartões" é real.
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Onde você mais gastou em outubro' })).toHaveClass('md:col-span-35'))
     expect(await bloco('Próximas contas')).toBeInTheDocument()
     expect(await bloco('Resultado de cada mês em 2026')).toBeInTheDocument()
-    await waitFor(() => expect(screen.queryByRole('region', { name: 'Cartões' })).not.toBeInTheDocument())
+    expect(screen.queryByRole('region', { name: 'Cartões' })).not.toBeInTheDocument()
   })
 
   it('falha_na_consulta_de_cartoes_nao_derruba_a_pagina', async () => {
     responderResumo(resumo())
-    servidor.use(http.get('/api/cartoes', () => HttpResponse.json({ erro: 'Falha nos cartões.' }, { status: 500 })))
+    let consultasDeCartoes = 0
+    servidor.use(
+      http.get('/api/cartoes', () => {
+        consultasDeCartoes += 1
+        return HttpResponse.json({ erro: 'Falha nos cartões.' }, { status: 500 })
+      }),
+    )
     renderizar()
 
     expect(await bloco('Sobra do mês')).toBeInTheDocument()
-    expect(await bloco('Onde você mais gastou em outubro')).toBeInTheDocument()
+    await waitFor(() => expect(consultasDeCartoes).toBeGreaterThanOrEqual(1))
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Onde você mais gastou em outubro' })).toHaveClass('md:col-span-35'))
     expect(await bloco('Próximas contas')).toBeInTheDocument()
-    await waitFor(() => expect(screen.queryByRole('region', { name: 'Cartões' })).not.toBeInTheDocument())
+    expect(screen.queryByRole('region', { name: 'Cartões' })).not.toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 

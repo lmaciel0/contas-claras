@@ -89,6 +89,19 @@ describe('GraficoResultado', () => {
     expect(semNbsp(screen.getByText(/^Acumulado até outubro/).textContent)).toContain(semNbsp(esperado))
   })
 
+  it('resultado_menor_que_um_real_sai_0_na_cor_mutada', async () => {
+    const serie = zeroSerie()
+    serie[0] = { mes: 1, receitas: '500.30', receitasPrevistas: '0.00', despesas: '500.00', despesasPrevistas: '0.00' }
+    serie[1] = { mes: 2, receitas: '500.00', receitasPrevistas: '0.00', despesas: '500.30', despesasPrevistas: '0.00' }
+    const grafico = await renderizar(serie)
+
+    const rotulos = within(grafico).getAllByText('0')
+    expect(rotulos).toHaveLength(12)
+    for (const rotulo of rotulos) {
+      expect(rotulo).toHaveAttribute('fill', 'var(--cor-mutado)')
+    }
+  })
+
   it('tabela_escondida_com_os_doze_meses', async () => {
     await renderizar()
 
@@ -104,6 +117,8 @@ describe('GraficoResultado', () => {
     render(<GraficoResultado ano={2026} mes={10} serie={[]} />)
 
     expect(await screen.findByRole('region', { name: 'Resultado de cada mês em 2026' })).toBeInTheDocument()
+    const grafico = await screen.findByRole('group', { name: 'Gráfico do resultado de cada mês em 2026' })
+    await waitFor(() => expect(grafico.querySelector('.recharts-wrapper')).toBeInTheDocument())
     expect(semNbsp(screen.getByText(/^Acumulado até outubro/).textContent)).toContain('R$ 0,00')
     const tabela = screen.getByRole('table', { name: 'Resultado de cada mês em 2026' })
     expect(within(tabela).getAllByRole('row')).toHaveLength(1)
