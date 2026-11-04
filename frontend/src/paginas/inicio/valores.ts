@@ -50,36 +50,6 @@ export function larguraDaBarra(fracao: string): number {
 
 const ROTULOS_CURTOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] as const
 
-export interface PontoDoGrafico {
-  mes: number
-  rotulo: string
-  receitasPagas: number
-  receitasPrevistas: number
-  despesasPagas: number
-  despesasPrevistas: number
-}
-
-/**
- * Prepara a série para as barras empilhadas. Na API `receitas` e `despesas` já incluem a parte prevista, então
- * a barra cheia é "paga + prevista" = total: a parte paga é o total menos a prevista (em centavos).
- */
-export function serieDoGrafico(serie: PontoSerie[]): PontoDoGrafico[] {
-  return serie.map((ponto) => {
-    const receitas = paraCentavos(ponto.receitas)
-    const receitasPrevistas = paraCentavos(ponto.receitasPrevistas)
-    const despesas = paraCentavos(ponto.despesas)
-    const despesasPrevistas = paraCentavos(ponto.despesasPrevistas)
-    return {
-      mes: ponto.mes,
-      rotulo: ROTULOS_CURTOS[ponto.mes - 1] ?? '',
-      receitasPagas: (receitas - receitasPrevistas) / 100,
-      receitasPrevistas: receitasPrevistas / 100,
-      despesasPagas: (despesas - despesasPrevistas) / 100,
-      despesasPrevistas: despesasPrevistas / 100,
-    }
-  })
-}
-
 export interface PontoDoResultado {
   mes: number
   rotulo: string

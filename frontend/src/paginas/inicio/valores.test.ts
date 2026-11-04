@@ -7,7 +7,6 @@ import {
   percentualDaReceita,
   resultadoAcumulado,
   resultadoCurto,
-  serieDoGrafico,
   serieDoResultado,
   variacao,
 } from './valores'
@@ -60,18 +59,6 @@ describe('formatarPercentual', () => {
 
   it('mostra <1% quando é positivo mas arredonda para zero', () => {
     expect(formatarPercentual('0.0049')).toBe('<1%')
-  })
-})
-
-describe('serieDoGrafico', () => {
-  it('separa a parte paga da prevista, já que previstas é subconjunto do total', () => {
-    const serie: PontoSerie[] = [
-      { mes: 1, receitas: '1000.00', receitasPrevistas: '400.00', despesas: '300.10', despesasPrevistas: '0.10' },
-    ]
-
-    expect(serieDoGrafico(serie)).toEqual([
-      { mes: 1, rotulo: 'Jan', receitasPagas: 600, receitasPrevistas: 400, despesasPagas: 300, despesasPrevistas: 0.1 },
-    ])
   })
 })
 

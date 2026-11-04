@@ -200,48 +200,6 @@ describe('InicioPage', () => {
     expect(within(emDia!).queryByText('atrasada')).not.toBeInTheDocument()
   })
 
-  it('o_grafico_tem_regiao_nomeada_e_legenda', async () => {
-    responderResumo(resumo())
-    renderizar()
-
-    expect(await screen.findByRole('group', { name: 'Gráfico de receitas e despesas por mês em 2026' })).toBeInTheDocument()
-    const legenda = screen.getByRole('list', { name: 'Legenda do gráfico' })
-    expect(within(legenda).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      'Receitas',
-      'Despesas',
-      'Previsto',
-    ])
-  })
-
-  it('o_grafico_empilha_a_parte_prevista_sem_contar_duas_vezes_e_usa_o_padrao_listrado', async () => {
-    const serie = zeroSerie()
-    serie[10] = { mes: 11, receitas: '1000.00', receitasPrevistas: '400.00', despesas: '800.00', despesasPrevistas: '200.00' }
-    responderResumo(resumo({ serieAno: serie }))
-    renderizar()
-
-    const grafico = await screen.findByRole('group', { name: /^Gráfico de receitas e despesas/ })
-
-    await waitFor(() => expect(grafico.querySelectorAll('.recharts-bar')).toHaveLength(4))
-    const [receitasPagas, receitasPrevistas, despesasPagas, despesasPrevistas] = [
-      ...grafico.querySelectorAll('.recharts-bar'),
-    ].map((barra) => barra.querySelector('path.recharts-rectangle'))
-    const altura = (barra: Element | null | undefined) => Number(barra?.getAttribute('height'))
-
-    // Cores: cheia na parte paga, padrão listrado (SVG <pattern>) na prevista.
-    expect(receitasPagas).toHaveAttribute('fill', 'var(--cor-grafico-receitas)')
-    expect(despesasPagas).toHaveAttribute('fill', 'var(--cor-grafico-despesas)')
-    const padroes = [...grafico.querySelectorAll('pattern')].map((padrao) => `url(#${padrao.id})`)
-    expect(padroes).toHaveLength(2)
-    expect(padroes).toContain(receitasPrevistas?.getAttribute('fill'))
-    expect(padroes).toContain(despesasPrevistas?.getAttribute('fill'))
-    // Alturas: receitas 600 + 400 = 1000 e despesas 600 + 200 = 800 (previstas fazem parte do total).
-    expect(altura(receitasPagas) / altura(receitasPrevistas)).toBeCloseTo(1.5)
-    expect(altura(despesasPagas) / altura(despesasPrevistas)).toBeCloseTo(3)
-    const totalReceitas = altura(receitasPagas) + altura(receitasPrevistas)
-    const totalDespesas = altura(despesasPagas) + altura(despesasPrevistas)
-    expect(totalReceitas / totalDespesas).toBeCloseTo(1.25)
-  })
-
   it('no_celular_os_blocos_seguem_a_ordem_sobra_totais_gastos_proximas_grafico', async () => {
     responderResumo(resumo())
     renderizar()
@@ -255,7 +213,7 @@ describe('InicioPage', () => {
       'Despesas',
       'Onde você mais gastou em outubro',
       'Próximas contas',
-      'Receitas × Despesas 2026',
+      'Resultado de cada mês em 2026',
     ])
   })
 

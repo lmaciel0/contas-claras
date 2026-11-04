@@ -7,7 +7,7 @@ import { CabecalhoPagina } from '../../layout/CabecalhoPagina'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { CardSobra } from './CardSobra'
 import { CardsTotais } from './CardsTotais'
-import { GraficoAno } from './GraficoAno'
+import { GraficoResultado } from './GraficoResultado'
 import { OndeMaisGastou } from './OndeMaisGastou'
 import { ProximasContas } from './ProximasContas'
 
@@ -101,7 +101,12 @@ export function InicioPage() {
         />
         <OndeMaisGastou nomeMes={minusculo(nomeMes(mes))} categorias={resumo.categorias} />
         <ProximasContas contas={resumo.proximas} />
-        <GraficoAno ano={ano} serie={resumo.serieAno} />
+        <GraficoResultado
+          ano={ano}
+          mes={mes}
+          serie={resumo.serieAno}
+          className="md:col-span-14 md:col-start-22 md:row-start-1"
+        />
       </div>
     </>
   )
