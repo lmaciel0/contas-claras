@@ -7,6 +7,7 @@ import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { Esqueleto } from '../../componentes/Esqueleto'
 import { CabecalhoPagina } from '../../layout/CabecalhoPagina'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
+import { FaixaSaldo } from './FaixaSaldo'
 import { GrupoCategoria } from './GrupoCategoria'
 import { invalidarLancamentos } from './invalidar'
 import { ReceitasCard } from './ReceitasCard'
@@ -32,7 +33,7 @@ function agrupar(lancamentos: LancamentoResponse[]): Grupo[] {
 }
 
 /**
- * `/lancamentos`: card único das receitas do mês (total recebido em destaque) e, depois, os demais lançamentos
+ * `/lancamentos`: faixa com o saldo do Itaú, card único das receitas do mês (total recebido em destaque) e, depois, os demais lançamentos
  * agrupados por categoria, com total por grupo.
  * O formulário (`/lancamentos/novo` e `/lancamentos/:id`) é uma rota filha, desenhada por cima pelo `<Outlet />`.
  */
@@ -117,6 +118,7 @@ export function LancamentosPage() {
   return (
     <>
       {titulo}
+      <FaixaSaldo ano={ano} mes={mes} />
       {status.isError && (
         <p role="alert" className="mb-3 rounded-xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] px-3 py-2 text-sm">
           {mensagemDoErro(status.error)}

@@ -161,6 +161,13 @@ export interface PontoSerie {
   despesas: string
   despesasPrevistas: string
 }
+/** Saldo do Itaú no mês: `ativo` é falso antes do mês de início; valores em string decimal (`"5322.44"`). */
+export interface SaldoResponse {
+  ativo: boolean
+  saldo: string
+  recebidoNoMes: string
+}
+
 export interface ResumoResponse {
   receitas: string
   despesas: string

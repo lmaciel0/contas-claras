@@ -183,4 +183,47 @@ describe('LancamentosPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Falhou.')
     expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument()
   })
+
+  it('mostra_a_faixa_do_saldo_acima_dos_cards_e_atualiza_ao_marcar_recebido', async () => {
+    let status: StatusLancamento = 'PREVISTO'
+    responderLancamentos(() => [
+      lancamento({
+        id: 5,
+        itemId: 11,
+        itemNome: 'Camila',
+        categoriaId: 1,
+        categoriaNome: 'Receitas',
+        tipo: 'RECEITA',
+        valor: '742.00',
+        status,
+      }),
+    ])
+    let consultasSaldo = 0
+    servidor.use(
+      http.get('/api/saldo', () => {
+        consultasSaldo += 1
+        return HttpResponse.json({
+          ativo: true,
+          saldo: status === 'PAGO' ? '6242.00' : '5500.00',
+          recebidoNoMes: status === 'PAGO' ? '6242.00' : '5500.00',
+        })
+      }),
+      http.patch('/api/lancamentos/:id/status', () => {
+        status = 'PAGO'
+        return HttpResponse.json(lancamento({ id: 5, itemId: 11, itemNome: 'Camila', status }))
+      }),
+    )
+    renderizar('/lancamentos?ano=2026&mes=11')
+
+    const faixa = await screen.findByRole('region', { name: /saldo/i })
+    const receitas = await screen.findByRole('region', { name: 'Receitas' })
+    expect(faixa.compareDocumentPosition(receitas) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await waitFor(() => expect(within(faixa).getAllByText('R$ 5.500,00')).toHaveLength(2))
+    expect(consultasSaldo).toBe(1)
+
+    await userEvent.click(screen.getByRole('button', { name: /Camila.*A receber/ }))
+
+    await waitFor(() => expect(within(faixa).getAllByText('R$ 6.242,00')).toHaveLength(2))
+    expect(consultasSaldo).toBe(2)
+  })
 })
