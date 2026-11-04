@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Backend no pacote `dev.lmaciel.contasclaras.auth`. Comentários, nomes e mensagens em PT-BR.
+- Backend no pacote `dev.lmaciel.aprumo.auth`. Comentários, nomes e mensagens em PT-BR.
 - Frontend em `frontend/src/auth/`. Uso estrito de TypeScript e Tailwind CSS existente sem adicionar bibliotecas externas.
 - Testes TDD obrigatórios em todas as tarefas: teste que falha primeiro, depois código mínimo, depois teste passando e commit atômico.
 - Nenhuma dependência externa nova (usar APIs nativas do navegador e da linguagem).
@@ -33,8 +33,8 @@
 Agent: `java-spring`.
 
 **Files:**
-- Modify: `backend/src/main/java/dev/lmaciel/contasclaras/auth/TokenService.java`
-- Create: `backend/src/test/java/dev/lmaciel/contasclaras/auth/TokenServiceTest.java`
+- Modify: `backend/src/main/java/dev/lmaciel/aprumo/auth/TokenService.java`
+- Create: `backend/src/test/java/dev/lmaciel/aprumo/auth/TokenServiceTest.java`
 
 **Interfaces:**
 - `TokenService.VALIDADE`: `Duration.ofHours(24)`
@@ -42,9 +42,9 @@ Agent: `java-spring`.
 
 - [ ] **Step 1: Write the failing test**
 
-Criar `backend/src/test/java/dev/lmaciel/contasclaras/auth/TokenServiceTest.java`:
+Criar `backend/src/test/java/dev/lmaciel/aprumo/auth/TokenServiceTest.java`:
 ```java
-package dev.lmaciel.contasclaras.auth;
+package dev.lmaciel.aprumo.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -84,7 +84,7 @@ Esperado: FAIL porque `TokenService.VALIDADE` atualmente é `Duration.ofDays(30)
 
 - [ ] **Step 3: Write minimal implementation**
 
-No arquivo `backend/src/main/java/dev/lmaciel/contasclaras/auth/TokenService.java`, alterar a linha 29:
+No arquivo `backend/src/main/java/dev/lmaciel/aprumo/auth/TokenService.java`, alterar a linha 29:
 ```java
 public static final Duration VALIDADE = Duration.ofHours(24);
 ```
@@ -100,7 +100,7 @@ Esperado: PASS (2/2 testes passando).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backend/src/main/java/dev/lmaciel/contasclaras/auth/TokenService.java backend/src/test/java/dev/lmaciel/contasclaras/auth/TokenServiceTest.java
+git add backend/src/main/java/dev/lmaciel/aprumo/auth/TokenService.java backend/src/test/java/dev/lmaciel/aprumo/auth/TokenServiceTest.java
 git commit -m "fix(auth): reduzir validade maxima da sessao jwt para 24 horas"
 ```
 

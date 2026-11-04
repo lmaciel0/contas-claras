@@ -40,9 +40,9 @@
 
 **Files:**
 - Create: `backend/src/main/resources/db/migration/V6__nota.sql`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/nota/{CategoriaNota,CategoriaNotaRepository,CategoriaNotaService,CategoriaNotaController,CorCategoriaNota,TextoSeguro}.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/nota/dto/{CategoriaNotaRequest,CategoriaNotaResponse}.java`
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/nota/CategoriaNotaControllerTest.java` (estende `IntegracaoTest`, mesmo padrão de `TarefaControllerTest`)
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/nota/{CategoriaNota,CategoriaNotaRepository,CategoriaNotaService,CategoriaNotaController,CorCategoriaNota,TextoSeguro}.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/nota/dto/{CategoriaNotaRequest,CategoriaNotaResponse}.java`
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/nota/CategoriaNotaControllerTest.java` (estende `IntegracaoTest`, mesmo padrão de `TarefaControllerTest`)
 
 **Interfaces:**
 - Produces (JSON, consumido pelas tasks 5 a 8):
@@ -95,8 +95,8 @@ git commit -m "feat(notas): migration V6 e categorias de nota"
 ### Task 2: Backend, validação do conteúdo e extração do texto
 
 **Files:**
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/nota/{ConteudoNota,ConteudoInvalidoException}.java` (ou reutilizar `RequisicaoInvalidaException`, que já vira 400)
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/nota/ConteudoNotaTest.java` (teste unitário puro com `ObjectMapper`, sem Spring)
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/nota/{ConteudoNota,ConteudoInvalidoException}.java` (ou reutilizar `RequisicaoInvalidaException`, que já vira 400)
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/nota/ConteudoNotaTest.java` (teste unitário puro com `ObjectMapper`, sem Spring)
 
 **Interfaces:**
 - Produces: `ConteudoNota.validar(JsonNode conteudo): void` lança `RequisicaoInvalidaException` com mensagem em português se o conteúdo violar a lista permitida, o limite de 100000 caracteres serializados ou a profundidade 20. `ConteudoNota.textoSimples(JsonNode conteudo): String` junta os nós `text` e separa blocos (`paragraph`, `heading`, `listItem`, `taskItem`) e `hardBreak` com `\n`, sem espaços repetidos nas pontas. `ConteudoNota.VAZIO: JsonNode` é `{"type":"doc","content":[{"type":"paragraph"}]}`.
@@ -133,10 +133,10 @@ git commit -m "feat(notas): validacao do conteudo por lista permitida e texto si
 ### Task 3: Backend, notas (criar, listar, filtrar, buscar, editar, excluir)
 
 **Files:**
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/nota/{Nota,NotaRepository,NotaService,NotaController}.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/nota/dto/{NovaNotaRequest,NotaRequest,NotaResponse,NotaResumoResponse}.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/nota/{Nota,NotaRepository,NotaService,NotaController}.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/nota/dto/{NovaNotaRequest,NotaRequest,NotaResponse,NotaResumoResponse}.java`
 - Modify: `CategoriaNotaService` (contagem de `totalNotas` passa a usar `NotaRepository`)
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/nota/NotaControllerTest.java`
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/nota/NotaControllerTest.java`
 
 **Interfaces:**
 - Consumes: `ConteudoNota.validar`, `ConteudoNota.textoSimples`, `ConteudoNota.VAZIO` (Task 2); `TextoSeguro`, `CategoriaNotaService.buscarDoUsuario` (Task 1).
@@ -197,8 +197,8 @@ git commit -m "feat(notas): criar, listar com filtro e busca, editar e excluir n
 
 **Files:**
 - Modify: `Nota`, `NotaRepository`, `NotaService`, `NotaController` (pacote `nota/`); `CategoriaNotaService`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/nota/dto/{FixarRequest,ConteudoRequest,NotaFixadaResponse}.java`
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/nota/NotaFixadaControllerTest.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/nota/dto/{FixarRequest,ConteudoRequest,NotaFixadaResponse}.java`
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/nota/NotaFixadaControllerTest.java`
 
 **Interfaces:**
 - Consumes: tudo da Task 3.

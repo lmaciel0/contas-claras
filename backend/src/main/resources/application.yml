@@ -1,6 +1,6 @@
 spring:
   application:
-    name: contas-claras
+    name: aprumo
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}

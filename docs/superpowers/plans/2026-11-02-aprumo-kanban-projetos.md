@@ -30,20 +30,20 @@
 
 **Files:**
 - Create: `backend/src/main/resources/db/migration/V7__projeto_kanban.sql`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/EstagioProjeto.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/PrioridadeProjeto.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/CorProjeto.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/Projeto.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/ProjetoSubtarefa.java`
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/projeto/ProjetoTest.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/EstagioProjeto.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/PrioridadeProjeto.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/CorProjeto.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/Projeto.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/ProjetoSubtarefa.java`
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/projeto/ProjetoTest.java`
 
 **Interfaces:**
-- Consumes: Entidade `Usuario` existente em `dev.lmaciel.contasclaras.usuario.Usuario`
+- Consumes: Entidade `Usuario` existente em `dev.lmaciel.aprumo.usuario.Usuario`
 - Produces: `Projeto`, `ProjetoSubtarefa`, enums `EstagioProjeto`, `PrioridadeProjeto`, `CorProjeto` e método de domínio `calcularProgresso()`
 
 - [ ] **Step 1: Escrever teste de unidade para regras de domínio do Projeto**
 
-Criar `backend/src/test/java/dev/lmaciel/contasclaras/projeto/ProjetoTest.java` testando:
+Criar `backend/src/test/java/dev/lmaciel/aprumo/projeto/ProjetoTest.java` testando:
 1. Cálculo de progresso com 0 subtarefas em estágio `A_FAZER` (esperado: 0%).
 2. Cálculo de progresso com 0 subtarefas em estágio `CONCLUIDO` (esperado: 100%).
 3. Cálculo de progresso com 2 subtarefas concluídas de 4 totais (esperado: 50%).
@@ -72,7 +72,7 @@ Expected: PASS (4/4 testes aprovados)
 
 Run:
 ```bash
-git add backend/src/main/resources/db/migration/V7__projeto_kanban.sql backend/src/main/java/dev/lmaciel/contasclaras/projeto/ backend/src/test/java/dev/lmaciel/contasclaras/projeto/ProjetoTest.java
+git add backend/src/main/resources/db/migration/V7__projeto_kanban.sql backend/src/main/java/dev/lmaciel/aprumo/projeto/ backend/src/test/java/dev/lmaciel/aprumo/projeto/ProjetoTest.java
 git commit -m "feat(projeto): criar migration V7, enums e entidades de dominio do projeto"
 ```
 
@@ -81,15 +81,15 @@ git commit -m "feat(projeto): criar migration V7, enums e entidades de dominio d
 ### Task 2: DTOs e Repositórios Spring Data com Isolamento por Usuário
 
 **Files:**
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/dto/ProjetoResposta.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/dto/ProjetoCriacaoRequisicao.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/dto/ProjetoEdicaoRequisicao.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/dto/ProjetoMoverEstagioRequisicao.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/dto/SubtarefaResposta.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/dto/SubtarefaCriacaoRequisicao.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/ProjetoRepository.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/ProjetoSubtarefaRepository.java`
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/projeto/ProjetoRepositoryTest.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/dto/ProjetoResposta.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/dto/ProjetoCriacaoRequisicao.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/dto/ProjetoEdicaoRequisicao.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/dto/ProjetoMoverEstagioRequisicao.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/dto/SubtarefaResposta.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/dto/SubtarefaCriacaoRequisicao.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/ProjetoRepository.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/ProjetoSubtarefaRepository.java`
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/projeto/ProjetoRepositoryTest.java`
 
 **Interfaces:**
 - Consumes: Entidades de Task 1
@@ -97,7 +97,7 @@ git commit -m "feat(projeto): criar migration V7, enums e entidades de dominio d
 
 - [ ] **Step 1: Escrever teste de unidade/integração para os Repositórios**
 
-Criar `backend/src/test/java/dev/lmaciel/contasclaras/projeto/ProjetoRepositoryTest.java` validando:
+Criar `backend/src/test/java/dev/lmaciel/aprumo/projeto/ProjetoRepositoryTest.java` validando:
 1. `findByUsuarioIdOrderByEstagioAscOrdemAscCriadoEmDesc` traz apenas projetos daquele usuário.
 2. Contagem por estágio para reordenação.
 3. Busca por subtarefas filtrada pelo projeto.
@@ -122,7 +122,7 @@ Expected: PASS
 
 Run:
 ```bash
-git add backend/src/main/java/dev/lmaciel/contasclaras/projeto/dto/ backend/src/main/java/dev/lmaciel/contasclaras/projeto/*Repository.java backend/src/test/java/dev/lmaciel/contasclaras/projeto/ProjetoRepositoryTest.java
+git add backend/src/main/java/dev/lmaciel/aprumo/projeto/dto/ backend/src/main/java/dev/lmaciel/aprumo/projeto/*Repository.java backend/src/test/java/dev/lmaciel/aprumo/projeto/ProjetoRepositoryTest.java
 git commit -m "feat(projeto): adicionar DTOs imutaveis e repositorios Spring Data"
 ```
 
@@ -131,9 +131,9 @@ git commit -m "feat(projeto): adicionar DTOs imutaveis e repositorios Spring Dat
 ### Task 3: Service e Controller REST com Testes de Integração Completos
 
 **Files:**
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/ProjetoService.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/projeto/ProjetoController.java`
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/projeto/ProjetoControllerTest.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/ProjetoService.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/projeto/ProjetoController.java`
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/projeto/ProjetoControllerTest.java`
 
 **Interfaces:**
 - Consumes: Repositories e DTOs de Task 2
@@ -141,7 +141,7 @@ git commit -m "feat(projeto): adicionar DTOs imutaveis e repositorios Spring Dat
 
 - [ ] **Step 1: Escrever testes de integração em `ProjetoControllerTest`**
 
-Criar `backend/src/test/java/dev/lmaciel/contasclaras/projeto/ProjetoControllerTest.java` estendendo `IntegracaoTest` cobrindo:
+Criar `backend/src/test/java/dev/lmaciel/aprumo/projeto/ProjetoControllerTest.java` estendendo `IntegracaoTest` cobrindo:
 1. `GET /api/projetos` lista projetos do usuário logado e não expõe projetos de outros usuários.
 2. `POST /api/projetos` cria com subtarefas em lote e retorna `201 Created`.
 3. `PUT /api/projetos/{id}` atualiza campos e responde `200 OK`.
@@ -170,7 +170,7 @@ Expected: PASS (todos os 8 cenários aprovados)
 
 Run:
 ```bash
-git add backend/src/main/java/dev/lmaciel/contasclaras/projeto/ProjetoService.java backend/src/main/java/dev/lmaciel/contasclaras/projeto/ProjetoController.java backend/src/test/java/dev/lmaciel/contasclaras/projeto/ProjetoControllerTest.java
+git add backend/src/main/java/dev/lmaciel/aprumo/projeto/ProjetoService.java backend/src/main/java/dev/lmaciel/aprumo/projeto/ProjetoController.java backend/src/test/java/dev/lmaciel/aprumo/projeto/ProjetoControllerTest.java
 git commit -m "feat(projeto): implementar service e controller REST com testes de integracao"
 ```
 

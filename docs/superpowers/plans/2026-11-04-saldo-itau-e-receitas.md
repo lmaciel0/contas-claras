@@ -20,7 +20,7 @@
 - Dinheiro trafega como string decimal (`"6242.00"`); formatar com `formatarMoeda` (`src/formato/moeda.ts`).
 - Não tocar em `InicioPage` nem em `FinancasDoMes.tsx` (PR #35). Código Java só pelo agent `java-spring`; front-end só pelo `frontend-developer`.
 - Acessibilidade: contraste 4,5:1, foco visível, `cursor-pointer` em clicáveis, `prefers-reduced-motion`, sem emoji como ícone.
-- Paths: backend `backend/src/main/java/dev/lmaciel/contasclaras` (abrev. `B`), testes `backend/src/test/java/dev/lmaciel/contasclaras` (`T`), frontend `frontend/src` (`F`).
+- Paths: backend `backend/src/main/java/dev/lmaciel/aprumo` (abrev. `B`), testes `backend/src/test/java/dev/lmaciel/aprumo` (`T`), frontend `frontend/src` (`F`).
 
 ## Review Focus
 
@@ -72,7 +72,7 @@
 
 **Interfaces:**
 - Produces: `record TotalTipo(TipoCategoria tipo, BigDecimal total)` em `B/lancamento/`.
-- Produces: `List<TotalTipo> LancamentoRepository.totaisPagosPorTipo(@Param("usuarioId") long usuarioId, @Param("de") int de, @Param("ate") int ate)`; JPQL no mesmo estilo de `totaisDoAno`, `l.status = dev.lmaciel.contasclaras.lancamento.StatusLancamento.PAGO`, período por `(l.ano * 12 + l.mes - 1) between :de and :ate`, `group by c.tipo`. Considera todos os itens, inclusive cartão e arquivados.
+- Produces: `List<TotalTipo> LancamentoRepository.totaisPagosPorTipo(@Param("usuarioId") long usuarioId, @Param("de") int de, @Param("ate") int ate)`; JPQL no mesmo estilo de `totaisDoAno`, `l.status = dev.lmaciel.aprumo.lancamento.StatusLancamento.PAGO`, período por `(l.ano * 12 + l.mes - 1) between :de and :ate`, `group by c.tipo`. Considera todos os itens, inclusive cartão e arquivados.
 - Produces: `record SaldoMes(boolean ativo, BigDecimal saldo, BigDecimal recebidoNoMes)` em `B/saldo/dto/`; com `ativo=false`, os dois valores são `0.00`.
 - Produces: `SaldoService(LancamentoRepository lancamentos, @Value("${app.saldo.inicio}") String inicio)` com `@Transactional(readOnly = true) SaldoMes saldo(int ano, int mes, UsuarioLogado usuario)`; converte `inicio` com `YearMonth.parse` e usa `MesAno.indice()`.
 - Produces: `GET /api/saldo?ano&mes` em `SaldoController` (`@RequestMapping("/api/saldo")`), mesma validação e `UsuarioLogado.de(jwt)` do `ResumoController`. Não precisa de matcher no `SecurityConfig`.

@@ -47,8 +47,8 @@ backend/
   pom.xml, mvnw, .mvn/, Dockerfile
   src/main/resources/application.yml, application-dev.yml, application-importar.yml
   src/main/resources/db/migration/V1__schema.sql
-  src/main/java/dev/lmaciel/contasclaras/
-    ContasClarasApplication.java
+  src/main/java/dev/lmaciel/aprumo/
+    AprumoApplication.java
     comum/        ApiErro.java, ApiExceptionHandler.java, NaoEncontradoException.java, ConflitoException.java, ClockConfig.java, Dinheiro.java
     saude/        HealthController.java
     usuario/      Usuario.java, UsuarioRepository.java
@@ -62,7 +62,7 @@ backend/
     relatorio/    RelatorioService.java, RelatorioController.java, dto/*.java
     importacao/   PlanilhaParser.java, PlanilhaLida.java (records), NomeNormalizado.java, ImportacaoService.java, ImportacaoRunner.java, ImportacaoRecusadaException.java
     demo/         DemoSeeder.java
-  src/test/java/dev/lmaciel/contasclaras/...   (espelha main; IntegracaoTest.java = base Testcontainers)
+  src/test/java/dev/lmaciel/aprumo/...   (espelha main; IntegracaoTest.java = base Testcontainers)
   src/test/java/.../importacao/PlanilhaFicticia.java  (gera o .xlsx fictício em memória com POI)
 frontend/
   package.json, vite.config.ts, tsconfig*.json, index.html, vercel.json, public/manifest.webmanifest, public/icon-*.png
@@ -83,7 +83,7 @@ render.yaml, .github/workflows/ci.yml, .env.example, README.md
 ### Task 1: Esqueleto da API, schema e health
 
 **Files:**
-- Create: `backend/pom.xml`, `backend/mvnw` + `.mvn/` (wrapper Maven 3.9.x), `ContasClarasApplication.java`, `application.yml`, `application-dev.yml`, `db/migration/V1__schema.sql`, `comum/ClockConfig.java`, `comum/ApiErro.java`, `comum/ApiExceptionHandler.java`, `comum/NaoEncontradoException.java`, `comum/ConflitoException.java`, `saude/HealthController.java`
+- Create: `backend/pom.xml`, `backend/mvnw` + `.mvn/` (wrapper Maven 3.9.x), `AprumoApplication.java`, `application.yml`, `application-dev.yml`, `db/migration/V1__schema.sql`, `comum/ClockConfig.java`, `comum/ApiErro.java`, `comum/ApiExceptionHandler.java`, `comum/NaoEncontradoException.java`, `comum/ConflitoException.java`, `saude/HealthController.java`
 - Test: `IntegracaoTest.java` (base), `saude/HealthControllerTest.java`, `SchemaTest.java`
 
 **Interfaces:**
@@ -599,7 +599,7 @@ Referência visual: `.local/mockups/dashboard-indigo.html` e `.local/mockups/car
 ### Task 16: Docker, CI e dados de demonstração
 
 **Files:**
-- Create: `backend/Dockerfile`, `render.yaml`, `.github/workflows/ci.yml`, `.env.example`, `backend/src/main/java/dev/lmaciel/contasclaras/demo/DemoSeeder.java`, `docker-compose.yml` (Postgres local para dev)
+- Create: `backend/Dockerfile`, `render.yaml`, `.github/workflows/ci.yml`, `.env.example`, `backend/src/main/java/dev/lmaciel/aprumo/demo/DemoSeeder.java`, `docker-compose.yml` (Postgres local para dev)
 - Test: `demo/DemoSeederTest.java`
 
 **Interfaces:**

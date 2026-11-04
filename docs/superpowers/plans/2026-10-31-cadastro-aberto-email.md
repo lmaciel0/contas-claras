@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Quem escreve: todo `.java` pelo agent `java-spring`; todo front-end pelo agent `frontend-developer`. TDD em tudo.
-- Backend no pacote `dev.lmaciel.contasclaras.auth`, plano como o atual; DTOs em `auth/dto`. Comentários, nomes e mensagens em PT-BR.
+- Backend no pacote `dev.lmaciel.aprumo.auth`, plano como o atual; DTOs em `auth/dto`. Comentários, nomes e mensagens em PT-BR.
 - Código: 6 dígitos, com zeros à esquerda, `SecureRandom`, 15 min, 5 tentativas, uso único.
 - Limites: 1 envio a cada 60 s por e-mail (`202` sem enviar); 3/h por e-mail, 10/h por IP e 300 em 24 h (`429`).
 - Mensagens exatas: `400` "Código inválido ou expirado."; `429` "Muitos pedidos agora. Tente de novo mais tarde."; `503` "Não foi possível enviar o e-mail. Tente de novo."
@@ -90,7 +90,7 @@ Agent: `java-spring`.
 
 **Files:**
 - Modify: `backend/src/main/resources/application.yml`
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/PoolConexoesTest.java`
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/PoolConexoesTest.java`
 
 **Interfaces:** nenhuma.
 
@@ -131,7 +131,7 @@ Expected: PASS.
 Agent: `java-spring`.
 
 **Files:**
-- Create em `backend/src/main/java/dev/lmaciel/contasclaras/auth/`: `TipoCodigo`, `CodigoEmail`, `CodigoEmailRepository`, `RegistroEnvio`, `RegistroEnvioRepository`, `CodigosEmail`, `MensagemEmail`, `ModelosEmail`, `EnvioEmail`, `SmtpEnvioEmail`, `ConsoleEnvioEmail`
+- Create em `backend/src/main/java/dev/lmaciel/aprumo/auth/`: `TipoCodigo`, `CodigoEmail`, `CodigoEmailRepository`, `RegistroEnvio`, `RegistroEnvioRepository`, `CodigosEmail`, `MensagemEmail`, `ModelosEmail`, `EnvioEmail`, `SmtpEnvioEmail`, `ConsoleEnvioEmail`
 - Create: `backend/src/main/resources/db/migration/V4__codigo_email.sql` (SQL exato da spec, parte "Dados")
 - Create: `comum/EmailIndisponivelException.java`
 - Modify: `comum/ApiExceptionHandler.java`, `backend/pom.xml`, `application.yml`

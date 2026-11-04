@@ -30,17 +30,17 @@
 
 **Files:**
 - Create: `backend/src/main/resources/db/migration/V11__categoria_icone_cor.sql`
-- Modify: `backend/src/main/java/dev/lmaciel/contasclaras/categoria/Categoria.java`
-- Modify: `backend/src/main/java/dev/lmaciel/contasclaras/categoria/CategoriasPadrao.java`
-- Create: `backend/src/test/java/dev/lmaciel/contasclaras/categoria/CategoriaTest.java`
+- Modify: `backend/src/main/java/dev/lmaciel/aprumo/categoria/Categoria.java`
+- Modify: `backend/src/main/java/dev/lmaciel/aprumo/categoria/CategoriasPadrao.java`
+- Create: `backend/src/test/java/dev/lmaciel/aprumo/categoria/CategoriaTest.java`
 
 **Interfaces:**
-- Consumes: Entidade `Usuario` existente em `dev.lmaciel.contasclaras.usuario.Usuario`
+- Consumes: Entidade `Usuario` existente em `dev.lmaciel.aprumo.usuario.Usuario`
 - Produces: `Categoria` com campos `icone` e `cor`, construtor estendido e método `atualizar(nome, icone, cor)`
 
 - [ ] **Step 1: Escrever teste de unidade para a entidade Categoria**
 
-Criar `backend/src/test/java/dev/lmaciel/contasclaras/categoria/CategoriaTest.java` validando:
+Criar `backend/src/test/java/dev/lmaciel/aprumo/categoria/CategoriaTest.java` validando:
 1. Construtor com `icone` e `cor` define valores corretamente.
 2. Construtor padrão/fallback atribui defaults quando `icone` ou `cor` são nulos/em branco.
 3. Método `atualizar(nome, icone, cor)` atualiza os valores corretamente e limpa espaços vazios.
@@ -65,7 +65,7 @@ Expected: PASS
 
 Run:
 ```bash
-git add backend/src/main/resources/db/migration/V11__categoria_icone_cor.sql backend/src/main/java/dev/lmaciel/contasclaras/categoria/ backend/src/test/java/dev/lmaciel/contasclaras/categoria/CategoriaTest.java
+git add backend/src/main/resources/db/migration/V11__categoria_icone_cor.sql backend/src/main/java/dev/lmaciel/aprumo/categoria/ backend/src/test/java/dev/lmaciel/aprumo/categoria/CategoriaTest.java
 git commit -m "feat(categoria): criar migration V11 e adicionar campos icone e cor na entidade Categoria"
 ```
 
@@ -74,11 +74,11 @@ git commit -m "feat(categoria): criar migration V11 e adicionar campos icone e c
 ### Task 2: DTOs e Endpoints REST de Categoria com Ícone e Cor (Backend)
 
 **Files:**
-- Modify: `backend/src/main/java/dev/lmaciel/contasclaras/categoria/dto/CategoriaRequest.java`
-- Modify: `backend/src/main/java/dev/lmaciel/contasclaras/categoria/dto/CategoriaResponse.java`
-- Modify: `backend/src/main/java/dev/lmaciel/contasclaras/categoria/CategoriaService.java`
-- Modify: `backend/src/main/java/dev/lmaciel/contasclaras/categoria/CategoriaController.java`
-- Modify: `backend/src/test/java/dev/lmaciel/contasclaras/categoria/CategoriaControllerTest.java`
+- Modify: `backend/src/main/java/dev/lmaciel/aprumo/categoria/dto/CategoriaRequest.java`
+- Modify: `backend/src/main/java/dev/lmaciel/aprumo/categoria/dto/CategoriaResponse.java`
+- Modify: `backend/src/main/java/dev/lmaciel/aprumo/categoria/CategoriaService.java`
+- Modify: `backend/src/main/java/dev/lmaciel/aprumo/categoria/CategoriaController.java`
+- Modify: `backend/src/test/java/dev/lmaciel/aprumo/categoria/CategoriaControllerTest.java`
 
 **Interfaces:**
 - Consumes: Entidade `Categoria` da Task 1
@@ -112,7 +112,7 @@ Expected: PASS
 
 Run:
 ```bash
-git add backend/src/main/java/dev/lmaciel/contasclaras/categoria/ backend/src/test/java/dev/lmaciel/contasclaras/categoria/CategoriaControllerTest.java
+git add backend/src/main/java/dev/lmaciel/aprumo/categoria/ backend/src/test/java/dev/lmaciel/aprumo/categoria/CategoriaControllerTest.java
 git commit -m "feat(categoria): expor icone e cor nos DTOs e endpoints REST de categoria"
 ```
 
