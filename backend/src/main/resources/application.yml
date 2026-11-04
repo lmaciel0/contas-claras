@@ -6,9 +6,10 @@ spring:
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     hikari:
-      # O session pooler do Supabase aceita 15 conexões no total. Cada instância da API abre no máximo 2
-      # (8 instâncias já somam 16, acima do limite), então a conexão ociosa é devolvida em 10 s em vez dos
-      # 10 min padrão do Hikari; com minimum-idle 0, nenhuma instância parada segura conexão.
+      # O session pooler do Supabase aceita 15 conexões no total. Estes valores são os padrões (local e testes):
+      # no Render o pool vem de SPRING_DATASOURCE_HIKARI_* (render.yaml), dimensionado para a API sempre ligada.
+      # Aqui, cada instância abre no máximo 2 e devolve a conexão ociosa em 10 s, para várias instâncias
+      # efêmeras não esgotarem o limite do pooler.
       maximum-pool-size: 2
       minimum-idle: 0
       idle-timeout: 10000
@@ -47,6 +48,6 @@ app:
     inicio: 2026-11
 
 server:
-  # Vercel (e qualquer PaaS) define PORT; sem ela, 8080.
+  # O Render (e qualquer PaaS) define PORT; sem ela, 8080.
   port: ${PORT:8080}
   forward-headers-strategy: framework

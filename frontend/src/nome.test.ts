@@ -53,7 +53,7 @@ describe('nome do produto', () => {
     const arquivosComNomeAntigo = versionados.filter((caminho) => {
       const bytes = readFileSync(resolve(raiz, caminho))
       if (bytes.subarray(0, 8000).includes(0)) return false // binário
-      const texto = bytes.toString('utf8').replaceAll('contas-claras-ten.vercel.app', '')
+      const texto = bytes.toString('utf8')
       return padraoAntigo.test(texto)
     })
 

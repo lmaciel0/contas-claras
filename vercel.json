@@ -6,15 +6,10 @@
       "root": "frontend/",
       "framework": "vite",
       "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-    },
-    "api": {
-      "root": "backend/",
-      "runtime": "container",
-      "entrypoint": "Dockerfile"
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": { "service": "api" } },
+    { "source": "/api/(.*)", "destination": "https://api.useaprumo.com.br/api/$1" },
     { "source": "/(.*)", "destination": { "service": "web" } }
   ],
   "headers": [

@@ -2,7 +2,7 @@
 
 Controle financeiro pessoal que substitui uma planilha anual de Excel. Ao abrir, responde duas perguntas: **quanto sobra no mês** e **onde estou gastando mais**. Funciona no computador e no celular, com lançamento rápido, contas previstas e pagas, vencimentos, limites de cartão e uma visão anual no formato da planilha.
 
-**App:** https://contas-claras-ten.vercel.app (cadastro restrito a e-mails liberados)
+**App:** https://app.useaprumo.com.br (cadastro restrito a e-mails liberados)
 
 | Computador | Celular |
 |---|---|
@@ -35,20 +35,20 @@ Controle financeiro pessoal que substitui uma planilha anual de Excel. Ao abrir,
 | Banco | PostgreSQL 17 (Supabase em produção) |
 | Front | React 19, TypeScript, Vite, Tailwind CSS v4, React Router, TanStack Query, Recharts |
 | Testes | JUnit 5, Mockito, Testcontainers · Vitest, Testing Library, MSW |
-| Deploy | Vercel Services: front estático + API em container (Container Runtime), região `gru1` |
+| Deploy | Front estático na Vercel (`app.useaprumo.com.br`) e API em container no Render Starter, sempre ligada, região Virginia (`api.useaprumo.com.br`) |
 | CI | GitHub Actions (backend `mvnw verify`, front `test` + `lint` + `build`) |
 
 ## Arquitetura
 
 ```mermaid
 flowchart LR
-  B[Navegador / celular] -->|HTTPS| V[Vercel gru1]
+  B[Navegador / celular] -->|HTTPS| V[Vercel<br/>app.useaprumo.com.br]
   V -->|"/*"| W[service web<br/>React + Vite]
-  V -->|"/api/*"| A[service api<br/>Spring Boot em container]
-  A -->|JDBC + TLS<br/>session pooler| D[(Supabase Postgres<br/>schema contas)]
+  V -->|"/api/* (rewrite externo)"| A[Render Starter, Virginia<br/>Spring Boot em container]
+  A -->|JDBC + TLS<br/>session pooler| D[(Supabase us-east-1<br/>schema contas)]
 ```
 
-Front e API ficam no **mesmo domínio**, então o cookie de sessão é de primeira parte e não há CORS.
+O navegador só fala com `app.useaprumo.com.br`: a Vercel repassa `/api/*` ao Render, então front e API aparecem na **mesma origem**, o cookie de sessão é de primeira parte e não há CORS. A API e o banco ficam na mesma região (Virginia / `us-east-1`), porque o Render não tem região em São Paulo.
 
 ### Decisões técnicas
 
@@ -58,7 +58,7 @@ Front e API ficam no **mesmo domínio**, então o cookie de sessão é de primei
 - **Isolamento:** toda consulta filtra pelo usuário autenticado; recurso de outro usuário responde **404**, nunca 403.
 - **Dinheiro:** `BigDecimal` no Java, `numeric(12,2)` no banco e string no JSON (`"1234.56"`). Nada de ponto flutuante.
 - **Banco:** migrations Flyway; a FK de lançamento é `ON DELETE RESTRICT`, então apagar categoria nunca apaga lançamento por cascata. Em produção a API usa um role e um schema próprios (`contas`), fora da API REST pública do Supabase.
-- **Cold start:** a API escala para zero; o front mostra "Acordando o servidor…" e repete 502/503/504 dentro de uma janela de 90 s. Um 503 com corpo `{erro}` vem da própria API (falha de envio de e-mail) e aparece na hora, sem repetir.
+- **Falhas de conexão:** a API roda sempre ligada (Render Starter), mas o front ainda mostra "Acordando o servidor…" e repete 502/503/504 dentro de uma janela de 90 s, para cobrir reinícios e deploys. Um 503 com corpo `{erro}` vem da própria API (falha de envio de e-mail) e aparece na hora, sem repetir.
 - **Front:** CSP restrita (só Google Identity Services como origem externa), `X-Frame-Options: DENY`, `nosniff`, redirecionamento pós-login validado contra open redirect.
 
 ## Rodar localmente
@@ -101,13 +101,16 @@ A saída mostra, por ano, receitas, despesas e diferença, para conferir com as 
 
 ## Deploy
 
-O `vercel.json` da raiz define os services `web` (`frontend/`) e `api` (`backend/Dockerfile`), as rotas e os headers de segurança. Variáveis de ambiente do projeto na Vercel (modelo em `.env.example`):
+Duas plataformas, cada uma com o seu arquivo de configuração:
 
-`DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET` (≥ 32 bytes), `MAIL_USERNAME`, `MAIL_PASSWORD`, `APP_URL`, `GOOGLE_CLIENT_ID`, `PORT=8080` e, para o front, `VITE_GOOGLE_CLIENT_ID`.
+- **API (Render):** o `render.yaml` da raiz descreve o serviço `aprumo-api` (Docker do `backend/`, plano Starter, região Virginia, health check em `/api/health`). O deploy é manual (`autoDeploy: false`), pelo botão "Manual Deploy" do painel do Render. O domínio `api.useaprumo.com.br` é configurado à mão em Settings → Custom Domains (o Blueprint não declara domínio) e o subdomínio `onrender.com` fica desligado. Variáveis no painel do Render (modelo em `.env.example`): `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET` (≥ 32 bytes), `MAIL_USERNAME`, `MAIL_PASSWORD`, `APP_URL` (`https://app.useaprumo.com.br`) e `GOOGLE_CLIENT_ID`. O pool de conexões vem de `SPRING_DATASOURCE_HIKARI_*`, já fixado no `render.yaml`.
+- **Front (Vercel):** o `vercel.json` da raiz define o service `web` (`frontend/`), o rewrite externo de `/api/*` para `https://api.useaprumo.com.br` e os headers de segurança. Variável do projeto na Vercel: `VITE_GOOGLE_CLIENT_ID`.
 
 ```bash
 vercel deploy --prod
 ```
+
+O login com Google exige `https://app.useaprumo.com.br` em "Origens JavaScript autorizadas" do OAuth Client no Google Cloud.
 
 ## Estrutura
 

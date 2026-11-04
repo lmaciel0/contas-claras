@@ -1,0 +1,45 @@
+# Blueprint do Render para a API do Aprumo.
+#
+# Starter (e não Free) de propósito: a instância fica sempre ligada. O motivo de existir este arquivo é o
+# cold start de ~17 s do container serverless anterior. Região Virginia: o Render não tem São Paulo, e o
+# banco (Supabase) fica em us-east-1, a mesma região, para cada consulta custar milissegundos.
+#
+# O front fica na Vercel (vercel.json) e repassa /api/* para api.useaprumo.com.br por rewrite externo.
+# Deploy manual (autoDeploy: false), como o restante do projeto: só com pedido do dono.
+services:
+  - type: web
+    name: aprumo-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    region: virginia
+    healthCheckPath: /api/health
+    autoDeploy: false
+    envVars:
+      # Pool do Hikari para instância sempre ligada. O pooler de sessão do Supabase aceita 15 conexões no total
+      # e o Render sobe a instância nova com a antiga ainda viva (deploy sem downtime): 2 x 5 = 10 cabe com folga
+      # para manutenção; 8 + 8 não caberia. Sobrescrevem o application.yml por relaxed binding do Spring Boot.
+      - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+        value: "5"
+      - key: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
+        value: "1"
+      - key: SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT
+        value: "600000"
+      # Segredos e endereços: preenchidos no painel do Render, nunca no repositório.
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
