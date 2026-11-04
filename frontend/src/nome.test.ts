@@ -38,6 +38,8 @@ describe('nome do produto', () => {
       'frontend/src/nome.test.ts',
       // tem a asserção negativa /contas claras/i
       'frontend/src/layout/AppShell.test.tsx',
+      // tem asserção negativa do nome antigo (doesNotContain)
+      'backend/src/test/java/dev/lmaciel/aprumo/auth/ModelosEmailTest.java',
       // sai da lista na Tarefa 4
       'sonar-project.properties',
     ])
