@@ -21,4 +21,22 @@ describe('totaisDeReceitas', () => {
   it('lista_vazia_zera_tudo', () => {
     expect(totaisDeReceitas([])).toEqual({ recebidoCentavos: 0, totalCentavos: 0, percentual: 0 })
   })
+
+  it('quase_tudo_recebido_nunca_mostra_100', () => {
+    const totais = totaisDeReceitas([receita(1, 'Salário', '5500.00', 'PAGO'), receita(2, 'Extra', '0.01', 'PREVISTO')])
+
+    expect(totais.percentual).toBe(99)
+  })
+
+  it('pouco_recebido_nunca_mostra_100_nem_arredonda_para_cima', () => {
+    const totais = totaisDeReceitas([receita(1, 'Salário', '5500.00', 'PAGO'), receita(2, 'Extra', '1000000.00', 'PREVISTO')])
+
+    expect(totais.percentual).toBe(0)
+  })
+
+  it('nada_recebido_com_previsto_da_zero', () => {
+    const totais = totaisDeReceitas([receita(1, 'Salário', '5500.00', 'PREVISTO')])
+
+    expect(totais).toEqual({ recebidoCentavos: 0, totalCentavos: 550000, percentual: 0 })
+  })
 })

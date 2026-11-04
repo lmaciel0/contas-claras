@@ -1,5 +1,7 @@
+import { QueryClientProvider } from '@tanstack/react-query'
 import { screen, waitFor, within } from '@testing-library/react'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
+import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SaldoResponse } from '../../api/tipos'
 import { renderComApp } from '../../teste/render'
@@ -67,6 +69,43 @@ describe('FaixaSaldo', () => {
 
     await screen.findByRole('region', { name: /saldo/i })
     expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it.each([
+    { de: 12, para: 11, rotulo: 'Dinheiro no Itaú hoje' },
+    { de: 11, para: 10, rotulo: 'Saldo no Itaú ao fim de Outubro' },
+  ])('troca de mes $de para $para: nunca mostra o saldo do mes anterior sob o novo rotulo', async ({ de, para, rotulo }) => {
+    servidor.use(
+      http.get('/api/saldo', async ({ request }) => {
+        const mesPedido = Number(new URL(request.url).searchParams.get('mes'))
+        if (mesPedido === para) {
+          await delay(150)
+          return HttpResponse.json({ ativo: true, saldo: '1111.11', recebidoNoMes: '2222.22' })
+        }
+        return HttpResponse.json({ ativo: true, saldo: '9999.99', recebidoNoMes: '8888.88' })
+      }),
+    )
+    const { rerender, queryClient } = renderComApp(<FaixaSaldo ano={2026} mes={de} />)
+    await screen.findByText('R$ 9.999,99')
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/']}>
+          <FaixaSaldo ano={2026} mes={para} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    // Carregando: o esqueleto ocupa o lugar e o valor do mês anterior não aparece.
+    expect(screen.getByRole('status', { name: /carregando o saldo/i })).toBeInTheDocument()
+    expect(screen.queryByText('R$ 9.999,99')).toBeNull()
+    expect(screen.queryByText('R$ 8.888,88')).toBeNull()
+    expect(screen.queryByRole('region', { name: /saldo/i })).toBeNull()
+
+    const faixa = await screen.findByRole('region', { name: /saldo/i })
+    expect(within(faixa).getByText(rotulo)).toBeInTheDocument()
+    expect(within(faixa).getByText('R$ 1.111,11')).toBeInTheDocument()
+    expect(screen.queryByText('R$ 9.999,99')).toBeNull()
   })
 
   it('falha_na_consulta_nao_mostra_a_faixa', async () => {

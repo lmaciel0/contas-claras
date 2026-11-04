@@ -48,7 +48,8 @@ export function FaixaSaldo({ ano, mes }: Props) {
     placeholderData: keepPreviousData,
   })
 
-  if (consulta.isPending) {
+  if (consulta.isPending || consulta.isPlaceholderData) {
+    // Também durante a troca de mês (dado do mês anterior): o saldo de um mês nunca aparece sob o rótulo de outro.
     // Mesmo miolo da faixa com o texto transparente: a altura é a mesma e a página não pula quando o saldo chega.
     return (
       <div
@@ -70,10 +71,7 @@ export function FaixaSaldo({ ano, mes }: Props) {
   return (
     <section
       aria-label="Saldo no Itaú"
-      aria-busy={consulta.isPlaceholderData}
-      className={`${medidas} mb-3 text-[var(--cor-sobre-principal)] shadow-[var(--sombra-flutuante)] motion-safe:transition-opacity ${
-        consulta.isPlaceholderData ? 'opacity-70' : ''
-      }`}
+      className={`${medidas} mb-3 text-[var(--cor-sobre-principal)] shadow-[var(--sombra-flutuante)]`}
       style={{ background: 'linear-gradient(120deg, var(--cor-principal), var(--cor-principal-fim))' }}
     >
       <Miolo rotulo={rotulo} saldo={consulta.data.saldo} recebido={consulta.data.recebidoNoMes} />

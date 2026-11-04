@@ -87,7 +87,13 @@ export function LancamentosPage() {
       </div>
     )
   } else if (consulta.data.length === 0) {
-    conteudo = <p className="card m-0 text-sm text-[var(--cor-mutado)]">Nenhum lançamento neste mês.</p>
+    // O card das receitas fica mesmo sem nenhum lançamento (com o aviso de que não há receita), acima do texto geral.
+    conteudo = (
+      <div className="grid gap-2.5 md:gap-3.5">
+        <ReceitasCard lancamentos={[]} busca={busca} idMudandoStatus={null} aoMudarStatus={() => undefined} />
+        <p className="card m-0 text-sm text-[var(--cor-mutado)]">Nenhum lançamento neste mês.</p>
+      </div>
+    )
   } else {
     const receitas = consulta.data.filter((l) => l.tipo === 'RECEITA')
     const demais = consulta.data.filter((l) => l.tipo !== 'RECEITA')

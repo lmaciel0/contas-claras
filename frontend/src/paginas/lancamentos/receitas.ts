@@ -19,6 +19,10 @@ export function totaisDeReceitas(lancamentos: LancamentoResponse[]): TotaisDeRec
       recebidoCentavos += centavos
     }
   }
-  const percentual = totalCentavos === 0 ? 0 : Math.round((recebidoCentavos / totalCentavos) * 100)
+  // Arredonda para baixo e só chega a 100 quando tudo foi recebido (5500 de 5501 não pode mostrar "100% … a receber").
+  let percentual = 0
+  if (totalCentavos > 0) {
+    percentual = recebidoCentavos >= totalCentavos ? 100 : Math.min(99, Math.floor((recebidoCentavos / totalCentavos) * 100))
+  }
   return { recebidoCentavos, totalCentavos, percentual }
 }

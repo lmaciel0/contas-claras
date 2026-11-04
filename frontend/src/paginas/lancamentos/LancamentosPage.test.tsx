@@ -176,6 +176,17 @@ describe('LancamentosPage', () => {
     expect(await screen.findByText('Nenhum lançamento neste mês.')).toBeInTheDocument()
   })
 
+  it('mes_sem_lancamentos_mantem_o_card_de_receitas_com_aviso', async () => {
+    responderLancamentos(() => [])
+    renderizar()
+
+    const receitas = await screen.findByRole('region', { name: 'Receitas' })
+
+    expect(within(receitas).getByText('Nenhuma receita neste mês')).toBeInTheDocument()
+    expect(within(receitas).queryByRole('progressbar')).toBeNull()
+    expect(screen.getByText('Nenhum lançamento neste mês.')).toBeInTheDocument()
+  })
+
   it('mostra_erro_da_api_com_botao_de_tentar_de_novo', async () => {
     servidor.use(http.get('/api/lancamentos', () => HttpResponse.json({ erro: 'Falhou.' }, { status: 500 })))
     renderizar()
