@@ -84,6 +84,7 @@ export function FinancasDoMes() {
           <CardSobra
             sobra={consulta.data.sobra}
             sobraAno={consulta.data.sobraAno}
+            receitas={consulta.data.receitas}
             anterior={consulta.data.anterior}
             nomeMesAnterior={nomeAnterior}
           />

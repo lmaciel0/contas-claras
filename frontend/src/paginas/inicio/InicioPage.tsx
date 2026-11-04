@@ -7,21 +7,30 @@ import { CabecalhoPagina } from '../../layout/CabecalhoPagina'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { CardSobra } from './CardSobra'
 import { CardsTotais } from './CardsTotais'
-import { GraficoAno } from './GraficoAno'
+import { GraficoResultado } from './GraficoResultado'
 import { OndeMaisGastou } from './OndeMaisGastou'
 import { ProximasContas } from './ProximasContas'
+import { ResumoCartoes } from './ResumoCartoes'
 
 const minusculo = (texto: string) => texto.toLocaleLowerCase('pt-BR')
 
 /**
  * Visão geral do financeiro (`/financeiro`): quanto sobra no mês e para onde vai o dinheiro. A ordem dos blocos no HTML é a do celular
- * (sobra, totais, onde mais gastou, próximas contas, gráfico); no computador o gráfico sobe para a primeira linha.
+ * (sobra, totais, resultado de cada mês, onde mais gastou, próximas contas, cartões). No computador (grade de 35 colunas): sobra e
+ * totais na primeira linha, com as próximas contas ao lado ocupando duas linhas; o gráfico na segunda; onde mais gastou e cartões na
+ * terceira. Sem cartões, onde mais gastou ocupa a linha inteira.
  */
 export function InicioPage() {
-  const { ano, mes } = useMesSelecionado()
+  const { ano, mes, busca } = useMesSelecionado()
   const consulta = useQuery({
     queryKey: ['resumo', ano, mes],
     queryFn: () => endpoints.resumo(ano, mes),
+    placeholderData: keepPreviousData,
+  })
+  // Cartões são um bloco à parte: falha ou lista vazia só o escondem, não derrubam a página.
+  const consultaCartoes = useQuery({
+    queryKey: ['cartoes', ano, mes],
+    queryFn: () => endpoints.cartoes.listar(ano, mes),
     placeholderData: keepPreviousData,
   })
 
@@ -81,6 +90,9 @@ export function InicioPage() {
   }
 
   const resumo = consulta.data
+  const cartoes = consultaCartoes.data?.cartoes ?? []
+  // Enquanto carrega, o layout já reserva o espaço dos cartões, para não saltar se houver.
+  const semCartoes = !consultaCartoes.isPending && cartoes.length === 0
   const nomeAnterior = minusculo(nomeMes(mesAnterior({ ano, mes }).mes))
 
   return (
@@ -90,6 +102,7 @@ export function InicioPage() {
         <CardSobra
           sobra={resumo.sobra}
           sobraAno={resumo.sobraAno}
+          receitas={resumo.receitas}
           anterior={resumo.anterior}
           nomeMesAnterior={nomeAnterior}
         />
@@ -99,9 +112,19 @@ export function InicioPage() {
           anterior={resumo.anterior}
           nomeMesAnterior={nomeAnterior}
         />
-        <OndeMaisGastou nomeMes={minusculo(nomeMes(mes))} categorias={resumo.categorias} />
-        <ProximasContas contas={resumo.proximas} />
-        <GraficoAno ano={ano} serie={resumo.serieAno} />
+        <GraficoResultado
+          ano={ano}
+          mes={mes}
+          serie={resumo.serieAno}
+          className="md:col-span-21 md:col-start-1 md:row-start-2"
+        />
+        <OndeMaisGastou
+          nomeMes={minusculo(nomeMes(mes))}
+          categorias={resumo.categorias}
+          className={semCartoes ? 'md:col-span-35' : 'md:col-span-20'}
+        />
+        <ProximasContas contas={resumo.proximas} className="md:col-span-14 md:col-start-22 md:row-span-2 md:row-start-1" />
+        <ResumoCartoes cartoes={cartoes} busca={busca} className="md:col-span-15" />
       </div>
     </>
   )

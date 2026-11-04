@@ -5,12 +5,14 @@ import { diaEMes } from './valores'
 interface Props {
   /** Atrasadas e as que vencem nos próximos 30 dias, por vencimento (independe do mês escolhido). */
   contas: ProximaConta[]
+  /** Classes de posição na grade; substituem o `md:col-span-15` de antes. */
+  className?: string
 }
 
 /** Lista das contas a pagar: data `dd/mm`, item, categoria e valor; as atrasadas levam a etiqueta vermelha. */
-export function ProximasContas({ contas }: Props) {
+export function ProximasContas({ contas, className = 'md:col-span-15' }: Props) {
   return (
-    <section aria-labelledby="titulo-proximas" className="card md:col-span-15">
+    <section aria-labelledby="titulo-proximas" className={`card ${className}`.trim()}>
       <h2 id="titulo-proximas" className="m-0 text-[15px] font-bold">
         Próximas contas
       </h2>

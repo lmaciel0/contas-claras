@@ -1,10 +1,12 @@
 import type { TotaisMes } from '../../api/tipos'
 import { formatarMoeda } from '../../formato/moeda'
-import { formatarComSinal, paraCentavos } from './valores'
+import { formatarComSinal, paraCentavos, percentualDaReceita } from './valores'
 
 interface Props {
   sobra: string
   sobraAno: string
+  /** Receitas do mês, base do percentual da sobra. */
+  receitas: string
   anterior: TotaisMes | null
   /** Nome do mês anterior em minúsculas (`setembro`). */
   nomeMesAnterior: string
@@ -23,8 +25,9 @@ function comparacao(sobra: string, anterior: TotaisMes | null, nomeMesAnterior: 
 }
 
 /** Destaque da tela: quanto sobrou no mês. Fica sempre em índigo; o valor negativo vai com o prefixo −. */
-export function CardSobra({ sobra, sobraAno, anterior, nomeMesAnterior }: Props) {
+export function CardSobra({ sobra, sobraAno, receitas, anterior, nomeMesAnterior }: Props) {
   const texto = comparacao(sobra, anterior, nomeMesAnterior)
+  const percentual = percentualDaReceita(sobra, receitas)
 
   return (
     <section
@@ -34,9 +37,12 @@ export function CardSobra({ sobra, sobraAno, anterior, nomeMesAnterior }: Props)
       <h2 id="titulo-sobra" className="m-0 text-xs font-normal text-[var(--cor-sobre-principal-suave)]">
         Sobra do mês
       </h2>
-      <p className="valor m-0 my-1.5 text-[26px] font-bold tracking-tight md:text-[30px]">{formatarComSinal(sobra)}</p>
+      <p className="valor m-0 mt-1.5 text-[26px] font-bold tracking-tight md:text-[30px]">{formatarComSinal(sobra)}</p>
+      {percentual !== null && (
+        <p className="valor m-0 mt-0.5 text-xs text-[var(--cor-sobre-principal-suave)]">{percentual} da receita</p>
+      )}
       {texto !== null && (
-        <p className="m-0 w-fit rounded-full bg-[var(--cor-sobre-principal)]/20 px-2 py-0.5 text-[11px] font-semibold">{texto}</p>
+        <p className="m-0 mt-1.5 w-fit rounded-full bg-[var(--cor-sobre-principal)]/20 px-2 py-0.5 text-[11px] font-semibold">{texto}</p>
       )}
       <p className="valor m-0 mt-auto pt-5 text-xs text-[var(--cor-sobre-principal-suave)]">No ano: {formatarComSinal(sobraAno)}</p>
     </section>

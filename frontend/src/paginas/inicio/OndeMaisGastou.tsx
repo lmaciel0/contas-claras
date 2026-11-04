@@ -7,12 +7,14 @@ interface Props {
   nomeMes: string
   /** Categorias de despesa, maiores primeiro (a API já entrega nessa ordem). */
   categorias: CategoriaTotal[]
+  /** Classes de posição na grade; substituem o `md:col-span-20` de antes. */
+  className?: string
 }
 
 /** Barras horizontais com o peso de cada categoria de despesa no mês. */
-export function OndeMaisGastou({ nomeMes, categorias }: Props) {
+export function OndeMaisGastou({ nomeMes, categorias, className = 'md:col-span-20' }: Props) {
   return (
-    <section aria-labelledby="titulo-onde" className="card md:col-span-20">
+    <section aria-labelledby="titulo-onde" className={`card ${className}`.trim()}>
       <h2 id="titulo-onde" className="m-0 text-[15px] font-bold">
         Onde você mais gastou em {nomeMes}
       </h2>

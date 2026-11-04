@@ -50,34 +50,90 @@ export function larguraDaBarra(fracao: string): number {
 
 const ROTULOS_CURTOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] as const
 
-export interface PontoDoGrafico {
+export interface PontoDoResultado {
   mes: number
   rotulo: string
+  /** Reais, ≥ 0. */
   receitasPagas: number
+  /** Reais, ≥ 0. */
   receitasPrevistas: number
+  /** Reais, ≤ 0 (a barra desce). */
   despesasPagas: number
+  /** Reais, ≤ 0. */
   despesasPrevistas: number
+  /** Total em reais, ≥ 0 (pago + previsto). */
+  receitas: number
+  /** Total em reais, ≥ 0 (pago + previsto). */
+  despesas: number
+  /** `receitas - despesas`, em reais. */
+  resultado: number
+  sentido: 'sobrou' | 'faltou' | 'zero'
 }
 
+/** Evita `-0` (de `-0 / 100`), que `toEqual` e a formatação tratariam como valor negativo. */
+const semMenosZero = (valor: number) => (valor === 0 ? 0 : valor)
+
 /**
- * Prepara a série para as barras empilhadas. Na API `receitas` e `despesas` já incluem a parte prevista, então
- * a barra cheia é "paga + prevista" = total: a parte paga é o total menos a prevista (em centavos).
+ * Prepara a série para o gráfico de resultado mensal. Na API `receitas` e `despesas` já incluem a parte prevista,
+ * então a parte paga é o total menos a prevista (em centavos). As despesas saem negativas, para a barra descer.
  */
-export function serieDoGrafico(serie: PontoSerie[]): PontoDoGrafico[] {
+export function serieDoResultado(serie: PontoSerie[]): PontoDoResultado[] {
   return serie.map((ponto) => {
     const receitas = paraCentavos(ponto.receitas)
     const receitasPrevistas = paraCentavos(ponto.receitasPrevistas)
     const despesas = paraCentavos(ponto.despesas)
     const despesasPrevistas = paraCentavos(ponto.despesasPrevistas)
+    const resultado = receitas - despesas
     return {
       mes: ponto.mes,
       rotulo: ROTULOS_CURTOS[ponto.mes - 1] ?? '',
-      receitasPagas: (receitas - receitasPrevistas) / 100,
-      receitasPrevistas: receitasPrevistas / 100,
-      despesasPagas: (despesas - despesasPrevistas) / 100,
-      despesasPrevistas: despesasPrevistas / 100,
+      receitasPagas: semMenosZero((receitas - receitasPrevistas) / 100),
+      receitasPrevistas: semMenosZero(receitasPrevistas / 100),
+      despesasPagas: semMenosZero(-(despesas - despesasPrevistas) / 100),
+      despesasPrevistas: semMenosZero(-despesasPrevistas / 100),
+      receitas: semMenosZero(receitas / 100),
+      despesas: semMenosZero(despesas / 100),
+      resultado: semMenosZero(resultado / 100),
+      sentido: resultado > 0 ? 'sobrou' : resultado < 0 ? 'faltou' : 'zero',
     }
   })
+}
+
+/** Soma de `receitas - despesas` de janeiro até `ateMes` (inclusive), como decimal de 2 casas (`"-1234.50"`). */
+export function resultadoAcumulado(serie: PontoSerie[], ateMes: number): string {
+  const centavos = serie
+    .filter((ponto) => ponto.mes <= ateMes)
+    .reduce((soma, ponto) => soma + paraCentavos(ponto.receitas) - paraCentavos(ponto.despesas), 0)
+  return semMenosZero(centavos / 100).toFixed(2)
+}
+
+/** Resultado em reais para o rótulo do gráfico: `+80`, `−1,2 mil` (`−1,2k` se `compacto`); zero sai `0`, sem sinal. */
+export function resultadoCurto(resultado: number, compacto: boolean): string {
+  const reais = Math.round(Math.abs(resultado))
+  if (reais === 0) {
+    return '0'
+  }
+  const sinal = resultado < 0 ? '−' : '+'
+  if (reais < 1000) {
+    return `${sinal}${reais}`
+  }
+  const milhares = (Math.round(reais / 100) / 10).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
+  return `${sinal}${milhares}${compacto ? 'k' : ' mil'}`
+}
+
+/** Sobra como percentual inteiro da receita (`−36%`, `+16%`); `null` sem receita; zero sai `0%`, sem sinal. */
+export function percentualDaReceita(sobra: string, receitas: string): string | null {
+  const base = paraCentavos(receitas)
+  if (base === 0) {
+    return null
+  }
+  const sobraCentavos = paraCentavos(sobra)
+  // Aritmética inteira: o meio (ex.: 14,5%) arredonda para cima sem erro de ponto flutuante.
+  const inteiro = Math.floor((Math.abs(sobraCentavos) * 200 + Math.abs(base)) / (2 * Math.abs(base)))
+  if (inteiro === 0) {
+    return '0%'
+  }
+  return `${sobraCentavos < 0 ? '−' : '+'}${inteiro}%`
 }
 
 /** `"2026-11-10"` vira `10/11` (lê a string, sem `Date`, para o fuso não mudar o dia). */
