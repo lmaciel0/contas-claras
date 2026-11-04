@@ -103,7 +103,7 @@ A saída mostra, por ano, receitas, despesas e diferença, para conferir com as 
 
 Duas plataformas, cada uma com o seu arquivo de configuração:
 
-- **API (Render):** o `render.yaml` da raiz descreve o serviço `aprumo-api` (Docker do `backend/`, plano Starter, região Virginia, health check em `/api/health`). O deploy é manual (`autoDeploy: false`), pelo painel do Render. Variáveis no painel do Render (modelo em `.env.example`): `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET` (≥ 32 bytes), `MAIL_USERNAME`, `MAIL_PASSWORD`, `APP_URL` (`https://app.useaprumo.com.br`) e `GOOGLE_CLIENT_ID`. O pool de conexões vem de `SPRING_DATASOURCE_HIKARI_*`, já fixado no `render.yaml`.
+- **API (Render):** o `render.yaml` da raiz descreve o serviço `aprumo-api` (Docker do `backend/`, plano Starter, região Virginia, health check em `/api/health`). O deploy é manual (`autoDeploy: false`), pelo botão "Manual Deploy" do painel do Render. O domínio `api.useaprumo.com.br` é configurado à mão em Settings → Custom Domains (o Blueprint não declara domínio) e o subdomínio `onrender.com` fica desligado. Variáveis no painel do Render (modelo em `.env.example`): `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET` (≥ 32 bytes), `MAIL_USERNAME`, `MAIL_PASSWORD`, `APP_URL` (`https://app.useaprumo.com.br`) e `GOOGLE_CLIENT_ID`. O pool de conexões vem de `SPRING_DATASOURCE_HIKARI_*`, já fixado no `render.yaml`.
 - **Front (Vercel):** o `vercel.json` da raiz define o service `web` (`frontend/`), o rewrite externo de `/api/*` para `https://api.useaprumo.com.br` e os headers de segurança. Variável do projeto na Vercel: `VITE_GOOGLE_CLIENT_ID`.
 
 ```bash
