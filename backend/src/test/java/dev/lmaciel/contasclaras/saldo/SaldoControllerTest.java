@@ -47,4 +47,18 @@ class SaldoControllerTest extends IntegracaoTest {
 
         mvc.perform(get("/api/saldo?ano=2026&mes=13").cookie(sessao)).andExpect(status().isBadRequest());
     }
+
+    @Test
+    void sem_mes_retorna_400() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+
+        mvc.perform(get("/api/saldo?ano=2026").cookie(sessao)).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void ano_nao_numerico_retorna_400() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+
+        mvc.perform(get("/api/saldo?ano=abc&mes=11").cookie(sessao)).andExpect(status().isBadRequest());
+    }
 }

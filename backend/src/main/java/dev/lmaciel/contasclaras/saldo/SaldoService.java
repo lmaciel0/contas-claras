@@ -2,6 +2,7 @@ package dev.lmaciel.contasclaras.saldo;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -30,8 +31,20 @@ public class SaldoService {
 
     public SaldoService(LancamentoRepository lancamentos, @Value("${app.saldo.inicio}") String inicio) {
         this.lancamentos = lancamentos;
-        YearMonth ym = YearMonth.parse(inicio);
-        this.inicio = new MesAno(ym.getYear(), ym.getMonthValue());
+        this.inicio = parseInicio(inicio);
+    }
+
+    private static MesAno parseInicio(String inicio) {
+        YearMonth ym;
+        try {
+            ym = YearMonth.parse(inicio);
+        } catch (DateTimeParseException e) {
+            throw new IllegalStateException("app.saldo.inicio deve ser AAAA-MM, recebido: " + inicio, e);
+        }
+        if (ym.getYear() < 2000 || ym.getYear() > 2100) {
+            throw new IllegalStateException("app.saldo.inicio deve ser AAAA-MM, recebido: " + inicio);
+        }
+        return new MesAno(ym.getYear(), ym.getMonthValue());
     }
 
     @Transactional(readOnly = true)

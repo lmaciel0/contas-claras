@@ -118,4 +118,55 @@ class SaldoServiceTest extends IntegracaoTest {
         assertThat(s.saldo()).isEqualByComparingTo("5322.44");
         assertThat(s.recebidoNoMes()).isEqualByComparingTo("5500.00");
     }
+
+    @Test
+    void viradaDeAnoCarregaASobra() throws Exception {
+        UsuarioLogado u = cadastrar(DONO);
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 11, "5500.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Doméstica", "Cagece"), 2026, 11, "177.56", "PAGO");
+        criarLancamento(criarItem(DONO, "Receitas", "Extra"), 2026, 12, "100.00", "PAGO");
+
+        SaldoMes s = saldos.saldo(2027, 1, u);
+
+        assertThat(s.ativo()).isTrue();
+        assertThat(s.saldo()).isEqualByComparingTo("5422.44");
+        assertThat(s.recebidoNoMes()).isEqualByComparingTo("0.00");
+    }
+
+    @Test
+    void receitaPrevistaNaoAlteraSaldoNemRecebido() throws Exception {
+        UsuarioLogado u = cadastrar(DONO);
+        cenarioDeNovembro();
+        criarLancamento(criarItem(DONO, "Receitas", "Salário extra"), 2026, 11, "742.00", "PREVISTO");
+
+        SaldoMes s = saldos.saldo(2026, 11, u);
+
+        assertThat(s.saldo()).isEqualByComparingTo("5322.44");
+        assertThat(s.recebidoNoMes()).isEqualByComparingTo("5500.00");
+    }
+
+    @Test
+    void saldoPodeFicarNegativo() throws Exception {
+        UsuarioLogado u = cadastrar(DONO);
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 11, "100.00", "PAGO");
+        criarLancamento(criarItem(DONO, "Doméstica", "Condominio"), 2026, 11, "307.07", "PAGO");
+
+        SaldoMes s = saldos.saldo(2026, 11, u);
+
+        assertThat(s.saldo()).isEqualByComparingTo("-207.07");
+        assertThat(s.recebidoNoMes()).isEqualByComparingTo("100.00");
+    }
+
+    @Test
+    void itemArquivadoPagoNoPeriodoConta() throws Exception {
+        UsuarioLogado u = cadastrar(DONO);
+        criarLancamento(criarItem(DONO, "Receitas", "Salário"), 2026, 11, "5500.00", "PAGO");
+        long cagece = criarItem(DONO, "Doméstica", "Cagece");
+        criarLancamento(cagece, 2026, 11, "177.56", "PAGO");
+        jdbc.update("update item set arquivado = true where id = ?", cagece);
+
+        SaldoMes s = saldos.saldo(2026, 11, u);
+
+        assertThat(s.saldo()).isEqualByComparingTo("5322.44");
+    }
 }
