@@ -4,21 +4,21 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: contas-claras-db
+    container_name: aprumo-db
     environment:
-      POSTGRES_DB: contasclaras
-      POSTGRES_USER: contas
-      POSTGRES_PASSWORD: contas
+      POSTGRES_DB: aprumo
+      POSTGRES_USER: aprumo
+      POSTGRES_PASSWORD: aprumo
     ports:
       # Só em localhost: o banco local tem senha fraca e não deve ficar exposto na rede.
       - "127.0.0.1:5432:5432"
     volumes:
-      - contas-claras-dados:/var/lib/postgresql/data
+      - aprumo-dados:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U contas -d contasclaras"]
+      test: ["CMD-SHELL", "pg_isready -U aprumo -d aprumo"]
       interval: 5s
       timeout: 3s
       retries: 10
 
 volumes:
-  contas-claras-dados:
+  aprumo-dados:

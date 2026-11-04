@@ -11,7 +11,7 @@ RUN chmod +x mvnw && ./mvnw -q -B dependency:go-offline
 
 COPY src src
 RUN ./mvnw -q -B -DskipTests package \
-    && mv target/contas-claras-*.jar target/app.jar
+    && mv target/aprumo-*.jar target/app.jar
 
 # ---- runtime: só JRE (Alpine, imagem menor = pull mais rápido no cold start) e o jar, sem root ----
 FROM eclipse-temurin:21-jre-alpine

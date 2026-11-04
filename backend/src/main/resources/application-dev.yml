@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/contasclaras
-    username: contas
-    password: contas
+    url: jdbc:postgresql://localhost:5432/aprumo
+    username: aprumo
+    password: aprumo
 
 app:
   # Front-end local (Vite), usado nos links dos e-mails.

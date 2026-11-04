@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>dev.lmaciel</groupId>
-	<artifactId>contas-claras</artifactId>
+	<artifactId>aprumo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>contas-claras</name>
-	<description>API do Contas Claras, controle financeiro pessoal</description>
+	<name>aprumo</name>
+	<description>API do Aprumo, assistente pessoal</description>
 	<properties>
 		<java.version>21</java.version>
 		<google-api-client.version>2.9.2</google-api-client.version>
