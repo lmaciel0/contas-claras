@@ -9,6 +9,7 @@ import { CabecalhoPagina } from '../../layout/CabecalhoPagina'
 import { useMesSelecionado } from '../../layout/useMesSelecionado'
 import { GrupoCategoria } from './GrupoCategoria'
 import { invalidarLancamentos } from './invalidar'
+import { ReceitasCard } from './ReceitasCard'
 
 interface Grupo {
   categoriaId: number
@@ -16,23 +17,23 @@ interface Grupo {
   lancamentos: LancamentoResponse[]
 }
 
-/** Agrupa por categoria na ordem da API, com as de receita antes das de despesa. */
+/** Agrupa por categoria na ordem da API (as receitas já saíram, cada uma vai para o `ReceitasCard`). */
 function agrupar(lancamentos: LancamentoResponse[]): Grupo[] {
-  const grupos = new Map<number, Grupo & { tipo: LancamentoResponse['tipo'] }>()
+  const grupos = new Map<number, Grupo>()
   for (const l of lancamentos) {
     const grupo = grupos.get(l.categoriaId)
     if (grupo === undefined) {
-      grupos.set(l.categoriaId, { categoriaId: l.categoriaId, nome: l.categoriaNome, tipo: l.tipo, lancamentos: [l] })
+      grupos.set(l.categoriaId, { categoriaId: l.categoriaId, nome: l.categoriaNome, lancamentos: [l] })
     } else {
       grupo.lancamentos.push(l)
     }
   }
-  const todos = [...grupos.values()]
-  return [...todos.filter((g) => g.tipo === 'RECEITA'), ...todos.filter((g) => g.tipo === 'DESPESA')]
+  return [...grupos.values()]
 }
 
 /**
- * `/lancamentos`: lançamentos do mês agrupados por categoria (receitas primeiro), com total por grupo.
+ * `/lancamentos`: card único das receitas do mês (total recebido em destaque) e, depois, os demais lançamentos
+ * agrupados por categoria, com total por grupo.
  * O formulário (`/lancamentos/novo` e `/lancamentos/:id`) é uma rota filha, desenhada por cima pelo `<Outlet />`.
  */
 export function LancamentosPage() {
@@ -87,16 +88,26 @@ export function LancamentosPage() {
   } else if (consulta.data.length === 0) {
     conteudo = <p className="card m-0 text-sm text-[var(--cor-mutado)]">Nenhum lançamento neste mês.</p>
   } else {
+    const receitas = consulta.data.filter((l) => l.tipo === 'RECEITA')
+    const demais = consulta.data.filter((l) => l.tipo !== 'RECEITA')
+    const idMudandoStatus = status.isPending ? (status.variables?.id ?? null) : null
+    const aoMudarStatus = (id: number, novo: StatusLancamento) => status.mutate({ id, novo })
     conteudo = (
       <div className="item-entra grid gap-2.5 md:grid-cols-2 md:gap-3.5">
-        {agrupar(consulta.data).map((grupo) => (
+        <ReceitasCard
+          lancamentos={receitas}
+          busca={busca}
+          idMudandoStatus={idMudandoStatus}
+          aoMudarStatus={aoMudarStatus}
+        />
+        {agrupar(demais).map((grupo) => (
           <GrupoCategoria
             key={grupo.categoriaId}
             nome={grupo.nome}
             lancamentos={grupo.lancamentos}
             busca={busca}
-            idMudandoStatus={status.isPending ? (status.variables?.id ?? null) : null}
-            aoMudarStatus={(id, novo) => status.mutate({ id, novo })}
+            idMudandoStatus={idMudandoStatus}
+            aoMudarStatus={aoMudarStatus}
           />
         ))}
       </div>

@@ -83,6 +83,28 @@ describe('LancamentosPage', () => {
     expect(within(condominio!).getByRole('button', { name: /Pago/ })).toBeInTheDocument()
   })
 
+  it('receitas_viram_um_card_proprio_e_as_despesas_continuam_por_categoria', async () => {
+    responderLancamentos(doMes)
+    renderizar()
+
+    const receitas = await screen.findByRole('region', { name: 'Receitas' })
+
+    expect(within(receitas).getByText('Recebido no mês')).toBeInTheDocument()
+    expect(within(receitas).getByText('R$ 5.000,00', { selector: '[data-total]' })).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Moradia' })).getByText('R$ 1.180,40', { selector: '[data-total]' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Salário' })).toBeNull()
+  })
+
+  it('sem_receita_no_mes_o_card_aparece_com_aviso', async () => {
+    responderLancamentos(() => [lancamento({ id: 1, itemId: 20, itemNome: 'Luz' })])
+    renderizar()
+
+    const receitas = await screen.findByRole('region', { name: 'Receitas' })
+
+    expect(within(receitas).getByText('Nenhuma receita neste mês')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Moradia' })).toBeInTheDocument()
+  })
+
   it('tocar_na_linha_leva_para_o_lancamento_mantendo_o_mes', async () => {
     responderLancamentos(doMes)
     renderizar()
