@@ -83,6 +83,28 @@ describe('LancamentosPage', () => {
     expect(within(condominio!).getByRole('button', { name: /Pago/ })).toBeInTheDocument()
   })
 
+  it('receitas_viram_um_card_proprio_e_as_despesas_continuam_por_categoria', async () => {
+    responderLancamentos(doMes)
+    renderizar()
+
+    const receitas = await screen.findByRole('region', { name: 'Receitas' })
+
+    expect(within(receitas).getByText('Recebido no mês')).toBeInTheDocument()
+    expect(within(receitas).getByText('R$ 5.000,00', { selector: '[data-total]' })).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Moradia' })).getByText('R$ 1.180,40', { selector: '[data-total]' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Salário' })).toBeNull()
+  })
+
+  it('sem_receita_no_mes_o_card_aparece_com_aviso', async () => {
+    responderLancamentos(() => [lancamento({ id: 1, itemId: 20, itemNome: 'Luz' })])
+    renderizar()
+
+    const receitas = await screen.findByRole('region', { name: 'Receitas' })
+
+    expect(within(receitas).getByText('Nenhuma receita neste mês')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Moradia' })).toBeInTheDocument()
+  })
+
   it('tocar_na_linha_leva_para_o_lancamento_mantendo_o_mes', async () => {
     responderLancamentos(doMes)
     renderizar()
@@ -154,11 +176,65 @@ describe('LancamentosPage', () => {
     expect(await screen.findByText('Nenhum lançamento neste mês.')).toBeInTheDocument()
   })
 
+  it('mes_sem_lancamentos_mantem_o_card_de_receitas_com_aviso', async () => {
+    responderLancamentos(() => [])
+    renderizar()
+
+    const receitas = await screen.findByRole('region', { name: 'Receitas' })
+
+    expect(within(receitas).getByText('Nenhuma receita neste mês')).toBeInTheDocument()
+    expect(within(receitas).queryByRole('progressbar')).toBeNull()
+    expect(screen.getByText('Nenhum lançamento neste mês.')).toBeInTheDocument()
+  })
+
   it('mostra_erro_da_api_com_botao_de_tentar_de_novo', async () => {
     servidor.use(http.get('/api/lancamentos', () => HttpResponse.json({ erro: 'Falhou.' }, { status: 500 })))
     renderizar()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Falhou.')
     expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument()
+  })
+
+  it('mostra_a_faixa_do_saldo_acima_dos_cards_e_atualiza_ao_marcar_recebido', async () => {
+    let status: StatusLancamento = 'PREVISTO'
+    responderLancamentos(() => [
+      lancamento({
+        id: 5,
+        itemId: 11,
+        itemNome: 'Camila',
+        categoriaId: 1,
+        categoriaNome: 'Receitas',
+        tipo: 'RECEITA',
+        valor: '742.00',
+        status,
+      }),
+    ])
+    let consultasSaldo = 0
+    servidor.use(
+      http.get('/api/saldo', () => {
+        consultasSaldo += 1
+        return HttpResponse.json({
+          ativo: true,
+          saldo: status === 'PAGO' ? '6242.00' : '5500.00',
+          recebidoNoMes: status === 'PAGO' ? '6242.00' : '5500.00',
+        })
+      }),
+      http.patch('/api/lancamentos/:id/status', () => {
+        status = 'PAGO'
+        return HttpResponse.json(lancamento({ id: 5, itemId: 11, itemNome: 'Camila', status }))
+      }),
+    )
+    renderizar('/lancamentos?ano=2026&mes=11')
+
+    const faixa = await screen.findByRole('region', { name: /saldo/i })
+    const receitas = await screen.findByRole('region', { name: 'Receitas' })
+    expect(faixa.compareDocumentPosition(receitas) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await waitFor(() => expect(within(faixa).getAllByText('R$ 5.500,00')).toHaveLength(2))
+    expect(consultasSaldo).toBe(1)
+
+    await userEvent.click(screen.getByRole('button', { name: /Camila.*A receber/ }))
+
+    await waitFor(() => expect(within(faixa).getAllByText('R$ 6.242,00')).toHaveLength(2))
+    expect(consultasSaldo).toBe(2)
   })
 })
