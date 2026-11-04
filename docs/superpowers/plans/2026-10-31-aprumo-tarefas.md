@@ -38,9 +38,9 @@
 
 **Files:**
 - Create: `backend/src/main/resources/db/migration/V5__tarefa.sql`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/tarefa/{Tarefa,TarefaRepository,TarefaService,TarefaController}.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/tarefa/dto/{TarefaRequest,TarefaResponse,TarefasResponse}.java`
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/tarefa/TarefaControllerTest.java` (estende `IntegracaoTest`, mesmo padrão de `CategoriaControllerTest`)
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/tarefa/{Tarefa,TarefaRepository,TarefaService,TarefaController}.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/tarefa/dto/{TarefaRequest,TarefaResponse,TarefasResponse}.java`
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/tarefa/TarefaControllerTest.java` (estende `IntegracaoTest`, mesmo padrão de `CategoriaControllerTest`)
 
 **Interfaces:**
 - Produces (JSON, consumido pelas tasks 3 a 5):
@@ -96,9 +96,9 @@ git commit -m "feat(tarefas): migration, criar e listar tarefas agrupadas"
 ### Task 2: Backend, editar, concluir/reabrir e excluir
 
 **Files:**
-- Modify: `backend/src/main/java/dev/lmaciel/contasclaras/tarefa/{Tarefa,TarefaService,TarefaController}.java`
-- Create: `backend/src/main/java/dev/lmaciel/contasclaras/tarefa/dto/ConcluirRequest.java`
-- Test: `backend/src/test/java/dev/lmaciel/contasclaras/tarefa/TarefaControllerTest.java`
+- Modify: `backend/src/main/java/dev/lmaciel/aprumo/tarefa/{Tarefa,TarefaService,TarefaController}.java`
+- Create: `backend/src/main/java/dev/lmaciel/aprumo/tarefa/dto/ConcluirRequest.java`
+- Test: `backend/src/test/java/dev/lmaciel/aprumo/tarefa/TarefaControllerTest.java`
 
 **Interfaces:**
 - Consumes: `TarefaService.buscarDoUsuario`, `TarefaResponse`, `TarefaRequest` da Task 1.

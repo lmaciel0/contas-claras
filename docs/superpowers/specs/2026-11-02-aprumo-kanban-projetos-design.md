@@ -28,7 +28,7 @@ Nesta primeira entrega, o foco está na visualização principal em **Quadro Kan
   - Nova migration Flyway `V7__projeto_kanban.sql` com tabelas `projeto` e `projeto_subtarefa`.
   - Isolamento estrito por usuário (`usuario_id`) em todas as operações; tentativas de acesso a dados de outros usuários respondem `404 Not Found`.
 - **Backend Spring Boot**:
-  - Pacote `dev.lmaciel.contasclaras.projeto` com Controller, Service, Repository, Entidades JPA e Records DTOs validados.
+  - Pacote `dev.lmaciel.aprumo.projeto` com Controller, Service, Repository, Entidades JPA e Records DTOs validados.
   - Endpoints REST completos para CRUD de projetos, movimentação transacional entre estágios (`PATCH /api/projetos/{id}/estagio`) e controle de subtarefas.
   - Cálculo dinâmico de progresso no backend (`porcentagemProgresso`, `totalSubtarefas`, `subtarefasConcluidas`).
 - **Frontend React 19 + TypeScript**:

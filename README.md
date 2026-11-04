@@ -76,7 +76,7 @@ npm install
 npm run dev                                # http://localhost:5173 (proxy /api → :8080)
 ```
 
-Entre com **demo@contasclaras.dev / demo12345** (perfil `demo`, dados fictícios de 2026).
+Entre com **demo@useaprumo.com.br / demo12345** (perfil `demo`, dados fictícios de 2026).
 
 ## Testes
 
@@ -93,7 +93,7 @@ A planilha precisa seguir o formato anual: abas com o nome do ano, blocos que co
 ```bash
 cd backend && ./mvnw -q -DskipTests package
 DATABASE_URL=... DATABASE_USERNAME=... DATABASE_PASSWORD=... JWT_SECRET=... APP_URL=... \
-java -jar target/contas-claras-0.0.1-SNAPSHOT.jar --spring.profiles.active=importar \
+java -jar target/aprumo-0.0.1-SNAPSHOT.jar --spring.profiles.active=importar \
   "--importar.arquivo=/caminho/da/planilha.xlsx" --importar.email=voce@exemplo.com
 ```
 

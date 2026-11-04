@@ -54,7 +54,7 @@ Item "Tarefas" entra em `layout/itensMenu.ts` (aparece no menu lateral e na pale
 
 ## Restrições e padrões a seguir
 
-- Backend segue o padrão dos módulos existentes: pacote `tarefa/` em `dev.lmaciel.contasclaras` com controller, service, repository, entidade e DTOs como records; mensagens de erro em português como constantes; id alheio ou inexistente devolve 404; usuário via `UsuarioLogado`; hora via `Clock` injetado (`America/Sao_Paulo`).
+- Backend segue o padrão dos módulos existentes: pacote `tarefa/` em `dev.lmaciel.aprumo` com controller, service, repository, entidade e DTOs como records; mensagens de erro em português como constantes; id alheio ou inexistente devolve 404; usuário via `UsuarioLogado`; hora via `Clock` injetado (`America/Sao_Paulo`).
 - Migration `V5__tarefa.sql`, sem prefixo de schema, com `usuario_id` referenciando `usuario` com `on delete cascade`, índice por usuário, `check` no tamanho do título. Hibernate em `validate`.
 - Frontend segue o padrão: `useQuery` e `useMutation` do TanStack Query, endpoints em `api/endpoints.ts`, tipos em `api/tipos.ts`, `invalidar.ts` por módulo, página em `paginas/tarefas/`, card como componente irmão de `FinancasDoMes` em `paginas/painel/`, com seu próprio `useQuery` e estados de carregamento e erro dentro do bloco. Datas são strings `yyyy-MM-dd`, sem passar por `Date` do navegador.
 - Estilo respeita os tokens de tema claro e escuro do módulo 1.

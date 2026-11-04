@@ -72,7 +72,7 @@ Referência em `.superpowers/brainstorm/*/content/saldo-onde.html` (opção B). 
 - Lançamento tem `ano`, `mes`, `valor`, `status` (`PREVISTO`/`PAGO`), sem data de pagamento nem conta. Receita ou despesa vem da categoria do item (`categoria.tipo`). Um lançamento por item por mês.
 - Cartão é um item com `cartao=true`, a fatura é um lançamento comum.
 - Não existe nenhuma estrutura de conta ou saldo hoje; não há migration necessária para o cálculo, que sai dos lançamentos. Última migration é V13; `ddl-auto` é `validate`.
-- Backend em Java/Spring, pacote por feature em `dev.lmaciel.contasclaras.<feature>`, controllers com `@AuthenticationPrincipal Jwt`. O "hoje" deve vir do `Clock` injetável (ClockConfig) para ser testável.
+- Backend em Java/Spring, pacote por feature em `dev.lmaciel.aprumo.<feature>`, controllers com `@AuthenticationPrincipal Jwt`. O "hoje" deve vir do `Clock` injetável (ClockConfig) para ser testável.
 - Frontend React 19, react-query 5, Tailwind 4, vitest + MSW. Endpoint novo chamado pela página pode exigir handler base em `src/teste/servidor.ts`.
 - Acessibilidade: contraste mínimo 4,5:1, foco visível, `cursor-pointer` em clicáveis, respeitar `prefers-reduced-motion`, sem emoji como ícone.
 

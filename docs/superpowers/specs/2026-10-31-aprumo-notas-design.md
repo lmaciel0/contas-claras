@@ -68,7 +68,7 @@ O conteúdo é texto formatado vindo do navegador, ou seja, entrada externa. Reg
 
 ## Restrições e padrões a seguir
 
-- Backend segue o padrão dos módulos existentes: pacote `nota/` em `dev.lmaciel.contasclaras` com controller, service, repository, entidade e DTOs como records; mensagens de erro em português como constantes; id alheio ou inexistente devolve 404; usuário via `UsuarioLogado`; hora via `Clock` injetado.
+- Backend segue o padrão dos módulos existentes: pacote `nota/` em `dev.lmaciel.aprumo` com controller, service, repository, entidade e DTOs como records; mensagens de erro em português como constantes; id alheio ou inexistente devolve 404; usuário via `UsuarioLogado`; hora via `Clock` injetado.
 - Migration `V6__nota.sql`, sem prefixo de schema, com `usuario_id` referenciando `usuario` com `on delete cascade`, índice por usuário, `check` nos tamanhos, `categoria_id` da nota com `on delete set null`, e **índice único parcial** garantindo no máximo uma nota fixada por usuário. Hibernate em `validate`. Além do conteúdo estruturado, a nota guarda o texto simples extraído, para busca e prévia *(forma a critério do construtor)*.
 - Frontend segue o padrão: `useQuery` e `useMutation` do TanStack Query, endpoints em `api/endpoints.ts`, tipos em `api/tipos.ts`, `invalidar.ts` por módulo, página em `paginas/notas/`, card como componente irmão de `FinancasDoMes` em `paginas/painel/`, com seu próprio `useQuery` e estados de carregamento e erro dentro do bloco.
 - Estilo respeita os tokens de tema claro e escuro do módulo 1. As cores das categorias precisam ter contraste legível nos dois temas.
