@@ -35,7 +35,7 @@ export function GraficoResultado({ ano, mes, serie, className }: Props) {
   const acumulado = resultadoAcumulado(serie, mes)
 
   return (
-    <section aria-labelledby="titulo-grafico" className={className ? `card ${className}` : 'card'}>
+    <section aria-labelledby="titulo-grafico" className={className ? `card flex flex-col ${className}` : 'card flex flex-col'}>
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <h2 id="titulo-grafico" className="m-0 text-[15px] font-bold">
           Resultado de cada mês em {ano}
@@ -65,15 +65,18 @@ export function GraficoResultado({ ano, mes, serie, className }: Props) {
         Acumulado até {nomeMes(mes).toLocaleLowerCase('pt-BR')}:{' '}
         <strong className={`font-bold ${corDoValor(acumulado)}`}>{formatarComSinal(acumulado)}</strong>
       </p>
-      {/* Altura fixa: o espaço já está reservado enquanto o gráfico carrega (sem salto de layout). */}
+      {/* Altura mínima fixa: o espaço já está reservado enquanto o gráfico carrega (sem salto de layout); se o card
+          crescer (grade), o gráfico ocupa o que sobrar. O gráfico fica em um filho absoluto para ter altura definida. */}
       <div
         role="group"
         aria-label={`Gráfico do resultado de cada mês em ${ano}`}
-        className="mt-2.5 h-[240px] md:h-[220px]"
+        className="relative mt-2.5 min-h-[240px] flex-1 md:min-h-[220px]"
       >
-        <Suspense fallback={null}>
-          <BarrasDoResultado dados={pontos} mesSelecionado={mes} compacto={compacto} />
-        </Suspense>
+        <div className="absolute inset-0">
+          <Suspense fallback={null}>
+            <BarrasDoResultado dados={pontos} mesSelecionado={mes} compacto={compacto} />
+          </Suspense>
+        </div>
       </div>
       <table className="sr-only">
         <caption>Resultado de cada mês em {ano}</caption>
