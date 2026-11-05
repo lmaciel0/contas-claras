@@ -115,15 +115,24 @@ async function ehRespostaDeProxySemApi(resposta: Response): Promise<boolean> {
   return erroDoCorpo(await lerCorpo(resposta.clone())) === null
 }
 
-async function tratarResposta<T>(resposta: Response): Promise<T> {
+async function tratarResposta<T>(resposta: Response, semLogoutEm401: boolean): Promise<T> {
   const corpo = await lerCorpo(resposta)
   if (!resposta.ok) {
-    if (resposta.status === 401) {
+    if (resposta.status === 401 && !semLogoutEm401) {
       tratarNaoAutenticado?.()
     }
     throw new ErroApi(resposta.status, mensagemDoErro(corpo))
   }
   return corpo as T
+}
+
+/** Opções do `fetch` mais as próprias do cliente. */
+export interface OpcoesApi extends RequestInit {
+  /**
+   * Quando o 401 significa "credencial errada" e não "sessão expirada" (ex.: senha errada ao excluir a conta), a
+   * chamada só rejeita com `ErroApi`, sem acionar o tratador de `aoNaoAutenticado` (que deslogaria a pessoa).
+   */
+  semLogoutEm401?: boolean
 }
 
 /**
@@ -134,8 +143,8 @@ async function tratarResposta<T>(resposta: Response): Promise<T> {
  * conexão são tentadas de novo (esperas de 2 s, depois 3 s), com o aviso ligado, até o limite de 90 s, quando
  * rejeita com `ErroApi` de `status` 0. Outros erros HTTP (inclusive 500 e 503 com `{erro}`) não são repetidos.
  */
-export async function api<T>(caminho: string, opcoes: RequestInit = {}): Promise<T> {
-  const { signal: sinalDoChamador, ...restoDasOpcoes } = opcoes
+export async function api<T>(caminho: string, opcoes: OpcoesApi = {}): Promise<T> {
+  const { signal: sinalDoChamador, semLogoutEm401 = false, ...restoDasOpcoes } = opcoes
   const headers = new Headers(restoDasOpcoes.headers)
   if (restoDasOpcoes.body != null && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
@@ -185,7 +194,7 @@ export async function api<T>(caminho: string, opcoes: RequestInit = {}): Promise
       }
 
       if (resposta !== null && !(await ehRespostaDeProxySemApi(resposta))) {
-        return await tratarResposta<T>(resposta)
+        return await tratarResposta<T>(resposta, semLogoutEm401)
       }
 
       ligarAviso()

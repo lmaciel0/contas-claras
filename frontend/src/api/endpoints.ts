@@ -12,6 +12,7 @@ import type {
   ConteudoNota,
   DefinirSenhaRequest,
   EmailRequest,
+  ExcluirContaRequest,
   GoogleLoginRequest,
   ItemRequest,
   ItemResponse,
@@ -66,6 +67,9 @@ export const endpoints = {
     google: (req: GoogleLoginRequest) => api<UsuarioResponse>('/api/auth/google', { method: 'POST', ...json(req) }),
     logout: () => api<void>('/api/auth/logout', { method: 'POST' }),
     definirSenha: (req: DefinirSenhaRequest) => api<void>('/api/auth/senha', { method: 'PUT', ...json(req) }),
+    // 204 e cookie expirado. 401 = reautenticação inválida (não é sessão expirada), então não pode deslogar.
+    excluirConta: (req: ExcluirContaRequest) =>
+      api<void>('/api/auth/conta', { method: 'DELETE', ...json(req), semLogoutEm401: true }),
   },
   categorias: {
     listar: () => api<CategoriaResponse[]>('/api/categorias'),

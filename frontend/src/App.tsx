@@ -14,7 +14,11 @@ const CadastroPage = lazy(() => import('./auth/CadastroPage').then((m) => ({ def
 const ConfirmarPage = lazy(() => import('./auth/ConfirmarPage').then((m) => ({ default: m.ConfirmarPage })))
 const DefinirSenhaPage = lazy(() => import('./auth/DefinirSenhaPage').then((m) => ({ default: m.DefinirSenhaPage })))
 const EsqueciSenhaPage = lazy(() => import('./auth/EsqueciSenhaPage').then((m) => ({ default: m.EsqueciSenhaPage })))
+const ExcluirContaPage = lazy(() => import('./auth/ExcluirContaPage').then((m) => ({ default: m.ExcluirContaPage })))
 const LoginPage = lazy(() => import('./auth/LoginPage').then((m) => ({ default: m.LoginPage })))
+const ExclusaoDeContaPage = lazy(() =>
+  import('./legal/ExclusaoDeContaPage').then((m) => ({ default: m.ExclusaoDeContaPage })),
+)
 const PrivacidadePage = lazy(() => import('./legal/PrivacidadePage').then((m) => ({ default: m.PrivacidadePage })))
 const TermosPage = lazy(() => import('./legal/TermosPage').then((m) => ({ default: m.TermosPage })))
 const CartoesPage = lazy(() => import('./paginas/cartoes/CartoesPage').then((m) => ({ default: m.CartoesPage })))
@@ -103,7 +107,7 @@ function MolduraDoUsuario() {
 }
 
 /**
- * Rotas do app (dentro de `AuthProvider`). Login, cadastro, `/privacidade` e `/termos` são públicos (as páginas legais ficam fora do `LayoutAuth` e abrem igual com ou sem sessão); o resto exige sessão
+ * Rotas do app (dentro de `AuthProvider`). Login, cadastro, `/privacidade`, `/termos` e `/excluir-conta` são públicos (as páginas legais ficam fora do `LayoutAuth` e abrem igual com ou sem sessão); o resto exige sessão
  * (`RotaProtegida`). O formulário de lançamento é rota filha da lista.
  */
 export function App() {
@@ -112,6 +116,7 @@ export function App() {
       <Routes>
       <Route path="/privacidade" element={<Pagina><PrivacidadePage /></Pagina>} />
       <Route path="/termos" element={<Pagina><TermosPage /></Pagina>} />
+      <Route path="/excluir-conta" element={<Pagina><ExclusaoDeContaPage /></Pagina>} />
       <Route element={<LayoutAuth />}>
         <Route path="/login" element={<Pagina><LoginPage /></Pagina>} />
         <Route path="/cadastro" element={<Pagina><CadastroPage /></Pagina>} />
@@ -135,6 +140,7 @@ export function App() {
           <Route path="/categorias" element={<Pagina><CategoriasPage /></Pagina>} />
           <Route path="/relatorios" element={<Pagina><RelatoriosPage /></Pagina>} />
           <Route path="/conta/senha" element={<Pagina><DefinirSenhaPage /></Pagina>} />
+          <Route path="/conta/excluir" element={<Pagina><ExcluirContaPage /></Pagina>} />
           <Route path="*" element={<NaoEncontradaPage />} />
         </Route>
       </Route>

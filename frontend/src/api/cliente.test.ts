@@ -109,6 +109,30 @@ describe('api', () => {
 
       expect(handler).not.toHaveBeenCalled()
     })
+
+    it('com semLogoutEm401, o 401 rejeita com ErroApi sem acionar o handler', async () => {
+      const handler = vi.fn()
+      const desfazer = aoNaoAutenticado(handler)
+      servidor.use(http.delete('/api/exemplo', () => HttpResponse.json({ erro: 'Senha errada.' }, { status: 401 })))
+
+      await expect(api('/api/exemplo', { method: 'DELETE', semLogoutEm401: true })).rejects.toMatchObject({
+        status: 401,
+        mensagem: 'Senha errada.',
+      })
+      expect(handler).not.toHaveBeenCalled()
+      desfazer()
+    })
+
+    it('sem a opção, o 401 continua acionando o handler', async () => {
+      const handler = vi.fn()
+      const desfazer = aoNaoAutenticado(handler)
+      servidor.use(http.delete('/api/exemplo', () => HttpResponse.json({ erro: 'x' }, { status: 401 })))
+
+      await api('/api/exemplo', { method: 'DELETE' }).catch(() => undefined)
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      desfazer()
+    })
   })
 
   describe('cold start (API dormindo)', () => {

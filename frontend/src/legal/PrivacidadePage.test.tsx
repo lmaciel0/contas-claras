@@ -80,6 +80,16 @@ describe('PrivacidadePage', () => {
     expect(texto).toContain('IP e dados técnicos de acesso nos próprios logs')
   })
 
+  it('cita_a_exclusao_de_conta_imediata_e_definitiva_no_app_e_por_email', () => {
+    const { container } = renderizar()
+    const texto = container.textContent ?? ''
+
+    expect(texto).toContain('imediata e definitiva')
+    expect(texto).toContain('Excluir conta')
+    expect(texto).not.toContain('Hoje esses pedidos são feitos por e-mail')
+    expect(screen.getByRole('link', { name: /excluir sua conta/i })).toHaveAttribute('href', '/excluir-conta')
+  })
+
   it('nao_tem_link_com_href_vazio', () => {
     renderizar()
 

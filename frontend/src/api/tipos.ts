@@ -36,6 +36,11 @@ export interface RedefinirSenhaRequest {
   codigo: string
   senha: string
 }
+/** Reautenticação para excluir a conta: exatamente um dos dois (senha, ou o ID token do Google para conta sem senha). */
+export interface ExcluirContaRequest {
+  senha?: string
+  credencialGoogle?: string
+}
 export interface GoogleLoginRequest {
   credential: string
 }
