@@ -106,6 +106,17 @@ describe('vercel.json: headers de segurança', () => {
     expect(cabecalho('X-Frame-Options')).toBe('DENY')
   })
 
+  it('hsts_de_um_ano_sem_preload', () => {
+    const hsts = cabecalho('Strict-Transport-Security')
+
+    expect(hsts).toBe('max-age=31536000')
+    expect(hsts).not.toMatch(/preload|includeSubDomains/i)
+  })
+
+  it('permissions_policy_bloqueia_camera_microfone_geolocalizacao_e_pagamento', () => {
+    expect(cabecalho('Permissions-Policy')).toBe('camera=(), microphone=(), geolocation=(), payment=()')
+  })
+
   it('api_nunca_e_cacheada_no_cdn', () => {
     expect(regraApi?.headers).toEqual([{ key: 'Cache-Control', value: 'no-store' }])
   })
