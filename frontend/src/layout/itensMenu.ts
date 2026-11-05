@@ -5,6 +5,8 @@ export interface ItemMenu {
   exata?: boolean
   /** O link leva `?ano=&mes=` do mês em foco. */
   comMes?: boolean
+  /** Outros caminhos em que o item também fica ativo (ele é o atalho de um grupo inteiro). */
+  tambemAtivoEm?: string[]
 }
 
 export interface GrupoMenu {
@@ -33,4 +35,14 @@ export const GRUPOS_MENU: GrupoMenu[] = [
       { rotulo: 'Relatórios', caminho: '/relatorios' },
     ],
   },
+]
+
+const CAMINHOS_FINANCEIRO = GRUPOS_MENU.find((g) => g.titulo === 'Financeiro')?.itens.map((i) => i.caminho) ?? []
+
+/** Os quatro destinos da dock inferior do celular. O resto (Projetos, Cartões, Relatórios...) fica no menu do topo; Finanças fica ativo em todo o grupo Financeiro. */
+export const ITENS_DOCK: ItemMenu[] = [
+  { rotulo: 'Início', caminho: '/', exata: true },
+  { rotulo: 'Tarefas', caminho: '/tarefas' },
+  { rotulo: 'Notas', caminho: '/notas' },
+  { rotulo: 'Finanças', caminho: '/financeiro', comMes: true, tambemAtivoEm: CAMINHOS_FINANCEIRO },
 ]

@@ -164,6 +164,35 @@ describe('toast de saída', () => {
     expect(aviso.parentElement).toHaveClass('bottom-6')
     expect(aviso.parentElement).not.toHaveClass('bottom-24')
   })
+
+  it('o aviso não captura toques: wrapper pointer-events-none e texto pointer-events-auto', async () => {
+    comSessao()
+    responderTudo()
+    servidor.use(http.post('/api/auth/logout', () => new Promise<never>(() => undefined)))
+    renderizar('/financeiro?ano=2026&mes=10')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Sair' }))
+
+    const aviso = await screen.findByText('Saindo…')
+    expect(aviso.parentElement).toHaveClass('pointer-events-none')
+    expect(aviso).toHaveClass('pointer-events-auto')
+  })
+
+  it('no celular o aviso sobe para ficar acima da dock inferior e do botão "Criar"', async () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 390 })
+    comSessao()
+    responderTudo()
+    servidor.use(http.post('/api/auth/logout', () => new Promise<never>(() => undefined)))
+    renderizar('/financeiro?ano=2026&mes=10')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Abrir menu' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Sair' }))
+
+    const aviso = await screen.findByText('Saindo…')
+    expect(aviso.parentElement).toHaveClass('bottom-[calc(8.75rem+env(safe-area-inset-bottom))]')
+    expect(aviso.parentElement).not.toHaveClass('bottom-6')
+    expect(aviso.parentElement).toHaveClass('pointer-events-none')
+  })
 })
 
 describe('rota de projetos', () => {

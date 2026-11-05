@@ -318,9 +318,39 @@ body {
   animation: menu-fundo-entra 200ms ease-out;
 }
 
+/*
+ * Entrada com fade e deslize de um eixo, parametrizada por `--entra-x`/`--entra-y` (só opacity e transform). Usada pela
+ * folha "Criar" do celular (sobe de baixo; o fundo reaproveita .menu-fundo) e pelo rótulo do item ativo da dock inferior.
+ */
+@keyframes entra-deslizando {
+  from {
+    opacity: 0;
+    transform: translate(var(--entra-x, 0), var(--entra-y, 0));
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+
+.folha-painel,
+.dock-rotulo {
+  animation: entra-deslizando 200ms ease-out;
+}
+
+.folha-painel {
+  --entra-y: 1rem;
+}
+
+.dock-rotulo {
+  --entra-x: -4px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .menu-painel,
-  .menu-fundo {
+  .menu-fundo,
+  .folha-painel,
+  .dock-rotulo {
     animation: none;
   }
 }

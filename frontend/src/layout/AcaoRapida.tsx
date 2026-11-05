@@ -1,0 +1,111 @@
+import { useCallback, useId, useRef, useState } from 'react'
+import { Link, useLocation, type To } from 'react-router'
+import { foco } from './classesFoco'
+import { FundoDoDialogo } from './FundoDoDialogo'
+import { ICONES } from './icones'
+import { useDialogoModal } from './useDialogoModal'
+import { useMesSelecionado } from './useMesSelecionado'
+
+const itemFolha = `flex min-h-11 items-center gap-3 rounded-2xl px-3 py-2 text-[15px] font-semibold text-[var(--cor-texto)] no-underline transition-colors duration-200 ease-out hover:bg-[var(--cor-fundo)] motion-reduce:transition-none ${foco}`
+
+const botaoFechar = `mt-1 min-h-11 cursor-pointer rounded-2xl border-t border-[var(--cor-linha)] px-3 py-2 text-[15px] font-semibold text-[var(--cor-mutado)] transition-colors duration-200 ease-out hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)] motion-reduce:transition-none ${foco}`
+
+interface ItemFolha {
+  rotulo: string
+  /** Chave de `ICONES`. */
+  icone: string
+  para: To
+  state?: { nova: true }
+}
+
+/**
+ * Botão "+" flutuante do celular (menos de 768 px) e a folha de ações rápidas que ele abre: Nova nota, Nova conta e
+ * Nova tarefa. Fica 12 px acima da dock (z-30, como ela); a folha (z-[35]) cobre a dock e fica abaixo do menu (z-40) e
+ * dos modais (z-50). Mesmo comportamento do menu deslizante (foco, Esc, fundo, rolagem travada, Tab preso), via
+ * `useDialogoModal`. Só renderize quando `useEhCelular()` for verdadeiro (o AppShell faz isso).
+ *
+ * Nota e tarefa não têm rota de criação: a nota nasce de um POST seguido de navegação, e a tarefa é o campo da própria
+ * página. "Nova nota" leva `{ nova: true }` no estado de navegação (um link externo não consegue defini-lo, então abrir
+ * uma URL não cria nota) e "Nova tarefa" leva `?nova=1`, que só foca o campo.
+ */
+export function AcaoRapida() {
+  const { busca } = useMesSelecionado()
+  const { pathname } = useLocation()
+  const [aberta, setAberta] = useState(false)
+  const [pathnameAnterior, setPathnameAnterior] = useState(pathname)
+  const botao = useRef<HTMLButtonElement>(null)
+  const idFolha = useId()
+  const itens: ItemFolha[] = [
+    { rotulo: 'Nova nota', icone: '/notas', para: '/notas', state: { nova: true } },
+    { rotulo: 'Nova conta', icone: '/lancamentos', para: { pathname: '/lancamentos/novo', search: busca } },
+    { rotulo: 'Nova tarefa', icone: '/tarefas', para: { pathname: '/tarefas', search: '?nova=1' } },
+  ]
+
+  // Trocou de rota com a folha aberta (gesto de voltar do Android/TWA, que não tem Esc): fecha já na renderização
+  // (estado derivado, como no AppShell). Ao desmontar a folha o hook solta a rolagem do corpo.
+  if (pathnameAnterior !== pathname) {
+    setPathnameAnterior(pathname)
+    if (aberta) {
+      setAberta(false)
+    }
+  }
+
+  const fechar = useCallback(() => {
+    setAberta(false)
+    botao.current?.focus()
+  }, [])
+  const { painel, prenderFoco } = useDialogoModal(aberta, fechar)
+
+  return (
+    <>
+      <button
+        ref={botao}
+        type="button"
+        aria-label="Criar"
+        aria-haspopup="dialog"
+        aria-expanded={aberta}
+        aria-controls={aberta ? idFolha : undefined}
+        onClick={() => setAberta(true)}
+        className={`fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 grid min-h-11 min-w-11 size-12 cursor-pointer place-items-center rounded-full bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)] shadow-[0_6px_16px_color-mix(in_srgb,var(--cor-principal)_40%,transparent)] transition-transform duration-200 ease-out motion-safe:active:scale-95 motion-reduce:transition-none ${foco}`}
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
+
+      {aberta && (
+        <div className="fixed inset-0 z-[35]">
+          <FundoDoDialogo testId="fundo-da-acao-rapida" aoClicar={fechar} />
+          <div
+            ref={painel}
+            id={idFolha}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Criar"
+            onKeyDown={prenderFoco}
+            className="folha-painel superficie absolute inset-x-2.5 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto flex max-w-md flex-col gap-1 rounded-3xl p-2"
+          >
+            {itens.map(({ rotulo, icone, para, state }) => (
+              <Link key={rotulo} to={para} state={state} onClick={fechar} className={itemFolha}>
+                {ICONES[icone]}
+                {rotulo}
+              </Link>
+            ))}
+            <button type="button" onClick={fechar} className={botaoFechar}>
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}

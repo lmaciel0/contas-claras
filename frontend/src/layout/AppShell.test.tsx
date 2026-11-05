@@ -363,7 +363,7 @@ describe('trava de rolagem', () => {
 })
 
 describe('moldura', () => {
-  it.each([390, 1280])('não existe navegação inferior em %i px', (largura) => {
+  it.each([768, 1280])('não existe a dock inferior em %i px', (largura) => {
     definirLargura(largura)
     renderizar()
 
@@ -384,6 +384,109 @@ describe('moldura', () => {
     renderizar('/lancamentos?ano=2026&mes=10')
 
     expect(within(screen.getByRole('main')).getByText('Conteúdo dos Lançamentos')).toBeInTheDocument()
+  })
+})
+
+describe('dock inferior no celular (menos de 768 px)', () => {
+  afterEach(() => {
+    document.body.style.overflow = ''
+  })
+
+  it('em 600 px renderiza a dock e a barra de topo', () => {
+    definirLargura(600)
+    renderizar()
+
+    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
+    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abrir menu' })).toBeInTheDocument()
+  })
+
+  it.each([900, 1300])('em %i px não renderiza a dock', (largura) => {
+    definirLargura(largura)
+    renderizar()
+
+    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
+  })
+
+  it('em 1300 px mantém a lateral', () => {
+    definirLargura(1300)
+    renderizar()
+
+    expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
+  })
+
+  it('o limite é 767/768 px', () => {
+    definirLargura(767)
+    renderizar()
+    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
+
+    act(() => definirLargura(768))
+    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abrir menu' })).toBeInTheDocument()
+  })
+
+  it('o main reserva espaço para a dock e para a área segura do aparelho', () => {
+    definirLargura(600)
+    renderizar()
+
+    const main = screen.getByRole('main')
+    expect(main.className).toMatch(/(^|\s)pb-/)
+    expect(main.className).toMatch(/safe-area-inset-bottom/)
+  })
+
+  it.each([768, 1300])('fora do celular (%i px) o main não reserva espaço para a dock', (largura) => {
+    definirLargura(largura)
+    renderizar()
+
+    expect(screen.getByRole('main').className).not.toMatch(/safe-area-inset-bottom/)
+  })
+
+  it('o menu "Abrir menu" abre sobre a dock e o link "Excluir conta" está nele', async () => {
+    definirLargura(600)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    const painel = screen.getByRole('dialog', { name: 'Menu' })
+    expect(within(painel).getByRole('link', { name: 'Excluir conta' })).toHaveAttribute('href', '/conta/excluir')
+  })
+
+  it('redimensionar de 600 para 1300 px com o menu aberto fecha o menu e tira a dock', async () => {
+    definirLargura(600)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+    expect(screen.getByRole('dialog', { name: 'Menu' })).toBeInTheDocument()
+
+    act(() => definirLargura(1300))
+
+    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
+    expect(document.body.style.overflow).toBe('')
+    expect(screen.getByRole('main')).toHaveFocus()
+  })
+
+  it('cruzar 767/768 px com o menu aberto fecha o menu, sem estado preso na volta', async () => {
+    definirLargura(767)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    act(() => definirLargura(768))
+
+    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
+    expect(document.body.style.overflow).toBe('')
+
+    act(() => definirLargura(767))
+
+    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
+  })
+
+  it('a dock marca o item da rota atual como ativo', async () => {
+    definirLargura(600)
+    renderizar()
+    const dock = screen.getByRole('navigation', { name: 'Navegação principal' })
+
+    expect(within(dock).getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
   })
 })
 
@@ -410,5 +513,45 @@ describe('aviso de servidor acordando', () => {
 
     await act(() => vi.advanceTimersByTimeAsync(2500))
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+})
+
+describe('AppShell: ação rápida', () => {
+  it('o botão "Criar" aparece no celular', () => {
+    definirLargura(390)
+    renderizar()
+    expect(screen.getByRole('button', { name: 'Criar' })).toBeInTheDocument()
+  })
+
+  it.each([768, 1280])('em %i px não há botão "Criar"', (largura) => {
+    definirLargura(largura)
+    renderizar()
+    expect(screen.queryByRole('button', { name: 'Criar' })).not.toBeInTheDocument()
+  })
+
+  it('a folha do "Criar" não interfere no menu: os dois diálogos abrem e fecham separados', async () => {
+    definirLargura(390)
+    renderizar()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
+    expect(screen.getByRole('dialog', { name: 'Criar' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Criar' })).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+    expect(screen.getByRole('dialog', { name: 'Menu' })).toBeInTheDocument()
+  })
+
+  it('crescer para 768 px com a folha aberta some com ela e solta a rolagem do corpo', async () => {
+    definirLargura(390)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
+    expect(document.body.style.overflow).toBe('hidden')
+
+    act(() => definirLargura(768))
+
+    expect(screen.queryByRole('dialog', { name: 'Criar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Criar' })).not.toBeInTheDocument()
+    expect(document.body.style.overflow).not.toBe('hidden')
   })
 })

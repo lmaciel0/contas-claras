@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import { useLocation } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import type { TarefaResponse, TarefasResponse } from '../../api/tipos'
 import { comSessao } from '../../teste/auth'
@@ -37,6 +38,11 @@ function responder(corpo: TarefasResponse) {
 function renderizar() {
   comSessao()
   return renderComApp(<TarefasPage />, '/tarefas')
+}
+
+function LocalAtual() {
+  const { pathname, search } = useLocation()
+  return <p data-testid="local-atual">{`${pathname}${search}`}</p>
 }
 
 const secao = (nome: string) => screen.getByRole('region', { name: nome })
@@ -479,5 +485,32 @@ describe('TarefasPage', () => {
     renderizar()
 
     expect(screen.getByText(/carregando as tarefas/i)).toBeInTheDocument()
+  })
+})
+
+describe('TarefasPage com ?nova=1 (ação rápida do celular)', () => {
+  it('leva o foco ao campo de nova tarefa e tira o parâmetro da URL', async () => {
+    comSessao()
+    responder(resposta())
+    renderComApp(
+      <>
+        <TarefasPage />
+        <LocalAtual />
+      </>,
+      '/tarefas?nova=1',
+    )
+
+    const campo = await screen.findByRole('textbox', { name: 'Adicionar uma tarefa' })
+    await waitFor(() => expect(campo).toHaveFocus())
+    expect(screen.getByTestId('local-atual')).toHaveTextContent(/^\/tarefas$/)
+  })
+
+  it('sem o parâmetro não rouba o foco', async () => {
+    comSessao()
+    responder(resposta())
+    renderComApp(<TarefasPage />, '/tarefas')
+
+    const campo = await screen.findByRole('textbox', { name: 'Adicionar uma tarefa' })
+    expect(campo).not.toHaveFocus()
   })
 })

@@ -23,8 +23,9 @@ export function ExclusaoDeContaPage() {
         >
           <li>Abra o app do Aprumo e entre na sua conta.</li>
           <li>
-            Abra o menu lateral (no celular, o ícone de menu no topo) e, no fim dele, perto de Alterar senha e de
-            Preferências, toque em Excluir conta.
+            Abra o menu lateral (no celular, toque no botão de menu, o de três riscos, na barra do topo; os ícones da
+            barra de baixo não levam a ele) e, no fim dele, perto de Alterar senha e de Preferências, toque em Excluir
+            conta.
           </li>
           <li>Marque &quot;Entendo que é definitivo&quot;.</li>
           <li>

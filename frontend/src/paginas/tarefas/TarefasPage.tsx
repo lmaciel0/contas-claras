@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
+import { useSearchParams } from 'react-router'
 import type { TarefaResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { Esqueleto } from '../../componentes/Esqueleto'
@@ -250,6 +251,22 @@ export function TarefasPage() {
   const campoNovaTarefa = useRef<HTMLInputElement>(null)
   const tituloDaPagina = useRef<HTMLHeadingElement>(null)
   const [aviso, setAviso] = useState('')
+  const [params, setParams] = useSearchParams()
+
+  // `?nova=1` vem do "Nova tarefa" da ação rápida do celular: leva o foco ao campo de nova tarefa e tira o parâmetro da
+  // URL (replace), para recarregar ou voltar não repetir.
+  useEffect(() => {
+    if (params.get('nova') !== '1') return
+    campoNovaTarefa.current?.focus()
+    setParams(
+      (atual) => {
+        const proximo = new URLSearchParams(atual)
+        proximo.delete('nova')
+        return proximo
+      },
+      { replace: true },
+    )
+  }, [params, setParams])
 
   // Concluir move a linha para outra seção (ela remonta) e excluir a remove: o foco vai para o título da página,
   // um destino fixo, e a região aria-live diz o que aconteceu. Não usamos o campo de texto para não abrir o teclado
