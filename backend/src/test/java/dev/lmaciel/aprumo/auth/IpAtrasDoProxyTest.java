@@ -67,7 +67,7 @@ class IpAtrasDoProxyTest extends IntegracaoTest {
 
     @Test
     void o_filtro_de_cabecalhos_encaminhados_nao_esta_na_cadeia() {
-        assertThat(ambiente.getProperty("server.forward-headers-strategy")).isNotEqualTo("framework");
+        assertThat(ambiente.getProperty("server.forward-headers-strategy")).isEqualTo("none");
         assertThat(contexto.getBeansOfType(FilterRegistrationBean.class).values())
                 .noneSatisfy(registro -> assertThat(registro.getFilter()).isInstanceOf(ForwardedHeaderFilter.class));
     }

@@ -50,8 +50,12 @@ app:
 server:
   # O Render (e qualquer PaaS) define PORT; sem ela, 8080.
   port: ${PORT:8080}
-  # Sem forward-headers-strategy (padrão none) de propósito: a estratégia "framework" reescreveria getRemoteAddr()
-  # com o IP mais à esquerda do X-Forwarded-For, que o cliente forja. O XFF é lido cru em IpDoCliente.
+  # forward-headers-strategy explícito em none, de propósito. Sem ele, o padrão do Boot muda para native quando
+  # detecta uma plataforma de nuvem (CloudPlatform, ex. Kubernetes), e o RemoteIpValve do Tomcat consumiria e
+  # reescreveria o X-Forwarded-For antes do nosso código, quebrando a contagem do XFF cru em IpDoCliente.
+  # A estratégia "framework" também não serve: reescreveria getRemoteAddr() com o IP mais à esquerda do XFF,
+  # que o cliente forja. O XFF é lido cru em IpDoCliente.
+  forward-headers-strategy: none
 
 aprumo:
   proxy:
