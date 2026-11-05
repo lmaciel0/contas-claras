@@ -4,6 +4,7 @@ import { LayoutAuth } from './auth/LayoutAuth'
 import { RotaProtegida } from './auth/RotaProtegida'
 import { useAuth } from './auth/useAuth'
 import { Carregando } from './componentes/Carregando'
+import { ErroDeCarregamento } from './componentes/ErroDeCarregamento'
 import { AppShell } from './layout/AppShell'
 import { NaoEncontradaPage } from './paginas/NaoEncontradaPage'
 import { PreferenciasProvider } from './preferencias/PreferenciasContext'
@@ -39,10 +40,15 @@ const TarefasPage = lazy(() => import('./paginas/tarefas/TarefasPage').then((m) 
 /**
  * Fronteira de carregamento de uma página lazy. Fica em cada rota (e não uma só no topo) para a moldura continuar
  * na tela, e as páginas-pai de rotas aninhadas, enquanto o chunk da filha baixa. O fallback é o `Carregando`
- * (`role="status"`, texto para leitor de tela, `prefers-reduced-motion` respeitado).
+ * (`role="status"`, texto para leitor de tela, `prefers-reduced-motion` respeitado). Se o chunk falhar (ex.: deploy novo
+ * removeu o arquivo), o `ErroDeCarregamento` mostra o alerta com "Recarregar" só nessa área, sem derrubar o app.
  */
 function Pagina({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<Carregando />}>{children}</Suspense>
+  return (
+    <ErroDeCarregamento>
+      <Suspense fallback={<Carregando />}>{children}</Suspense>
+    </ErroDeCarregamento>
+  )
 }
 
 /**

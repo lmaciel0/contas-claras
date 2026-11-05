@@ -4,8 +4,11 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import { App } from './App'
 import { AuthProvider } from './auth/AuthProvider'
+import { instalarRecarregarNoErroDeChunk } from './recarregarNoErroDeChunk'
 import '@fontsource-variable/inter'
 import './index.css'
+
+instalarRecarregarNoErroDeChunk()
 
 const queryClient = new QueryClient({
   defaultOptions: {

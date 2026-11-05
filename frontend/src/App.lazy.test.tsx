@@ -26,11 +26,11 @@ describe('rotas em lazy loading', () => {
     )
 
     expect(await screen.findByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('Carregando…')
+    expect(screen.getByText('Carregando…').closest('[role="status"]')).not.toBeNull()
     expect(screen.queryByRole('heading', { name: 'Projetos carregada' })).not.toBeInTheDocument()
 
     expect(await screen.findByRole('heading', { name: 'Projetos carregada' })).toBeInTheDocument()
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.queryByText('Carregando…')).not.toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
   })
 })
