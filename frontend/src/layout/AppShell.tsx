@@ -6,10 +6,12 @@ import { Logo } from './Logo'
 import { PainelLateralDireito } from './PainelLateralDireito'
 import { PaletaContext } from './paleta'
 import { PaletaNavegacao } from './PaletaNavegacao'
+import { DockInferior } from './DockInferior'
 import { DockLateral } from './DockLateral'
 import { PreferenciasModal } from '../preferencias/PreferenciasModal'
 import { usePreferencias } from '../preferencias/usePreferencias'
 import { travarRolagem } from './travaRolagem'
+import { useEhCelular } from './useEhCelular'
 import { useEhDesktop } from './useEhDesktop'
 
 interface Props {
@@ -22,21 +24,30 @@ const botaoIcone = `grid min-h-11 min-w-11 shrink-0 cursor-pointer place-items-c
 
 const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-/** No desktop o vão vem do `gap-3 p-3` do grid, então o `main` não tem padding; abaixo de 1280 px mantém o de antes. */
-function classesMain(larguraTotal: boolean, ehDesktop: boolean): string {
+/** Folga embaixo do `main` no celular: o último item e o botão "Salvar" ficam acima da dock flutuante e da área segura. */
+const FOLGA_DOCK = 'pb-[calc(6.5rem+env(safe-area-inset-bottom))]'
+
+/**
+ * No desktop o vão vem do `gap-3 p-3` do grid, então o `main` não tem padding; abaixo de 1280 px mantém o de antes e,
+ * no celular (menos de 768 px), reserva espaço para a dock inferior.
+ */
+function classesMain(larguraTotal: boolean, ehDesktop: boolean, ehCelular: boolean): string {
   const largura = larguraTotal ? 'w-full min-w-0 outline-none' : 'mx-auto w-full max-w-6xl min-w-0 outline-none'
   if (ehDesktop) {
     return `${largura} col-start-2 row-start-2`
   }
-  return `${largura} px-4 py-5 ${larguraTotal ? 'md:px-8' : 'md:px-6'}`
+  const folga = ehCelular ? ` ${FOLGA_DOCK}` : ''
+  return `${largura} px-4 py-5 ${larguraTotal ? 'md:px-8' : 'md:px-6'}${folga}`
 }
 
 /**
  * Moldura das telas logadas. Em ≥ 1280 px a DockLateral fica flutuante à esquerda. Abaixo disso há uma barra fina no topo com o
- * botão "Abrir menu"; o menu desliza sobre um fundo escurecido (Esc, clique no fundo ou navegar fecham; ao virar desktop fecha sozinho).
+ * botão "Abrir menu"; o menu desliza sobre um fundo escurecido (Esc, clique no fundo ou navegar fecham; ao virar desktop ou
+ * cruzar o limite de celular fecha sozinho). Em menos de 768 px entra também a DockInferior, com os quatro destinos principais.
  */
 export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const ehDesktop = useEhDesktop()
+  const ehCelular = useEhCelular()
   const { preferencias } = usePreferencias()
   const [aberto, setAberto] = useState(false)
   const [paletaAberta, setPaletaAberta] = useState(false)
@@ -46,6 +57,8 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const painel = useRef<HTMLDivElement>(null)
   const principal = useRef<HTMLElement>(null)
   const painelEstavaAberto = useRef(false)
+  const eraCelular = useRef(ehCelular)
+  const [celularAnterior, setCelularAnterior] = useState(ehCelular)
   const idPainel = useId()
 
   const painelAberto = aberto && !ehDesktop
@@ -53,6 +66,14 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   // Virou desktop com o painel aberto: zera o estado já na renderização (padrão do React para estado derivado).
   if (ehDesktop && aberto) {
     setAberto(false)
+  }
+
+  // Cruzou o limite de celular (767/768 px) com o menu aberto: fecha, para o layout novo não herdar o estado do antigo.
+  if (celularAnterior !== ehCelular) {
+    setCelularAnterior(ehCelular)
+    if (aberto) {
+      setAberto(false)
+    }
   }
 
   const fechar = useCallback(() => {
@@ -78,13 +99,16 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
     }
   }, [painelAberto, fechar])
 
-  // Painel aberto que some porque a tela virou desktop: o foco (que estava nele) iria para o body; leva ao conteúdo.
+  // Painel aberto que some porque o layout mudou (virou desktop ou cruzou o limite de celular): o foco (que estava nele)
+  // iria para o body; leva ao conteúdo.
   useEffect(() => {
-    if (painelEstavaAberto.current && !painelAberto && ehDesktop) {
+    const layoutMudou = ehDesktop || eraCelular.current !== ehCelular
+    if (painelEstavaAberto.current && !painelAberto && layoutMudou) {
       principal.current?.focus()
     }
     painelEstavaAberto.current = painelAberto
-  }, [painelAberto, ehDesktop])
+    eraCelular.current = ehCelular
+  }, [painelAberto, ehDesktop, ehCelular])
 
   // Atalho global da paleta "Ir para…". Com o painel do menu aberto (celular) só bloqueia o atalho do navegador.
   useEffect(() => {
@@ -222,7 +246,7 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
           <main
             ref={principal}
             tabIndex={-1}
-            className={classesMain(preferencias.layoutLargura === 'largura-total', ehDesktop)}
+            className={classesMain(preferencias.layoutLargura === 'largura-total', ehDesktop, ehCelular)}
           >
             <Outlet />
           </main>
@@ -237,6 +261,8 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
             />
           )}
         </div>
+
+        {ehCelular && <DockInferior />}
 
         {painelAberto && (
           <div className="fixed inset-0 z-40">

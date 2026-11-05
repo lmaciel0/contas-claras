@@ -32,6 +32,8 @@ describe('ExclusaoDeContaPage', () => {
     const texto = passos.map((p) => p.textContent ?? '').join(' | ')
     expect(texto).toMatch(/Abra o app/i)
     expect(texto).toMatch(/Preferências|menu/i)
+    expect(texto).toMatch(/botão de menu.*barra do topo/i)
+    expect(texto).not.toMatch(/ícone de menu no topo/i)
     expect(texto).toContain('Excluir conta')
     expect(screen.getByRole('list', { name: 'Passos para excluir a conta' })).toBeInTheDocument()
   })

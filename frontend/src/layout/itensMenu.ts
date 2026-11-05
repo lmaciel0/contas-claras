@@ -34,3 +34,11 @@ export const GRUPOS_MENU: GrupoMenu[] = [
     ],
   },
 ]
+
+/** Os quatro destinos da dock inferior do celular. O resto (Projetos, Cartões, Relatórios...) fica no menu do topo. */
+export const ITENS_DOCK: ItemMenu[] = [
+  { rotulo: 'Início', caminho: '/', exata: true },
+  { rotulo: 'Tarefas', caminho: '/tarefas' },
+  { rotulo: 'Notas', caminho: '/notas' },
+  { rotulo: 'Finanças', caminho: '/financeiro', comMes: true },
+]

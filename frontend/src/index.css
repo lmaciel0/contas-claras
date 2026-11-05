@@ -325,6 +325,28 @@ body {
   }
 }
 
+/* Dock inferior do celular: o rótulo do item ativo entra com fade e um leve deslize (só opacity e transform). */
+@keyframes dock-rotulo-entra {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.dock-rotulo {
+  animation: dock-rotulo-entra 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-rotulo {
+    animation: none;
+  }
+}
+
 /* Paleta "Ir para…" (Ctrl K): entra com um leve fade. */
 @keyframes paleta-entra {
   from {
