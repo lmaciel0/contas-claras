@@ -6,7 +6,7 @@ import { App } from '../App'
 import { comSessao, usuarioFicticio } from '../teste/auth'
 import { instalarGoogleFalso, removerGoogleFalso } from '../teste/google'
 import type { ConfiguracaoGoogle } from '../teste/google'
-import { renderComApp } from '../teste/render'
+import { renderComApp, renderComBrowserRouter } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
 
@@ -100,6 +100,26 @@ describe('ExcluirContaPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
     expect(corpo).toEqual({ senha: 'minha-senha' })
+  })
+
+  it('sucesso_com_BrowserRouter_termina_em_login_sem_voltar', async () => {
+    comSessao()
+    servidor.use(http.delete('/api/auth/conta', () => new HttpResponse(null, { status: 204 })))
+    renderComBrowserRouter(
+      <AuthProvider>
+        <App />
+      </AuthProvider>,
+      '/conta/excluir',
+    )
+    await userEvent.type(await screen.findByLabelText('Senha'), 'minha-senha')
+    await userEvent.click(caixaDeCiencia())
+
+    await userEvent.click(botaoExcluir())
+
+    expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
+    // Sem `?voltar=%2Fconta%2Fexcluir`: quem se recadastrar e entrar não pode cair direto na tela de excluir conta.
+    expect(window.location.pathname).toBe('/login')
+    expect(window.location.search).toBe('')
   })
 
   it('conta_so_google_mostra_o_botao_do_google_em_vez_do_campo_de_senha', async () => {

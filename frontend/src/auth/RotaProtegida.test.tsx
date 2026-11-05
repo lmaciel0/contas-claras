@@ -39,6 +39,23 @@ describe('RotaProtegida', () => {
     expect(screen.queryByText('Conteúdo protegido')).not.toBeInTheDocument()
   })
 
+  it('sessao_perdida_em_conta_excluir_vai_para_login_sem_voltar', async () => {
+    semSessao()
+    renderComApp(
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LocalAtual />} />
+          <Route element={<RotaProtegida />}>
+            <Route path="/conta/excluir" element={<p>Excluir</p>} />
+          </Route>
+        </Routes>
+      </AuthProvider>,
+      '/conta/excluir',
+    )
+
+    expect(await screen.findByTestId('local')).toHaveTextContent(/^\/login$/)
+  })
+
   it('com_sessao_mostra_o_conteudo', async () => {
     comSessao()
     renderizar('/cartoes')
