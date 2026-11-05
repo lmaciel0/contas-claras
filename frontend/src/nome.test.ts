@@ -68,7 +68,7 @@ describe('nome do produto', () => {
     expect(manifest.name).toBe('Aprumo')
     expect(manifest.short_name).toBe('Aprumo')
     expect(manifest.description).toBe(
-      'Aprumo: suas finanças, e em breve tarefas e agenda, no mesmo lugar.',
+      'Aprumo: finanças, tarefas, notas e projetos no mesmo lugar.',
     )
   })
 })
