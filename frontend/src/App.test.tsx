@@ -167,3 +167,21 @@ describe('rota de projetos', () => {
     expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
   })
 })
+
+describe('rota pública de privacidade', () => {
+  it('visitante_sem_sessao_ve_a_politica_e_nao_o_login', async () => {
+    semSessao()
+    renderizar('/privacidade')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Política de Privacidade' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
+  })
+
+  it('logado_tambem_ve_a_politica_sem_ser_redirecionado', async () => {
+    comSessao()
+    renderizar('/privacidade')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Política de Privacidade' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Menu principal' })).not.toBeInTheDocument()
+  })
+})

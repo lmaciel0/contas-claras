@@ -8,6 +8,7 @@ import { LayoutAuth } from './auth/LayoutAuth'
 import { LoginPage } from './auth/LoginPage'
 import { RotaProtegida } from './auth/RotaProtegida'
 import { useAuth } from './auth/useAuth'
+import { PrivacidadePage } from './legal/PrivacidadePage'
 import { AppShell } from './layout/AppShell'
 import { CartoesPage } from './paginas/cartoes/CartoesPage'
 import { CategoriasPage } from './paginas/categorias/CategoriasPage'
@@ -76,13 +77,14 @@ function MolduraDoUsuario() {
 import { PreferenciasProvider } from './preferencias/PreferenciasContext'
 
 /**
- * Rotas do app (dentro de `AuthProvider`). Login e cadastro são públicos; o resto exige sessão
+ * Rotas do app (dentro de `AuthProvider`). Login, cadastro e `/privacidade` são públicos (a política fica fora do `LayoutAuth` e abre igual com ou sem sessão); o resto exige sessão
  * (`RotaProtegida`). O formulário de lançamento é rota filha da lista.
  */
 export function App() {
   return (
     <PreferenciasProvider>
       <Routes>
+      <Route path="/privacidade" element={<PrivacidadePage />} />
       <Route element={<LayoutAuth />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<CadastroPage />} />
