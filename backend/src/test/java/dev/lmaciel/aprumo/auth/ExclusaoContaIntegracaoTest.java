@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -38,6 +41,9 @@ class ExclusaoContaIntegracaoTest extends IntegracaoTest {
 
     @Autowired
     JdbcTemplate jdbc;
+
+    @Autowired
+    PasswordEncoder encoder;
 
     @BeforeEach
     void limparUsuarios() {
@@ -173,7 +179,8 @@ class ExclusaoContaIntegracaoTest extends IntegracaoTest {
         Cookie cookie = cadastrarEEntrar(EMAIL_A);
 
         excluir(cookie, "{}").andExpect(status().isBadRequest());
-        excluir(cookie, "{\"senha\":\"  \",\"credencialGoogle\":\"\"}").andExpect(status().isBadRequest());
+        // Espaços valem como senha (SEC7), mas não como credencial do Google.
+        excluir(cookie, "{\"senha\":\"\",\"credencialGoogle\":\"  \"}").andExpect(status().isBadRequest());
 
         assertThat(contar("usuario", idDe(EMAIL_A))).isEqualTo(1);
     }
@@ -243,5 +250,206 @@ class ExclusaoContaIntegracaoTest extends IntegracaoTest {
         excluir(null, comSenha(SENHA_PADRAO_TESTE)).andExpect(status().isUnauthorized());
 
         assertThat(contar("usuario", idDe(EMAIL_A))).isEqualTo(1);
+    }
+
+    // ---- PUT /senha: conta só Google (SEC1) ---------------------------------------------
+
+    private ResultActions definirSenha(Cookie cookie, String corpo) throws Exception {
+        return mvc.perform(put("/api/auth/senha").contentType(MediaType.APPLICATION_JSON).content(corpo)
+                .cookie(cookie));
+    }
+
+    private static String corpoDefinirSenha(String senhaAtual, String credencialGoogle, String senha) {
+        StringBuilder json = new StringBuilder("{");
+        if (senhaAtual != null) {
+            json.append("\"senhaAtual\":\"%s\",".formatted(senhaAtual));
+        }
+        if (credencialGoogle != null) {
+            json.append("\"credencialGoogle\":\"%s\",".formatted(credencialGoogle));
+        }
+        return json.append("\"senha\":\"%s\"}".formatted(senha)).toString();
+    }
+
+    private String senhaHashDe(long id) {
+        return jdbc.queryForObject("select senha_hash from usuario where id = ?", String.class, id);
+    }
+
+    @Test
+    void contaSoGoogleDefinirSenhaSemGoogleRetorna401ENadaMuda() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        long a = idDe(EMAIL_A);
+
+        definirSenha(cookie, corpoDefinirSenha(null, null, "senha-do-atacante-1"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+        definirSenha(cookie, corpoDefinirSenha("qualquer-coisa-1", null, "senha-do-atacante-1"))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(senhaHashDe(a)).isNull();
+        mvc.perform(get("/api/auth/me").cookie(cookie)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.temSenha").value(false));
+    }
+
+    @Test
+    void contaSoGoogleDefinirSenhaComGoogleDoMesmoUsuarioFunciona() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie antigo = entrarComGoogle(TOKEN_A);
+
+        MvcResult resposta = definirSenha(antigo, corpoDefinirSenha(null, TOKEN_A, "primeira-senha-1"))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("cc_session=")))
+                .andReturn();
+        String setCookie = resposta.getResponse().getHeader(HttpHeaders.SET_COOKIE);
+        Cookie novo = new Cookie("cc_session", setCookie.substring("cc_session=".length(), setCookie.indexOf(';')));
+
+        mvc.perform(get("/api/auth/me").cookie(antigo)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/auth/me").cookie(novo)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.temSenha").value(true));
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"%s\",\"senha\":\"primeira-senha-1\"}".formatted(EMAIL_A)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void contaSoGoogleDefinirSenhaComGoogleDeOutroUsuarioRetorna401() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        tokenGoogle(TOKEN_B, "sub-b", EMAIL_B);
+        Cookie cookieA = entrarComGoogle(TOKEN_A);
+        entrarComGoogle(TOKEN_B);
+
+        definirSenha(cookieA, corpoDefinirSenha(null, TOKEN_B, "senha-do-atacante-1"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+        when(verificador.verificar("token-invalido")).thenReturn(Optional.empty());
+        definirSenha(cookieA, corpoDefinirSenha(null, "token-invalido", "senha-do-atacante-1"))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(senhaHashDe(idDe(EMAIL_A))).isNull();
+    }
+
+    @Test
+    void contaSoGoogleNaoApagaComSenhaCriadaSemPassarPeloGoogle() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        long a = idDe(EMAIL_A);
+
+        definirSenha(cookie, corpoDefinirSenha(null, null, "senha-do-atacante-1"))
+                .andExpect(status().isUnauthorized());
+        excluir(cookie, comSenha("senha-do-atacante-1")).andExpect(status().isUnauthorized());
+
+        assertThat(contar("usuario", a)).isEqualTo(1);
+    }
+
+    @Test
+    void contaSoGoogleEnviandoSenhaNoDeleteRetorna401SemApagar() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        long a = popular(EMAIL_A);
+
+        excluir(cookie, comSenha("qualquer-senha-1")).andExpect(status().isUnauthorized());
+
+        assertThat(contar("usuario", a)).isEqualTo(1);
+        assertThat(contar("lancamento", a)).isEqualTo(1);
+        assertThat(contarCodigos(EMAIL_A)).isEqualTo(1);
+    }
+
+    @Test
+    void contaComSenhaIgnoraCredencialGoogleEExigeSenhaAtual() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+        jdbc.update("update usuario set google_sub = 'sub-a' where email = ?", EMAIL_A);
+
+        definirSenha(cookie, corpoDefinirSenha(null, TOKEN_A, "outra-senha-123"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Senha atual incorreta."));
+
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(EMAIL_A, SENHA_PADRAO_TESTE)))
+                .andExpect(status().isOk());
+    }
+
+    // ---- limite de tentativas da reautenticação (SEC2) ------------------------------------
+
+    private void loginDeveFuncionar(String email) throws Exception {
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"%s\",\"senha\":\"%s\"}".formatted(email, SENHA_PADRAO_TESTE)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void excluirComSenhaErradaBloqueiaNaSextaTentativaSemTravarOLogin() throws Exception {
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+        long a = idDe(EMAIL_A);
+
+        for (int i = 0; i < LimiteTentativasLogin.MAX_TENTATIVAS; i++) {
+            excluir(cookie, comSenha("senha-errada-123")).andExpect(status().isUnauthorized());
+        }
+        // Mesmo a senha certa fica bloqueada na janela.
+        excluir(cookie, comSenha(SENHA_PADRAO_TESTE)).andExpect(status().isTooManyRequests());
+        excluir(cookie, comSenha("senha-errada-123")).andExpect(status().isTooManyRequests());
+
+        assertThat(contar("usuario", a)).isEqualTo(1);
+        loginDeveFuncionar(EMAIL_A);
+    }
+
+    @Test
+    void senhaAtualErradaDoPutSenhaDividePorUsuarioOMesmoLimiteDaExclusao() throws Exception {
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+        long a = idDe(EMAIL_A);
+
+        for (int i = 0; i < LimiteTentativasLogin.MAX_TENTATIVAS - 1; i++) {
+            definirSenha(cookie, corpoDefinirSenha("senha-errada-123", null, "nova-senha-123"))
+                    .andExpect(status().isBadRequest());
+        }
+        excluir(cookie, comSenha("senha-errada-123")).andExpect(status().isUnauthorized());
+        definirSenha(cookie, corpoDefinirSenha(SENHA_PADRAO_TESTE, null, "nova-senha-123"))
+                .andExpect(status().isTooManyRequests());
+        excluir(cookie, comSenha(SENHA_PADRAO_TESTE)).andExpect(status().isTooManyRequests());
+
+        assertThat(contar("usuario", a)).isEqualTo(1);
+        loginDeveFuncionar(EMAIL_A);
+    }
+
+    @Test
+    void limiteDeUmUsuarioNaoAfetaOutro() throws Exception {
+        Cookie cookieA = cadastrarEEntrar(EMAIL_A);
+        Cookie cookieB = cadastrarEEntrar(EMAIL_B);
+
+        for (int i = 0; i < LimiteTentativasLogin.MAX_TENTATIVAS; i++) {
+            excluir(cookieA, comSenha("senha-errada-123")).andExpect(status().isUnauthorized());
+        }
+        excluir(cookieA, comSenha(SENHA_PADRAO_TESTE)).andExpect(status().isTooManyRequests());
+
+        excluir(cookieB, comSenha(SENHA_PADRAO_TESTE)).andExpect(status().isNoContent());
+    }
+
+    @Test
+    void sucessoZeraOContadorDaReautenticacao() throws Exception {
+        Cookie antigo = cadastrarEEntrar(EMAIL_A);
+        for (int i = 0; i < LimiteTentativasLogin.MAX_TENTATIVAS - 1; i++) {
+            excluir(antigo, comSenha("senha-errada-123")).andExpect(status().isUnauthorized());
+        }
+        MvcResult resposta = definirSenha(antigo, corpoDefinirSenha(SENHA_PADRAO_TESTE, null, "nova-senha-123"))
+                .andExpect(status().isNoContent()).andReturn();
+        String setCookie = resposta.getResponse().getHeader(HttpHeaders.SET_COOKIE);
+        Cookie novo = new Cookie("cc_session", setCookie.substring("cc_session=".length(), setCookie.indexOf(';')));
+
+        for (int i = 0; i < LimiteTentativasLogin.MAX_TENTATIVAS; i++) {
+            excluir(novo, comSenha("senha-errada-123")).andExpect(status().isUnauthorized());
+        }
+    }
+
+    // ---- senha só com espaços (SEC7) ----------------------------------------------------
+
+    @Test
+    void usuarioComSenhaDeOitoEspacosExcluiComNoContent() throws Exception {
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+        long a = idDe(EMAIL_A);
+        jdbc.update("update usuario set senha_hash = ? where id = ?", encoder.encode("        "), a);
+
+        excluir(cookie, comSenha("        ")).andExpect(status().isNoContent());
+
+        assertThat(contar("usuario", a)).isZero();
     }
 }

@@ -113,7 +113,7 @@ public class AuthController {
 
     @PutMapping(path = "/senha", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> definirSenha(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DefinirSenhaRequest req) {
-        Usuario usuario = auth.definirSenha(UsuarioLogado.de(jwt).id(), req.senhaAtual(), req.senha());
+        Usuario usuario = auth.definirSenha(UsuarioLogado.de(jwt).id(), req.senhaAtual(), req.credencialGoogle(), req.senha());
         // As sessões antigas deixam de valer; este aparelho segue logado com o cookie novo.
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, sessaoCookie.criar(tokens.emitir(usuario)).toString())

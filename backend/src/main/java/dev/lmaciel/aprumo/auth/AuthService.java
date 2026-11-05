@@ -1,6 +1,7 @@
 package dev.lmaciel.aprumo.auth;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +35,8 @@ public class AuthService {
     private final PasswordEncoder encoder;
     private final CategoriasPadrao categoriasPadrao;
     private final LimiteTentativasLogin limite;
+    /** Balde próprio das reautenticações por senha: nunca divide contador com o login. */
+    private final LimiteTentativasLogin limiteReautenticacao;
     private final GoogleTokenVerifier googleVerificador;
     private final LancamentoRepository lancamentos;
     private final CodigoEmailRepository codigos;
@@ -42,11 +45,12 @@ public class AuthService {
 
     public AuthService(UsuarioRepository usuarios, PasswordEncoder encoder,
             CategoriasPadrao categoriasPadrao, LimiteTentativasLogin limite, GoogleTokenVerifier googleVerificador,
-            LancamentoRepository lancamentos, CodigoEmailRepository codigos) {
+            LancamentoRepository lancamentos, CodigoEmailRepository codigos, Clock clock) {
         this.usuarios = usuarios;
         this.encoder = encoder;
         this.categoriasPadrao = categoriasPadrao;
         this.limite = limite;
+        this.limiteReautenticacao = new LimiteTentativasLogin(clock);
         this.googleVerificador = googleVerificador;
         this.lancamentos = lancamentos;
         this.codigos = codigos;
@@ -149,13 +153,26 @@ public class AuthService {
 
     /**
      * Define ou troca a senha e invalida as sessões antigas; quem chama deve emitir um token novo com a
-     * versão devolvida. Quem já tem senha precisa informar a senha atual; contas só com Google não.
+     * versão devolvida. Reautenticação obrigatória, conforme o tipo da conta:
+     * <ul>
+     * <li>com senha: {@code senhaAtual} (400 se errada, 429 se estourar o limite); {@code credencialGoogle}
+     * é ignorada;</li>
+     * <li>sem senha (só Google): {@code credencialGoogle} do mesmo Google da conta (401 se ausente, inválida
+     * ou de outro usuário); {@code senhaAtual} é ignorada. Sem isso uma sessão roubada criaria uma senha e
+     * a usaria para excluir a conta, contornando o Google.</li>
+     * </ul>
      */
     @Transactional
-    public Usuario definirSenha(long id, String senhaAtual, String senhaNova) {
+    public Usuario definirSenha(long id, String senhaAtual, String credencialGoogle, String senhaNova) {
         Usuario usuario = buscar(id);
-        if (usuario.temSenha() && !senhaAtualConfere(usuario, senhaAtual)) {
-            throw new RequisicaoInvalidaException("Senha atual incorreta.");
+        if (usuario.temSenha()) {
+            reservarTentativaDeReautenticacao(id);
+            if (!senhaAtualConfere(usuario, senhaAtual)) {
+                throw new RequisicaoInvalidaException("Senha atual incorreta.");
+            }
+            limiteReautenticacao.registrarSucesso(chaveReautenticacao(id));
+        } else {
+            exigirGoogleDoUsuario(usuario, credencialGoogle);
         }
         usuario.setSenhaHash(hashDaSenha(senhaNova));
         usuario.invalidarSessoes();
@@ -164,32 +181,60 @@ public class AuthService {
 
     /**
      * Exclui a conta e todos os dados dela. Exige reautenticação: exatamente um entre a senha e a credencial
-     * do Google (400 se vierem os dois ou nenhum; 401 se não conferem). Os lançamentos saem primeiro (a chave
-     * de {@code lancamento.item_id} é RESTRICT); os códigos de e-mail pendentes saem pelo e-mail, pois não têm
-     * chave para o usuário; o resto cai por {@code ON DELETE CASCADE}. {@code envio_email} guarda só HMAC de
-     * e-mail e IP para o limite de envio e fica como está.
+     * do Google (400 se vierem os dois ou nenhum; 401 se não conferem; 429 se a senha errar demais). Os
+     * lançamentos saem primeiro (a chave de {@code lancamento.item_id} é RESTRICT); os códigos de e-mail
+     * pendentes saem pelo e-mail, pois não têm chave para o usuário; o resto cai por {@code ON DELETE CASCADE}.
+     * {@code envio_email} guarda só HMAC de e-mail e IP para o limite de envio e fica como está.
      */
     @Transactional
     public void excluirConta(Long usuarioId, ExcluirContaRequest pedido) {
-        boolean comSenha = StringUtils.hasText(pedido.senha());
+        // A senha não passa por hasText: oito espaços é uma senha válida.
+        boolean comSenha = pedido.senha() != null && !pedido.senha().isEmpty();
         boolean comGoogle = StringUtils.hasText(pedido.credencialGoogle());
         if (comSenha == comGoogle) {
             throw new RequisicaoInvalidaException("Informe a senha ou a credencial do Google.");
         }
         Usuario usuario = buscar(usuarioId);
         if (comSenha) {
-            if (!usuario.temSenha() || !senhaAtualConfere(usuario, pedido.senha())) {
+            if (!usuario.temSenha()) {
                 throw new NaoAutenticadoException(SENHA_INCORRETA);
             }
-        } else {
-            IdentidadeGoogle identidade = verificarGoogle(pedido.credencialGoogle());
-            if (!identidade.sub().equals(usuario.getGoogleSub())) {
-                throw new NaoAutenticadoException(LOGIN_GOOGLE_INVALIDO);
+            reservarTentativaDeReautenticacao(usuarioId);
+            if (!senhaAtualConfere(usuario, pedido.senha())) {
+                throw new NaoAutenticadoException(SENHA_INCORRETA);
             }
+            limiteReautenticacao.registrarSucesso(chaveReautenticacao(usuarioId));
+        } else {
+            exigirGoogleDoUsuario(usuario, pedido.credencialGoogle());
         }
         lancamentos.apagarDoUsuario(usuarioId);
         codigos.apagarPorEmail(usuario.getEmail());
         usuarios.deleteById(usuarioId);
+    }
+
+    /** Confere o ID token e exige que o {@code sub} seja o do usuário; 401 se ausente, inválido ou de outro. */
+    private void exigirGoogleDoUsuario(Usuario usuario, String credencialGoogle) {
+        if (!StringUtils.hasText(credencialGoogle)) {
+            throw new NaoAutenticadoException(LOGIN_GOOGLE_INVALIDO);
+        }
+        IdentidadeGoogle identidade = verificarGoogle(credencialGoogle);
+        if (!identidade.sub().equals(usuario.getGoogleSub())) {
+            throw new NaoAutenticadoException(LOGIN_GOOGLE_INVALIDO);
+        }
+    }
+
+    /**
+     * Reserva uma tentativa de senha em ação sensível (excluir conta, trocar senha) antes do BCrypt. O balde é
+     * por usuário e separado do login: quem tem uma sessão roubada não consegue travar o login do dono.
+     */
+    private void reservarTentativaDeReautenticacao(long usuarioId) {
+        if (!limiteReautenticacao.reservarTentativa(chaveReautenticacao(usuarioId))) {
+            throw new MuitasTentativasException();
+        }
+    }
+
+    private static String chaveReautenticacao(long usuarioId) {
+        return "excluir:" + usuarioId;
     }
 
     private boolean senhaAtualConfere(Usuario usuario, String senhaAtual) {
