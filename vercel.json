@@ -9,8 +9,22 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://api.useaprumo.com.br/api/$1" },
     { "source": "/(.*)", "destination": { "service": "web" } }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://api.useaprumo.com.br/api/$1",
+      "transforms": [
+        {
+          "type": "request.headers",
+          "op": "set",
+          "target": { "key": "X-Aprumo-Origem" },
+          "args": "$ORIGEM_SEGREDO",
+          "env": ["ORIGEM_SEGREDO"]
+        }
+      ]
+    }
   ],
   "headers": [
     {

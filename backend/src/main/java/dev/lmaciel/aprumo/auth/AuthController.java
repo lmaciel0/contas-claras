@@ -1,7 +1,5 @@
 package dev.lmaciel.aprumo.auth;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,32 +30,31 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    // TEMPORARIO DIAG-IP: remover na Task 2
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-
     private final AuthService auth;
     private final FluxoEmailService fluxoEmail;
     private final TokenService tokens;
     private final SessaoCookie sessaoCookie;
+    private final IpDoCliente ipDoCliente;
 
     public AuthController(AuthService auth, FluxoEmailService fluxoEmail, TokenService tokens,
-            SessaoCookie sessaoCookie) {
+            SessaoCookie sessaoCookie, IpDoCliente ipDoCliente) {
         this.auth = auth;
         this.fluxoEmail = fluxoEmail;
         this.tokens = tokens;
         this.sessaoCookie = sessaoCookie;
+        this.ipDoCliente = ipDoCliente;
     }
 
     /** Sempre 202 sem corpo e sem cookie: a conta só nasce na confirmação por e-mail. */
     @PostMapping(path = "/cadastro", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> cadastro(@Valid @RequestBody CadastroRequest req, HttpServletRequest http) {
-        fluxoEmail.pedirCadastro(req.nome(), req.email(), http.getRemoteAddr());
+        fluxoEmail.pedirCadastro(req.nome(), req.email(), ipDoCliente.de(http));
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping(path = "/cadastro/reenviar", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> reenviarCadastro(@Valid @RequestBody EmailRequest req, HttpServletRequest http) {
-        fluxoEmail.reenviarCadastro(req.email(), http.getRemoteAddr());
+        fluxoEmail.reenviarCadastro(req.email(), ipDoCliente.de(http));
         return ResponseEntity.accepted().build();
     }
 
@@ -78,9 +75,7 @@ public class AuthController {
     /** Sempre 202: com ou sem conta, sai um e-mail. */
     @PostMapping(path = "/esqueci-senha", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> esqueciSenha(@Valid @RequestBody EmailRequest req, HttpServletRequest http) {
-        // TEMPORARIO DIAG-IP: remover na Task 2
-        log.info("DIAG-IP remoteAddr={} xff={}", http.getRemoteAddr(), http.getAttribute(DiagIpListener.ATRIBUTO));
-        fluxoEmail.esqueciSenha(req.email(), http.getRemoteAddr());
+        fluxoEmail.esqueciSenha(req.email(), ipDoCliente.de(http));
         return ResponseEntity.accepted().build();
     }
 

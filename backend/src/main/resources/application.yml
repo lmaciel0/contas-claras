@@ -50,4 +50,11 @@ app:
 server:
   # O Render (e qualquer PaaS) define PORT; sem ela, 8080.
   port: ${PORT:8080}
-  forward-headers-strategy: framework
+  # Sem forward-headers-strategy (padrão none) de propósito: a estratégia "framework" reescreveria getRemoteAddr()
+  # com o IP mais à esquerda do X-Forwarded-For, que o cliente forja. O XFF é lido cru em IpDoCliente.
+
+aprumo:
+  proxy:
+    # Segredo que o rewrite da Vercel envia em X-Aprumo-Origem. Com ele, IpDoCliente sabe que há um salto a mais
+    # (Vercel) antes da borda do Render. Vazio: nenhum pedido é tratado como vindo da Vercel.
+    segredo-origem: ${ORIGEM_SEGREDO:}
