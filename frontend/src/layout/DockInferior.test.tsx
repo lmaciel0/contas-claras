@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { DockInferior } from './DockInferior'
-import { ITENS_DOCK } from './itensMenu'
+import { GRUPOS_MENU, ITENS_DOCK } from './itensMenu'
 
 function renderizar(rota = '/') {
   return render(
@@ -19,8 +19,14 @@ describe('ITENS_DOCK', () => {
       { rotulo: 'Início', caminho: '/', exata: true },
       { rotulo: 'Tarefas', caminho: '/tarefas' },
       { rotulo: 'Notas', caminho: '/notas' },
-      { rotulo: 'Finanças', caminho: '/financeiro', comMes: true },
+      { rotulo: 'Finanças', caminho: '/financeiro', comMes: true, tambemAtivoEm: expect.any(Array) },
     ])
+  })
+
+  it('Finanças fica ativo em todo o grupo Financeiro do menu, sem repetir a lista de rotas à mão', () => {
+    const financeiro = GRUPOS_MENU.find((g) => g.titulo === 'Financeiro')?.itens.map((i) => i.caminho)
+    expect(financeiro).toEqual(['/financeiro', '/lancamentos', '/cartoes', '/categorias', '/relatorios'])
+    expect(ITENS_DOCK.find((i) => i.rotulo === 'Finanças')?.tambemAtivoEm).toEqual(financeiro)
   })
 })
 
@@ -65,6 +71,34 @@ describe('DockInferior', () => {
     renderizar('/notas')
     expect(screen.getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current')
     expect(screen.getByRole('link', { name: 'Notas' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it.each(['/financeiro', '/lancamentos', '/cartoes', '/categorias', '/relatorios'])(
+    'em %s Finanças fica ativo, com rótulo e aria-current, e os outros não',
+    (rota) => {
+      renderizar(`${rota}?ano=2026&mes=10`)
+      const financas = screen.getByRole('link', { name: 'Finanças' })
+      expect(financas).toHaveAttribute('aria-current', 'page')
+      expect(financas).toHaveTextContent('Finanças')
+      expect(financas).toHaveAttribute('href', '/financeiro?ano=2026&mes=10')
+      for (const nome of ['Início', 'Tarefas', 'Notas']) {
+        const link = screen.getByRole('link', { name: nome })
+        expect(link).not.toHaveAttribute('aria-current')
+        expect(link).toHaveTextContent('')
+      }
+    },
+  )
+
+  it('em /lancamentos/novo (subrota) Finanças continua ativo', () => {
+    renderizar('/lancamentos/novo?ano=2026&mes=10')
+    expect(screen.getByRole('link', { name: 'Finanças' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it.each(['/', '/tarefas', '/notas', '/projetos'])('em %s Finanças NÃO fica ativo', (rota) => {
+    renderizar(rota)
+    const financas = screen.getByRole('link', { name: 'Finanças' })
+    expect(financas).not.toHaveAttribute('aria-current')
+    expect(financas).toHaveTextContent('')
   })
 
   it('o link de Finanças leva ?ano=&mes= do mês em foco', () => {

@@ -6,6 +6,7 @@ import { useAuth } from './auth/useAuth'
 import { Carregando } from './componentes/Carregando'
 import { ErroDeCarregamento } from './componentes/ErroDeCarregamento'
 import { AppShell } from './layout/AppShell'
+import { useEhCelular } from './layout/useEhCelular'
 import { NaoEncontradaPage } from './paginas/NaoEncontradaPage'
 import { PreferenciasProvider } from './preferencias/PreferenciasContext'
 // As páginas saem do bundle principal: cada rota baixa o seu chunk só quando é aberta (o Tiptap, por exemplo, só vem
@@ -61,6 +62,7 @@ function Pagina({ children }: { children: ReactNode }) {
  */
 function MolduraDoUsuario() {
   const { usuario, sair } = useAuth()
+  const ehCelular = useEhCelular()
   const [saindo, setSaindo] = useState(false)
   const [erroAoSair, setErroAoSair] = useState<string | null>(null)
   // O ref vale já no clique; o estado só chega no próximo render, tarde para barrar um segundo clique rápido.
@@ -84,18 +86,24 @@ function MolduraDoUsuario() {
     <>
       <AppShell nomeUsuario={usuario?.nome} aoSair={aoSair} />
       {(saindo || erroAoSair !== null) && (
-        <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+        // Sem `pointer-events-none` o wrapper (largura total) cobriria a dock e o erro persistente bloquearia os toques.
+        // No celular sobe acima da dock inferior.
+        <div
+          className={`pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 ${
+            ehCelular ? 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))]' : 'bottom-6'
+          }`}
+        >
           {saindo ? (
             <p
               role="status"
-              className="m-0 rounded-xl border border-[var(--cor-linha)] bg-[var(--cor-card)] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
+              className="pointer-events-auto m-0 rounded-xl border border-[var(--cor-linha)] bg-[var(--cor-card)] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
             >
               Saindo…
             </p>
           ) : (
             <p
               role="alert"
-              className="m-0 rounded-xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
+              className="pointer-events-auto m-0 rounded-xl border border-[var(--cor-negativo)] bg-[var(--cor-erro-fundo)] px-4 py-2.5 text-sm text-[var(--cor-texto)] shadow-lg"
             >
               {erroAoSair}
             </p>
