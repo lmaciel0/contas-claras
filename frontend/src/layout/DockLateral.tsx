@@ -274,13 +274,22 @@ export function DockLateral({
 
         {/* Links adicionais quando expandida */}
         {!recolhida && (
-          <Link
-            to="/conta/senha"
-            onClick={aoNavegar}
-            className={`${linhaBase} text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)]`}
-          >
-            Alterar senha
-          </Link>
+          <>
+            <Link
+              to="/conta/senha"
+              onClick={aoNavegar}
+              className={`${linhaBase} text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)]`}
+            >
+              Alterar senha
+            </Link>
+            <Link
+              to="/privacidade"
+              onClick={aoNavegar}
+              className={`${linhaBase} text-xs text-[var(--cor-mutado)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)]`}
+            >
+              Política de Privacidade
+            </Link>
+          </>
         )}
 
         {/* Botão Sair */}

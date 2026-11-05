@@ -41,6 +41,17 @@ describe('DockLateral', () => {
     expect(screen.getByRole('link', { name: /visão geral/i })).toBeInTheDocument()
   })
 
+  it('tem link discreto para a politica de privacidade e fecha o menu ao navegar', () => {
+    const aoNavegar = vi.fn()
+    renderizar({ aoNavegar })
+    const link = screen.getByRole('link', { name: 'Política de Privacidade' })
+    expect(link).toHaveAttribute('href', '/privacidade')
+    expect(link).not.toHaveAttribute('target')
+    expect(link).toHaveClass('min-h-11')
+    fireEvent.click(link)
+    expect(aoNavegar).toHaveBeenCalledTimes(1)
+  })
+
   it('permite alternar entre modo expandido e modo recolhido', () => {
     renderizar()
     // Inicialmente expandida

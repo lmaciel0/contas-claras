@@ -31,12 +31,26 @@ export function PaginaLegal({ titulo, children }: { titulo: string; children: Re
   )
 }
 
-/** Link de texto das páginas legais (e-mail, ANPD): sublinhado e foco visível. */
-export function LinkLegal({ href, children }: { href: string; children: ReactNode }) {
+/**
+ * Link de texto das páginas legais (e-mail, ANPD) e dos avisos de ciência: sublinhado e foco visível. Com `novaAba`
+ * abre em outra aba sem perder a tela em curso (cadastro com dados já digitados).
+ */
+export function LinkLegal({
+  href,
+  children,
+  novaAba = false,
+  className = '',
+}: {
+  href: string
+  children: ReactNode
+  novaAba?: boolean
+  className?: string
+}) {
   return (
     <a
       href={href}
-      className="rounded-sm font-semibold text-[var(--cor-principal)] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
+      {...(novaAba ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className={`rounded-sm font-semibold text-[var(--cor-principal)] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)] ${className}`.trim()}
     >
       {children}
     </a>

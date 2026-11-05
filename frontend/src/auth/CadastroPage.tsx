@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
+import { AvisoCiencia } from '../legal/AvisosLegais'
 import { CampoTexto, classeBotaoPrimario, MensagemDeErro } from './CampoTexto'
 import { mensagemDoErro } from './mensagemDoErro'
 import { TelaAuth } from './TelaAuth'
@@ -64,6 +65,7 @@ export function CadastroPage() {
           onChange={(evento) => setEmail(evento.target.value)}
         />
         <MensagemDeErro texto={erro} />
+        <AvisoCiencia acao="criar a conta" testId="aviso-cadastro" />
         <button type="submit" disabled={enviando} className={classeBotaoPrimario}>
           {enviando ? 'Enviando…' : 'Criar conta'}
         </button>
