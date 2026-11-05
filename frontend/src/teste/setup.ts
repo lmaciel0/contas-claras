@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { servidor } from './servidor'
 
@@ -35,6 +35,12 @@ if (typeof Range.prototype.getBoundingClientRect !== 'function') Range.prototype
 if (typeof Range.prototype.getClientRects !== 'function') {
   Range.prototype.getClientRects = () => ({ length: 0, item: () => null, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList
 }
+
+/**
+ * As páginas são lazy: na primeira vez que um teste abre uma rota, o vitest ainda transforma o módulo (e as
+ * dependências pesadas, como o Tiptap). Com a suíte inteira em paralelo isso passa do 1 s padrão do `findBy*`/`waitFor`.
+ */
+configure({ asyncUtilTimeout: 5000 })
 
 beforeAll(() => servidor.listen({ onUnhandledFrame: 'error' }))
 
