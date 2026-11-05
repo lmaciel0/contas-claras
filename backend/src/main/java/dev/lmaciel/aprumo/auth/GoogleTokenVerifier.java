@@ -1,5 +1,6 @@
 package dev.lmaciel.aprumo.auth;
 
+import java.time.Instant;
 import java.util.Optional;
 
 /**
@@ -10,7 +11,11 @@ public interface GoogleTokenVerifier {
 
     Optional<IdentidadeGoogle> verificar(String idToken);
 
-    /** Dados do token já validado. {@code sub} é o identificador estável do usuário no Google. */
-    record IdentidadeGoogle(String sub, String email, boolean emailVerificado, String nome) {
+    /**
+     * Dados do token já validado. {@code sub} é o identificador estável do usuário no Google; {@code iat} é
+     * o instante de emissão do token (nulo se o token não o trouxer), usado para exigir token recente nas
+     * ações sensíveis.
+     */
+    record IdentidadeGoogle(String sub, String email, boolean emailVerificado, String nome, Instant iat) {
     }
 }

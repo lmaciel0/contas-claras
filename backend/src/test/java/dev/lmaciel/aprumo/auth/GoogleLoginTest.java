@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -53,7 +54,7 @@ class GoogleLoginTest extends IntegracaoTest {
 
     private void tokenValido(String sub, String email, boolean emailVerificado) {
         when(verificador.verificar(TOKEN))
-                .thenReturn(Optional.of(new IdentidadeGoogle(sub, email, emailVerificado, "Pessoa Google")));
+                .thenReturn(Optional.of(new IdentidadeGoogle(sub, email, emailVerificado, "Pessoa Google", Instant.EPOCH)));
     }
 
     private ResultActions google(String credential) throws Exception {
@@ -171,7 +172,7 @@ class GoogleLoginTest extends IntegracaoTest {
     @Test
     void google_sem_nome_no_token_usa_o_email_como_nome() throws Exception {
         when(verificador.verificar(TOKEN))
-                .thenReturn(Optional.of(new IdentidadeGoogle("sub-1", "dono@exemplo.com", true, null)));
+                .thenReturn(Optional.of(new IdentidadeGoogle("sub-1", "dono@exemplo.com", true, null, Instant.EPOCH)));
 
         google(TOKEN)
                 .andExpect(status().isOk())
@@ -181,7 +182,7 @@ class GoogleLoginTest extends IntegracaoTest {
     @Test
     void google_nome_maior_que_120_e_cortado_sem_falhar() throws Exception {
         when(verificador.verificar(TOKEN)).thenReturn(
-                Optional.of(new IdentidadeGoogle("sub-1", "dono@exemplo.com", true, "n".repeat(300))));
+                Optional.of(new IdentidadeGoogle("sub-1", "dono@exemplo.com", true, "n".repeat(300), Instant.EPOCH)));
 
         google(TOKEN).andExpect(status().isOk());
 

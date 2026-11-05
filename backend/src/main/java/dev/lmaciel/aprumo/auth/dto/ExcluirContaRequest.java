@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
  * {@code senha} para contas com senha; {@code credencialGoogle} é o ID token do Google, para contas só com Google.
  */
 public record ExcluirContaRequest(
-        @Size(max = 1024, message = "Senha incorreta.")
+        @Size(max = 1024, message = "Senha inválida.")
         String senha,
 
         @Size(max = 8192, message = "Login Google inválido.")

@@ -385,7 +385,7 @@ class AuthControllerTest extends IntegracaoTest {
         long id = inserirUsuarioSoGoogle("outra@exemplo.com", "sub-outra");
         Cookie cookie = new Cookie("cc_session", jwt(JWT_SECRET_TESTE, id, AGORA.plusSeconds(3600)));
         when(verificador.verificar("token-google-outra")).thenReturn(
-                Optional.of(new IdentidadeGoogle("sub-outra", "outra@exemplo.com", true, "Outra")));
+                Optional.of(new IdentidadeGoogle("sub-outra", "outra@exemplo.com", true, "Outra", AGORA)));
 
         MvcResult resposta = mvc.perform(put("/api/auth/senha").cookie(cookie)
                 .contentType(MediaType.APPLICATION_JSON)

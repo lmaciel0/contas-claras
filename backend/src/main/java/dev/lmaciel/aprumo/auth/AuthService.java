@@ -2,11 +2,14 @@ package dev.lmaciel.aprumo.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
 import dev.lmaciel.aprumo.auth.GoogleTokenVerifier.IdentidadeGoogle;
@@ -26,6 +29,8 @@ public class AuthService {
     static final String CREDENCIAIS_INVALIDAS = "E-mail ou senha inválidos.";
     static final String LOGIN_GOOGLE_INVALIDO = "Login Google inválido.";
     static final String SENHA_INCORRETA = "Senha incorreta.";
+    /** Idade máxima do ID token do Google aceito como reautenticação (excluir conta, definir senha). */
+    private static final Duration IDADE_MAXIMA_TOKEN_GOOGLE = Duration.ofMinutes(5);
     /** Tamanho da coluna {@code usuario.nome}. */
     private static final int MAX_NOME = 120;
     /** O BCrypt só considera os 72 primeiros bytes e o encoder recusa senhas maiores que isso. */
@@ -40,12 +45,16 @@ public class AuthService {
     private final GoogleTokenVerifier googleVerificador;
     private final LancamentoRepository lancamentos;
     private final CodigoEmailRepository codigos;
+    private final Clock clock;
+    /** Transação curta só dos deletes da exclusão; a reautenticação (BCrypt, rede) fica fora dela. */
+    private final TransactionTemplate tx;
     /** Hash de uma senha descartada: gasta o mesmo tempo de BCrypt quando o e-mail não existe. */
     private final String hashFalso;
 
     public AuthService(UsuarioRepository usuarios, PasswordEncoder encoder,
             CategoriasPadrao categoriasPadrao, LimiteTentativasLogin limite, GoogleTokenVerifier googleVerificador,
-            LancamentoRepository lancamentos, CodigoEmailRepository codigos, Clock clock) {
+            LancamentoRepository lancamentos, CodigoEmailRepository codigos, Clock clock,
+            TransactionTemplate tx) {
         this.usuarios = usuarios;
         this.encoder = encoder;
         this.categoriasPadrao = categoriasPadrao;
@@ -54,6 +63,8 @@ public class AuthService {
         this.googleVerificador = googleVerificador;
         this.lancamentos = lancamentos;
         this.codigos = codigos;
+        this.clock = clock;
+        this.tx = tx;
         this.hashFalso = encoder.encode("senha-descartada-sem-uso");
     }
 
@@ -97,8 +108,9 @@ public class AuthService {
     }
 
     /**
-     * Confere o ID token no Google. Fica fora de transação de propósito: é uma chamada de rede numa
-     * rota pública e não deve segurar uma conexão do banco enquanto espera.
+     * Confere o ID token no Google (chamada de rede). Este método em si não abre transação, então no login
+     * e em {@link #excluirConta} a espera não segura conexão do banco. Já {@link #definirSenha} roda
+     * inteiro em {@code @Transactional} e, para conta só Google, chama isto dentro dela.
      */
     public IdentidadeGoogle verificarGoogle(String credential) {
         IdentidadeGoogle identidade = googleVerificador.verificar(credential).orElse(null);
@@ -185,8 +197,10 @@ public class AuthService {
      * lançamentos saem primeiro (a chave de {@code lancamento.item_id} é RESTRICT); os códigos de e-mail
      * pendentes saem pelo e-mail, pois não têm chave para o usuário; o resto cai por {@code ON DELETE CASCADE}.
      * {@code envio_email} guarda só HMAC de e-mail e IP para o limite de envio e fica como está.
+     * <p>
+     * A reautenticação (BCrypt ou chamada ao Google) roda sem transação, para não segurar conexão do pool; só
+     * os deletes ficam numa transação curta. Se a conta sumir no meio (exclusão concorrente), responde 401.
      */
-    @Transactional
     public void excluirConta(Long usuarioId, ExcluirContaRequest pedido) {
         // A senha não passa por hasText: oito espaços é uma senha válida.
         boolean comSenha = pedido.senha() != null && !pedido.senha().isEmpty();
@@ -207,20 +221,33 @@ public class AuthService {
         } else {
             exigirGoogleDoUsuario(usuario, pedido.credencialGoogle());
         }
-        lancamentos.apagarDoUsuario(usuarioId);
-        codigos.apagarPorEmail(usuario.getEmail());
-        usuarios.deleteById(usuarioId);
+        String email = usuario.getEmail();
+        tx.executeWithoutResult(status -> {
+            if (!usuarios.existsById(usuarioId)) {
+                throw new NaoAutenticadoException();
+            }
+            lancamentos.apagarDoUsuario(usuarioId);
+            codigos.apagarPorEmail(email);
+            usuarios.deleteById(usuarioId);
+        });
     }
 
-    /** Confere o ID token e exige que o {@code sub} seja o do usuário; 401 se ausente, inválido ou de outro. */
+    /**
+     * Confere o ID token e exige que o {@code sub} seja o do usuário e que o token tenha sido emitido há no
+     * máximo 5 minutos (sem {@code iat}, vale como velho); 401 se ausente, inválido, velho ou de outro.
+     */
     private void exigirGoogleDoUsuario(Usuario usuario, String credencialGoogle) {
         if (!StringUtils.hasText(credencialGoogle)) {
             throw new NaoAutenticadoException(LOGIN_GOOGLE_INVALIDO);
         }
         IdentidadeGoogle identidade = verificarGoogle(credencialGoogle);
-        if (!identidade.sub().equals(usuario.getGoogleSub())) {
+        if (!identidade.sub().equals(usuario.getGoogleSub()) || !emitidoRecentemente(identidade.iat())) {
             throw new NaoAutenticadoException(LOGIN_GOOGLE_INVALIDO);
         }
+    }
+
+    private boolean emitidoRecentemente(Instant iat) {
+        return iat != null && Duration.between(iat, clock.instant()).compareTo(IDADE_MAXIMA_TOKEN_GOOGLE) <= 0;
     }
 
     /**

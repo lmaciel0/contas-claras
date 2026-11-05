@@ -3,6 +3,8 @@ package dev.lmaciel.aprumo.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,6 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +28,8 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -42,8 +50,11 @@ class ExclusaoContaIntegracaoTest extends IntegracaoTest {
     @Autowired
     JdbcTemplate jdbc;
 
-    @Autowired
+    @MockitoSpyBean
     PasswordEncoder encoder;
+
+    @Autowired
+    Clock clock;
 
     @BeforeEach
     void limparUsuarios() {
@@ -102,8 +113,13 @@ class ExclusaoContaIntegracaoTest extends IntegracaoTest {
     }
 
     private void tokenGoogle(String token, String sub, String email) {
-        when(verificador.verificar(token))
-                .thenReturn(Optional.of(new IdentidadeGoogle(sub, email, true, "Pessoa Google")));
+        tokenGoogle(token, sub, email, Duration.ZERO);
+    }
+
+    /** Token do Google emitido há {@code idade} (o {@code iat} vem do mesmo relógio do serviço). */
+    private void tokenGoogle(String token, String sub, String email, Duration idade) {
+        when(verificador.verificar(token)).thenReturn(Optional.of(
+                new IdentidadeGoogle(sub, email, true, "Pessoa Google", clock.instant().minus(idade))));
     }
 
     /** Entra pelo Google (cria a conta, sem senha) e devolve o cookie da sessão. */
@@ -451,5 +467,114 @@ class ExclusaoContaIntegracaoTest extends IntegracaoTest {
         excluir(cookie, comSenha("        ")).andExpect(status().isNoContent());
 
         assertThat(contar("usuario", a)).isZero();
+    }
+
+    // ---- token Google recente na reautenticação (SEC3) ------------------------------------
+
+    @Test
+    void excluirComTokenGoogleDe10MinutosRetorna401ENadaMuda() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        long a = popular(EMAIL_A);
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A, Duration.ofMinutes(10));
+
+        excluir(cookie, comGoogle(TOKEN_A))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.erro").value("Login Google inválido."));
+
+        assertThat(contar("usuario", a)).isEqualTo(1);
+        assertThat(contar("lancamento", a)).isEqualTo(1);
+        assertThat(contarCodigos(EMAIL_A)).isEqualTo(1);
+    }
+
+    @Test
+    void excluirComTokenGoogleDe1MinutoFunciona() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        long a = idDe(EMAIL_A);
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A, Duration.ofMinutes(1));
+
+        excluir(cookie, comGoogle(TOKEN_A)).andExpect(status().isNoContent());
+
+        assertThat(contar("usuario", a)).isZero();
+    }
+
+    @Test
+    void definirSenhaComTokenGoogleDe10MinutosRetorna401ENadaMuda() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        long a = idDe(EMAIL_A);
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A, Duration.ofMinutes(10));
+
+        definirSenha(cookie, corpoDefinirSenha(null, TOKEN_A, "senha-do-atacante-1"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.erro").value("Login Google inválido."))
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+
+        assertThat(senhaHashDe(a)).isNull();
+        mvc.perform(get("/api/auth/me").cookie(cookie)).andExpect(status().isOk());
+    }
+
+    @Test
+    void definirSenhaComTokenGoogleDe1MinutoFunciona() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A, Duration.ofMinutes(1));
+
+        definirSenha(cookie, corpoDefinirSenha(null, TOKEN_A, "primeira-senha-1"))
+                .andExpect(status().isNoContent());
+
+        assertThat(senhaHashDe(idDe(EMAIL_A))).startsWith("$2");
+    }
+
+    @Test
+    void loginNormalComGoogleNaoExigeTokenRecente() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A, Duration.ofMinutes(10));
+
+        entrarComGoogle(TOKEN_A);
+
+        assertThat(contar("usuario", idDe(EMAIL_A))).isEqualTo(1);
+    }
+
+    // ---- reautenticação fora da transação (SEC4) ------------------------------------------
+
+    @Test
+    void excluirComGoogleVerificaOTokenForaDeTransacao() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        List<Boolean> emTransacao = new ArrayList<>();
+        when(verificador.verificar(TOKEN_A)).thenAnswer(inv -> {
+            emTransacao.add(TransactionSynchronizationManager.isActualTransactionActive());
+            return Optional.of(new IdentidadeGoogle("sub-a", EMAIL_A, true, "Pessoa Google", clock.instant()));
+        });
+
+        excluir(cookie, comGoogle(TOKEN_A)).andExpect(status().isNoContent());
+
+        assertThat(emTransacao).containsExactly(false);
+    }
+
+    @Test
+    void excluirComSenhaFazOBcryptForaDeTransacao() throws Exception {
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+        List<Boolean> emTransacao = new ArrayList<>();
+        doAnswer(inv -> {
+            emTransacao.add(TransactionSynchronizationManager.isActualTransactionActive());
+            return inv.callRealMethod();
+        }).when(encoder).matches(anyString(), anyString());
+
+        excluir(cookie, comSenha(SENHA_PADRAO_TESTE)).andExpect(status().isNoContent());
+
+        assertThat(emTransacao).containsExactly(false);
+    }
+
+    // ---- validação do corpo -------------------------------------------------------------
+
+    @Test
+    void senhaGigantePedeSenhaInvalidaCom400() throws Exception {
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+
+        excluir(cookie, comSenha("x".repeat(1025)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Senha inválida."));
     }
 }
