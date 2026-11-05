@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Outlet, useNavigate } from 'react-router'
+import { useEffect, useRef, useState } from 'react'
+import { Outlet, useNavigate, useSearchParams } from 'react-router'
 import type { NotaResumoResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { CartaoNota } from './CartaoNota'
@@ -30,6 +30,29 @@ export function NotasPage() {
   const categorias = useCategoriasNota()
   const criar = useCriarNota()
   const fixar = useFixarNota()
+  const [params, setParams] = useSearchParams()
+  const { mutate: criarNota } = criar
+  const criandoPelaAcaoRapida = useRef(false)
+
+  // `?nova=1` vem do "Nova nota" da ação rápida do celular: cria a nota (sem categoria) e abre a edição, como o botão
+  // "Nova nota". O parâmetro sai da URL (replace) na hora, e a trava evita criar duas vezes (efeito duplo do StrictMode).
+  useEffect(() => {
+    if (params.get('nova') !== '1') {
+      criandoPelaAcaoRapida.current = false
+      return
+    }
+    if (criandoPelaAcaoRapida.current) return
+    criandoPelaAcaoRapida.current = true
+    setParams(
+      (atual) => {
+        const proximo = new URLSearchParams(atual)
+        proximo.delete('nova')
+        return proximo
+      },
+      { replace: true },
+    )
+    criarNota(null, { onSuccess: (nota) => navegar(`/notas/${nota.id}`) })
+  }, [params, setParams, criarNota, navegar])
 
   useEffect(() => {
     const relogio = setTimeout(() => setBuscaAplicada(busca.trim()), PAUSA_BUSCA_MS)

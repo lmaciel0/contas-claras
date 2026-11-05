@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Outlet } from 'react-router'
 import { AvisoServidor } from './AvisoServidor'
 import { HeaderPrincipal } from './HeaderPrincipal'
@@ -10,7 +10,9 @@ import { DockInferior } from './DockInferior'
 import { DockLateral } from './DockLateral'
 import { PreferenciasModal } from '../preferencias/PreferenciasModal'
 import { usePreferencias } from '../preferencias/usePreferencias'
-import { travarRolagem } from './travaRolagem'
+import { AcaoRapida } from './AcaoRapida'
+import { FundoDoDialogo } from './FundoDoDialogo'
+import { useDialogoModal } from './useDialogoModal'
 import { useEhCelular } from './useEhCelular'
 import { useEhDesktop } from './useEhDesktop'
 
@@ -22,10 +24,8 @@ interface Props {
 const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
 const botaoIcone = `grid min-h-11 min-w-11 shrink-0 cursor-pointer place-items-center rounded-xl text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] ${foco}`
 
-const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-
-/** Folga embaixo do `main` no celular: o último item e o botão "Salvar" ficam acima da dock flutuante e da área segura. */
-const FOLGA_DOCK = 'pb-[calc(6.5rem+env(safe-area-inset-bottom))]'
+/** Folga embaixo do `main` no celular: o último item e o botão "Salvar" ficam acima da dock flutuante, do botão "Criar" (que sobe até 8 rem) e da área segura. */
+const FOLGA_DOCK = 'pb-[calc(8.5rem+env(safe-area-inset-bottom))]'
 
 /**
  * No desktop o vão vem do `gap-3 p-3` do grid, então o `main` não tem padding; abaixo de 1280 px mantém o de antes e,
@@ -54,7 +54,6 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const [painelProdutividadeAberto, setPainelProdutividadeAberto] = useState(false)
   const [modalPreferenciasAberta, setModalPreferenciasAberta] = useState(false)
   const botao = useRef<HTMLButtonElement>(null)
-  const painel = useRef<HTMLDivElement>(null)
   const principal = useRef<HTMLElement>(null)
   const painelEstavaAberto = useRef(false)
   const eraCelular = useRef(ehCelular)
@@ -81,23 +80,7 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
     botao.current?.focus()
   }, [])
 
-  useEffect(() => {
-    if (!painelAberto) {
-      return
-    }
-    painel.current?.querySelector<HTMLElement>(FOCAVEIS)?.focus()
-    const soltarRolagem = travarRolagem()
-    const fecharComEsc = (evento: globalThis.KeyboardEvent) => {
-      if (evento.key === 'Escape') {
-        fechar()
-      }
-    }
-    document.addEventListener('keydown', fecharComEsc)
-    return () => {
-      soltarRolagem()
-      document.removeEventListener('keydown', fecharComEsc)
-    }
-  }, [painelAberto, fechar])
+  const { painel, prenderFoco } = useDialogoModal(painelAberto, fechar)
 
   // Painel aberto que some porque o layout mudou (virou desktop ou cruzou o limite de celular): o foco (que estava nele)
   // iria para o body; leva ao conteúdo.
@@ -145,23 +128,6 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
 
   const paleta = useMemo(() => ({ abrir: () => setPaletaAberta(true) }), [])
   const fecharPaleta = useCallback(() => setPaletaAberta(false), [])
-
-  /** Mantém o Tab dentro do painel enquanto ele está aberto. */
-  const prenderFoco = (evento: KeyboardEvent<HTMLDivElement>) => {
-    if (evento.key !== 'Tab' || !painel.current) {
-      return
-    }
-    const itens = painel.current.querySelectorAll<HTMLElement>(FOCAVEIS)
-    const primeiro = itens[0]
-    const ultimo = itens[itens.length - 1]
-    if (evento.shiftKey && document.activeElement === primeiro) {
-      evento.preventDefault()
-      ultimo?.focus()
-    } else if (!evento.shiftKey && document.activeElement === ultimo) {
-      evento.preventDefault()
-      primeiro?.focus()
-    }
-  }
 
   const barraSuperior = (
     <header className="superficie sticky top-3 z-30 m-3 flex items-center gap-2 rounded-2xl px-3 py-2">
@@ -263,15 +229,11 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
         </div>
 
         {ehCelular && <DockInferior />}
+        {ehCelular && <AcaoRapida />}
 
         {painelAberto && (
           <div className="fixed inset-0 z-40">
-            <div
-              data-testid="fundo-do-menu"
-              aria-hidden="true"
-              onClick={fechar}
-              className="menu-fundo absolute inset-0 bg-[var(--cor-texto)]/50"
-            />
+            <FundoDoDialogo testId="fundo-do-menu" aoClicar={fechar} />
             <div
               ref={painel}
               id={idPainel}

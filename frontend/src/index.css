@@ -318,9 +318,26 @@ body {
   animation: menu-fundo-entra 200ms ease-out;
 }
 
+/* Folha "Criar" do celular: sobe de baixo (o fundo reaproveita .menu-fundo). */
+@keyframes folha-painel-entra {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.folha-painel {
+  animation: folha-painel-entra 200ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .menu-painel,
-  .menu-fundo {
+  .menu-fundo,
+  .folha-painel {
     animation: none;
   }
 }

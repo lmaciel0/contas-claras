@@ -515,3 +515,43 @@ describe('aviso de servidor acordando', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 })
+
+describe('AppShell: ação rápida', () => {
+  it('o botão "Criar" aparece no celular', () => {
+    definirLargura(390)
+    renderizar()
+    expect(screen.getByRole('button', { name: 'Criar' })).toBeInTheDocument()
+  })
+
+  it.each([768, 1280])('em %i px não há botão "Criar"', (largura) => {
+    definirLargura(largura)
+    renderizar()
+    expect(screen.queryByRole('button', { name: 'Criar' })).not.toBeInTheDocument()
+  })
+
+  it('a folha do "Criar" não interfere no menu: os dois diálogos abrem e fecham separados', async () => {
+    definirLargura(390)
+    renderizar()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
+    expect(screen.getByRole('dialog', { name: 'Criar' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Criar' })).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+    expect(screen.getByRole('dialog', { name: 'Menu' })).toBeInTheDocument()
+  })
+
+  it('crescer para 768 px com a folha aberta some com ela e solta a rolagem do corpo', async () => {
+    definirLargura(390)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
+    expect(document.body.style.overflow).toBe('hidden')
+
+    act(() => definirLargura(768))
+
+    expect(screen.queryByRole('dialog', { name: 'Criar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Criar' })).not.toBeInTheDocument()
+    expect(document.body.style.overflow).not.toBe('hidden')
+  })
+})

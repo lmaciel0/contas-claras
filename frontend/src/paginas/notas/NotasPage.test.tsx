@@ -24,14 +24,14 @@ function api(notas: NotaResumoResponse[] | (() => NotaResumoResponse[]), categor
   return consultas
 }
 
-function renderizar() {
+function renderizar(rota = '/notas') {
   return renderComApp(
     <Routes>
       <Route path="/notas" element={<NotasPage />}>
         <Route path=":id" element={<p>Editando a nota</p>} />
       </Route>
     </Routes>,
-    '/notas',
+    rota,
   )
 }
 
@@ -174,5 +174,37 @@ describe('NotasPage', () => {
     )
     renderizar()
     expect(await within(await screen.findByRole('alert')).findByText('Falha no servidor.')).toBeInTheDocument()
+  })
+})
+
+describe('NotasPage com ?nova=1 (ação rápida do celular)', () => {
+  it('cria a nota uma única vez e abre a edição', async () => {
+    api([])
+    const corpos: unknown[] = []
+    servidor.use(
+      http.post('/api/notas', async ({ request }) => {
+        corpos.push(await request.json())
+        return HttpResponse.json({ id: 42, titulo: '', conteudo: { type: 'doc' } }, { status: 201 })
+      }),
+    )
+    renderizar('/notas?nova=1')
+
+    expect(await screen.findByText('Editando a nota')).toBeInTheDocument()
+    expect(corpos).toEqual([{ categoriaId: null }])
+  })
+
+  it('sem o parâmetro não cria nada', async () => {
+    api([])
+    let criadas = 0
+    servidor.use(
+      http.post('/api/notas', () => {
+        criadas += 1
+        return HttpResponse.json({ id: 1, titulo: '', conteudo: { type: 'doc' } }, { status: 201 })
+      }),
+    )
+    renderizar('/notas')
+
+    await screen.findByText('Nenhuma nota ainda. Crie a primeira.')
+    expect(criadas).toBe(0)
   })
 })
