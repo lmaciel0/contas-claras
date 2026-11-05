@@ -36,11 +36,15 @@ export function PrivacidadePage() {
             e-mail e nome junto com um código e um link de confirmação.
           </li>
           <li>
-            <strong>Segurança e abuso:</strong> para limitar envios em excesso, guardamos apenas um código calculado
-            (HMAC) a partir do seu IP e do seu e-mail. O IP não é gravado em texto aberto.
+            <strong>Segurança e abuso:</strong> para limitar envios em excesso, o Aprumo guarda apenas um código
+            calculado (HMAC) a partir do seu IP e do seu e-mail. O Aprumo não grava o IP em texto aberto.
           </li>
         </ul>
-        <p>Não coletamos dados de localização, contatos, câmera ou microfone.</p>
+        <p>
+          Os provedores que hospedam o Aprumo (Render e Vercel, seção 4) registram o IP e dados técnicos de acesso nos
+          próprios logs, como parte da operação deles. Não coletamos dados de localização, contatos, câmera ou
+          microfone.
+        </p>
       </section>
 
       <section aria-labelledby="finalidade-e-base-legal">
@@ -92,8 +96,8 @@ export function PrivacidadePage() {
         <h2 id="cookies">5. Cookies e armazenamento local</h2>
         <ul>
           <li>
-            <strong>Cookie de sessão (cc_session):</strong> mantém você logado. Vale só enquanto a sessão durar (até 24
-            horas), não é acessível por scripts (HttpOnly), só trafega por conexão segura (Secure) e só é enviado ao
+            <strong>Cookie de sessão (cc_session):</strong> mantém você logado. Expira em até 24 horas ou ao sair, e
+            persiste se você fechar o navegador antes disso. Não é acessível por scripts (HttpOnly), só trafega por conexão segura (Secure) e só é enviado ao
             próprio Aprumo (SameSite=Strict).
           </li>
           <li>
@@ -113,14 +117,17 @@ export function PrivacidadePage() {
             qualquer momento (veja a seção 8).
           </li>
           <li>
-            <strong>Códigos e links de verificação:</strong> valem por 15 minutos, com no máximo 5 tentativas.
+            <strong>Códigos e links de verificação (com seu e-mail e nome):</strong> expiram em 15 minutos, com no máximo
+            5 tentativas. O registro vencido é apagado no uso seguinte do serviço de verificação, e não em um horário
+            fixo.
           </li>
           <li>
-            <strong>Código de limite de envios (HMAC do IP e do e-mail):</strong> até 24 horas.
+            <strong>Código de limite de envios (HMAC do IP e do e-mail):</strong> vale por 24 horas e é apagado no
+            primeiro pedido feito depois de 24 horas, e não em um horário fixo.
           </li>
           <li>
-            <strong>Cópias de segurança e registros (logs) dos provedores:</strong> ficam sob o prazo definido por cada
-            provedor, que não é controlado pelo Aprumo.
+            <strong>Cópias de segurança e registros (logs) dos provedores, incluindo IP e dados técnicos de acesso nos
+            próprios logs:</strong> ficam sob o prazo definido por cada provedor, que não é controlado pelo Aprumo.
           </li>
         </ul>
       </section>
@@ -129,7 +136,7 @@ export function PrivacidadePage() {
         <h2 id="seguranca">7. Segurança</h2>
         <p>
           Adotamos medidas técnicas para proteger seus dados: a senha é guardada só como hash, a sessão usa cookie
-          protegido, as conexões são criptografadas e o IP não é gravado em texto aberto. Nenhum sistema é totalmente
+          protegido, as conexões são criptografadas e o Aprumo não grava o IP em texto aberto. Nenhum sistema é totalmente
           imune a falhas. Se houver um incidente de segurança que possa causar risco relevante a você, avisaremos você e
           a Autoridade Nacional de Proteção de Dados (ANPD), como a lei exige.
         </p>

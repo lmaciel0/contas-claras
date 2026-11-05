@@ -52,6 +52,34 @@ describe('PrivacidadePage', () => {
     }
   })
 
+  it('cita_transferencia_internacional_maioridade_e_retencao_real', () => {
+    const { container } = renderizar()
+    const texto = container.textContent ?? ''
+
+    expect(texto).toContain('art. 33')
+    expect(texto).toContain('18 anos')
+    expect(texto).toContain('primeiro pedido feito depois de 24 horas')
+    expect(texto).toContain('apagado no uso seguinte')
+  })
+
+  it('nao_afirma_retencao_que_o_backend_nao_cumpre', () => {
+    const { container } = renderizar()
+    const texto = container.textContent ?? ''
+
+    expect(texto).not.toContain('HMAC do IP e do e-mail):</strong> até 24 horas')
+    expect(texto).not.toContain('Vale só enquanto a sessão durar')
+    expect(texto).toContain('até 24 horas ou ao sair')
+  })
+
+  it('diz_que_o_aprumo_nao_grava_o_ip_e_que_os_provedores_guardam_logs', () => {
+    const { container } = renderizar()
+    const texto = container.textContent ?? ''
+
+    expect(texto).toContain('O Aprumo não grava o IP em texto aberto')
+    expect(texto).not.toContain('e o IP não é gravado em texto aberto')
+    expect(texto).toContain('IP e dados técnicos de acesso nos próprios logs')
+  })
+
   it('nao_tem_link_com_href_vazio', () => {
     renderizar()
 

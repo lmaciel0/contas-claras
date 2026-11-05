@@ -31,27 +31,34 @@ export function PaginaLegal({ titulo, children }: { titulo: string; children: Re
   )
 }
 
+const CLASSE_LINK_LEGAL =
+  'rounded-sm font-semibold text-[var(--cor-principal)] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
+
 /**
  * Link de texto das páginas legais (e-mail, ANPD) e dos avisos de ciência: sublinhado e foco visível. Com `novaAba`
- * abre em outra aba sem perder a tela em curso (cadastro com dados já digitados).
+ * abre em outra aba sem perder a tela em curso (cadastro com dados já digitados). Com `to` vira link interno do router
+ * (sem recarregar a página); sem `to`, use `href`.
  */
-export function LinkLegal({
-  href,
-  children,
-  novaAba = false,
-  className = '',
-}: {
-  href: string
+export function LinkLegal(props: {
+  href?: string
+  to?: string
   children: ReactNode
   novaAba?: boolean
   className?: string
 }) {
+  const { href, to, children, novaAba = false, className = '' } = props
+  const classes = `${CLASSE_LINK_LEGAL} ${className}`.trim()
+
+  if (to !== undefined) {
+    return (
+      <Link to={to} className={classes}>
+        {children}
+      </Link>
+    )
+  }
+
   return (
-    <a
-      href={href}
-      {...(novaAba ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      className={`rounded-sm font-semibold text-[var(--cor-principal)] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)] ${className}`.trim()}
-    >
+    <a href={href} {...(novaAba ? { target: '_blank', rel: 'noopener noreferrer' } : {})} className={classes}>
       {children}
     </a>
   )

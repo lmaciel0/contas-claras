@@ -1,9 +1,5 @@
-import { Link } from 'react-router'
 import { LinkLegal, PaginaLegal } from './PaginaLegal'
 import { CONTATO_EMAIL } from './responsavel'
-
-const CLASSE_LINK =
-  'rounded-sm font-semibold text-[var(--cor-principal)] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
 
 /** Termos de Uso, página pública em `/termos`. Não é parecer jurídico. */
 export function TermosPage() {
@@ -48,9 +44,7 @@ export function TermosPage() {
           Os dados que você registra no Aprumo (lançamentos, tarefas, notas, projetos e o restante) continuam sendo
           seus. Você responde pelo que registra e não deve guardar conteúdo ilegal ou que viole direitos de outras
           pessoas. Usamos esse conteúdo só para fazer o serviço funcionar, como explica a{' '}
-          <Link to="/privacidade" className={CLASSE_LINK}>
-            Política de Privacidade
-          </Link>
+          <LinkLegal to="/privacidade">Política de Privacidade</LinkLegal>
           .
         </p>
       </section>
