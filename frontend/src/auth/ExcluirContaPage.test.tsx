@@ -186,4 +186,63 @@ describe('ExcluirContaPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/conta Google/i)
     expect(screen.getByRole('heading', { level: 1, name: 'Excluir conta' })).toBeInTheDocument()
   })
+
+  it('sessao_vencida_401_nao_autenticado_leva_ao_login_sem_voltar', async () => {
+    comSessao()
+    servidor.use(
+      http.delete('/api/auth/conta', () => HttpResponse.json({ erro: 'Não autenticado.' }, { status: 401 })),
+    )
+    renderComBrowserRouter(
+      <AuthProvider>
+        <App />
+      </AuthProvider>,
+      '/conta/excluir',
+    )
+    await userEvent.type(await screen.findByLabelText('Senha'), 'minha-senha')
+    await userEvent.click(caixaDeCiencia())
+
+    await userEvent.click(botaoExcluir())
+
+    expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/login')
+    expect(window.location.search).toBe('')
+  })
+
+  it('muitas_tentativas_429_mostra_a_mensagem_do_servidor_sem_deslogar', async () => {
+    comSessao()
+    servidor.use(
+      http.delete('/api/auth/conta', () =>
+        HttpResponse.json({ erro: 'Muitas tentativas. Tente de novo mais tarde.' }, { status: 429 }),
+      ),
+    )
+    renderizar()
+    await userEvent.type(await screen.findByLabelText('Senha'), 'errada')
+    await userEvent.click(caixaDeCiencia())
+
+    await userEvent.click(botaoExcluir())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Muitas tentativas. Tente de novo mais tarde.')
+    expect(screen.getByRole('heading', { level: 1, name: 'Excluir conta' })).toBeInTheDocument()
+  })
+
+  it('mexer_na_senha_ou_na_ciencia_apaga_a_mensagem_de_erro_da_tentativa_anterior', async () => {
+    comSessao()
+    servidor.use(
+      http.delete('/api/auth/conta', () => HttpResponse.json({ erro: 'Senha incorreta.' }, { status: 401 })),
+    )
+    renderizar()
+    await userEvent.type(await screen.findByLabelText('Senha'), 'errada')
+    await userEvent.click(caixaDeCiencia())
+    await userEvent.click(botaoExcluir())
+    expect(await screen.findByRole('alert')).toHaveTextContent('Senha incorreta.')
+
+    await userEvent.type(screen.getByLabelText('Senha'), 'x')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+
+    await userEvent.click(botaoExcluir())
+    expect(await screen.findByRole('alert')).toHaveTextContent('Senha incorreta.')
+
+    await userEvent.click(caixaDeCiencia())
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
 })

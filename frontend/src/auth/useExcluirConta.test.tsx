@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { Route, Routes, useLocation } from 'react-router'
@@ -93,5 +93,19 @@ describe('useExcluirConta', () => {
     expect(screen.getByTestId('usuario')).toHaveTextContent('Ana')
     expect(screen.getByTestId('cache')).toHaveTextContent('dados')
     expect(screen.queryByTestId('login')).not.toBeInTheDocument()
+  })
+
+  it('em_401_nao_autenticado_a_sessao_e_perdida_e_limpa', async () => {
+    comSessao()
+    servidor.use(
+      http.delete('/api/auth/conta', () => HttpResponse.json({ erro: 'Não autenticado.' }, { status: 401 })),
+    )
+    renderizar()
+    expect(await screen.findByTestId('usuario')).toHaveTextContent('Ana')
+
+    await userEvent.click(screen.getByRole('button', { name: 'excluir' }))
+
+    // Sem `RotaProtegida` neste cenário, o que prova a sessão perdida é o usuário zerado.
+    await waitFor(() => expect(screen.getByTestId('usuario')).toHaveTextContent('ninguem'))
   })
 })

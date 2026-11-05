@@ -5,6 +5,7 @@ import { ErroApi } from '../api/cliente'
 import { BotaoGoogle } from './BotaoGoogle'
 import { CampoTexto, classeBotaoSecundario, MensagemDeErro } from './CampoTexto'
 import { mensagemDoErro } from './mensagemDoErro'
+import { ehSessaoPerdida } from './sessaoPerdida'
 import { useAuth } from './useAuth'
 import { useExcluirConta } from './useExcluirConta'
 
@@ -32,7 +33,7 @@ export function ExcluirContaPage() {
   const excluindo = excluir.isPending
 
   const erroDaApi =
-    excluir.error === null
+    excluir.error === null || ehSessaoPerdida(excluir.error)
       ? null
       : excluir.error instanceof ErroApi && excluir.error.status === 401
         ? temSenha
@@ -86,6 +87,7 @@ export function ExcluirContaPage() {
             onChange={(evento) => {
               setCiente(evento.target.checked)
               setErroLocal(null)
+              excluir.reset()
             }}
             className="size-5 shrink-0 cursor-pointer accent-[var(--cor-principal)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
           />
@@ -102,6 +104,7 @@ export function ExcluirContaPage() {
             onChange={(evento) => {
               setSenha(evento.target.value)
               setErroLocal(null)
+              excluir.reset()
             }}
           />
         ) : (

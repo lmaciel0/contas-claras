@@ -9,6 +9,9 @@ import { useAuth } from './useAuth'
  */
 const SEM_VOLTAR = ['/conta/excluir']
 
+/** Sem barras finais e em minúsculas: o roteador aceita `/conta/excluir/` e `/Conta/Excluir`, então a comparação também. */
+const normalizar = (caminho: string) => caminho.replace(/\/+$/, '').toLowerCase()
+
 /**
  * Rota-layout: só mostra as rotas filhas com sessão. Sem usuário vai para `/login?voltar=<rota>` (só `/login` nas
  * rotas de `SEM_VOLTAR`); é o único ponto que reage à sessão perdida (inclusive por 401 no meio do uso).
@@ -21,7 +24,7 @@ export function RotaProtegida() {
     return <TelaCarregando />
   }
   if (usuario === null) {
-    const destino = SEM_VOLTAR.includes(pathname) ? '/login' : `/login?voltar=${encodeURIComponent(pathname + search)}`
+    const destino = SEM_VOLTAR.includes(normalizar(pathname)) ? '/login' : `/login?voltar=${encodeURIComponent(pathname + search)}`
     return <Navigate to={destino} replace />
   }
   return <Outlet />

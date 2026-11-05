@@ -45,8 +45,10 @@ export interface GoogleLoginRequest {
   credential: string
 }
 export interface DefinirSenhaRequest {
-  /** Obrigatória para quem já tem senha; contas só com Google definem a primeira sem ela. */
+  /** Conta com senha: obrigatória (a API responde 400 se faltar ou errar). */
   senhaAtual?: string
+  /** Conta só com Google: ID token novo do Google, que reautentica a definição da primeira senha. */
+  credencialGoogle?: string
   senha: string
 }
 

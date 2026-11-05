@@ -24,6 +24,8 @@ function renderizar() {
 }
 
 async function clicarEmSair() {
+  // Espera a página (lazy) sair do "Carregando…": senão o `role="status"` dela concorre com o "Saindo…".
+  await screen.findByRole('heading', { level: 1, name: /senha/i })
   await userEvent.click(await screen.findByRole('button', { name: 'Sair' }))
 }
 
