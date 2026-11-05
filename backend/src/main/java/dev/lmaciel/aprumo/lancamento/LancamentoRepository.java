@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -103,4 +104,12 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
     boolean existsByItemCategoriaId(long categoriaId);
 
     boolean existsByItemCategoriaUsuarioId(long usuarioId);
+
+    /**
+     * Apaga todos os lançamentos do usuário (os de itens das categorias dele) e devolve quantos eram. Exige
+     * transação ativa. Existe porque a chave de {@code lancamento.item_id} é RESTRICT.
+     */
+    @Modifying
+    @Query("delete from Lancamento l where l.item.id in (select i.id from Item i where i.categoria.usuario.id = :usuarioId)")
+    int apagarDoUsuario(@Param("usuarioId") long usuarioId);
 }

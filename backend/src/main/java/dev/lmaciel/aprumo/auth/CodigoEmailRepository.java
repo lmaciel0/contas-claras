@@ -31,4 +31,9 @@ public interface CodigoEmailRepository extends JpaRepository<CodigoEmail, Long> 
     @Modifying
     @Query("delete from CodigoEmail c where c.expiraEm < :limite")
     void deleteByExpiraEmBefore(@Param("limite") Instant limite);
+
+    /** Apaga os códigos pendentes do e-mail (cadastro e senha). Exige transação ativa. */
+    @Modifying
+    @Query("delete from CodigoEmail c where c.email = :email")
+    int apagarPorEmail(@Param("email") String email);
 }

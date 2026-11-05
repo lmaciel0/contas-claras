@@ -9,11 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import dev.lmaciel.aprumo.auth.GoogleTokenVerifier.IdentidadeGoogle;
+import dev.lmaciel.aprumo.auth.dto.ExcluirContaRequest;
 import dev.lmaciel.aprumo.categoria.CategoriasPadrao;
 import dev.lmaciel.aprumo.comum.ConflitoException;
 import dev.lmaciel.aprumo.comum.MuitasTentativasException;
 import dev.lmaciel.aprumo.comum.NaoAutenticadoException;
 import dev.lmaciel.aprumo.comum.RequisicaoInvalidaException;
+import dev.lmaciel.aprumo.lancamento.LancamentoRepository;
 import dev.lmaciel.aprumo.usuario.Usuario;
 import dev.lmaciel.aprumo.usuario.UsuarioRepository;
 
@@ -22,6 +24,7 @@ public class AuthService {
 
     static final String CREDENCIAIS_INVALIDAS = "E-mail ou senha inválidos.";
     static final String LOGIN_GOOGLE_INVALIDO = "Login Google inválido.";
+    static final String SENHA_INCORRETA = "Senha incorreta.";
     /** Tamanho da coluna {@code usuario.nome}. */
     private static final int MAX_NOME = 120;
     /** O BCrypt só considera os 72 primeiros bytes e o encoder recusa senhas maiores que isso. */
@@ -32,16 +35,21 @@ public class AuthService {
     private final CategoriasPadrao categoriasPadrao;
     private final LimiteTentativasLogin limite;
     private final GoogleTokenVerifier googleVerificador;
+    private final LancamentoRepository lancamentos;
+    private final CodigoEmailRepository codigos;
     /** Hash de uma senha descartada: gasta o mesmo tempo de BCrypt quando o e-mail não existe. */
     private final String hashFalso;
 
     public AuthService(UsuarioRepository usuarios, PasswordEncoder encoder,
-            CategoriasPadrao categoriasPadrao, LimiteTentativasLogin limite, GoogleTokenVerifier googleVerificador) {
+            CategoriasPadrao categoriasPadrao, LimiteTentativasLogin limite, GoogleTokenVerifier googleVerificador,
+            LancamentoRepository lancamentos, CodigoEmailRepository codigos) {
         this.usuarios = usuarios;
         this.encoder = encoder;
         this.categoriasPadrao = categoriasPadrao;
         this.limite = limite;
         this.googleVerificador = googleVerificador;
+        this.lancamentos = lancamentos;
+        this.codigos = codigos;
         this.hashFalso = encoder.encode("senha-descartada-sem-uso");
     }
 
@@ -152,6 +160,36 @@ public class AuthService {
         usuario.setSenhaHash(hashDaSenha(senhaNova));
         usuario.invalidarSessoes();
         return usuario;
+    }
+
+    /**
+     * Exclui a conta e todos os dados dela. Exige reautenticação: exatamente um entre a senha e a credencial
+     * do Google (400 se vierem os dois ou nenhum; 401 se não conferem). Os lançamentos saem primeiro (a chave
+     * de {@code lancamento.item_id} é RESTRICT); os códigos de e-mail pendentes saem pelo e-mail, pois não têm
+     * chave para o usuário; o resto cai por {@code ON DELETE CASCADE}. {@code envio_email} guarda só HMAC de
+     * e-mail e IP para o limite de envio e fica como está.
+     */
+    @Transactional
+    public void excluirConta(Long usuarioId, ExcluirContaRequest pedido) {
+        boolean comSenha = StringUtils.hasText(pedido.senha());
+        boolean comGoogle = StringUtils.hasText(pedido.credencialGoogle());
+        if (comSenha == comGoogle) {
+            throw new RequisicaoInvalidaException("Informe a senha ou a credencial do Google.");
+        }
+        Usuario usuario = buscar(usuarioId);
+        if (comSenha) {
+            if (!usuario.temSenha() || !senhaAtualConfere(usuario, pedido.senha())) {
+                throw new NaoAutenticadoException(SENHA_INCORRETA);
+            }
+        } else {
+            IdentidadeGoogle identidade = verificarGoogle(pedido.credencialGoogle());
+            if (!identidade.sub().equals(usuario.getGoogleSub())) {
+                throw new NaoAutenticadoException(LOGIN_GOOGLE_INVALIDO);
+            }
+        }
+        lancamentos.apagarDoUsuario(usuarioId);
+        codigos.apagarPorEmail(usuario.getEmail());
+        usuarios.deleteById(usuarioId);
     }
 
     private boolean senhaAtualConfere(Usuario usuario, String senhaAtual) {
