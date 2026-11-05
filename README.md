@@ -2,7 +2,7 @@
 
 Controle financeiro pessoal que substitui uma planilha anual de Excel. Ao abrir, responde duas perguntas: **quanto sobra no mês** e **onde estou gastando mais**. Funciona no computador e no celular, com lançamento rápido, contas previstas e pagas, vencimentos, limites de cartão e uma visão anual no formato da planilha.
 
-**App:** https://app.useaprumo.com.br (cadastro restrito a e-mails liberados)
+**App:** https://app.useaprumo.com.br (cadastro aberto, com confirmação por e-mail)
 
 | Computador | Celular |
 |---|---|
@@ -19,7 +19,7 @@ Controle financeiro pessoal que substitui uma planilha anual de Excel. Ao abrir,
 - **Cartões:** fatura do mês contra o limite de cada cartão, com faixas verde/amarelo/vermelho.
 - **Categorias:** criar, renomear, reordenar, arquivar itens, marcar item como cartão e definir limite.
 - **Relatórios:** ano inteiro em itens × meses, totais e diferença de caixa, células pagas em verde.
-- **Conta:** login por e-mail/senha e Google, cadastro só para e-mails liberados, dados isolados por usuário.
+- **Conta:** login por e-mail/senha e Google, cadastro aberto com e-mail confirmado, dados isolados por usuário.
 - **Importação:** leitura única da planilha anual (`.xlsx`) para a conta do dono, preservando o status pago (texto verde) e o dia de vencimento `(NN)` dos nomes.
 
 ## Menu lateral e tema
