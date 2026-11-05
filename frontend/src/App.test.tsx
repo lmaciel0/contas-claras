@@ -185,3 +185,21 @@ describe('rota pública de privacidade', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu principal' })).not.toBeInTheDocument()
   })
 })
+
+describe('rota pública de termos', () => {
+  it('visitante_sem_sessao_ve_os_termos_e_nao_o_login', async () => {
+    semSessao()
+    renderizar('/termos')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Termos de Uso' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
+  })
+
+  it('logado_tambem_ve_os_termos_sem_ser_redirecionado', async () => {
+    comSessao()
+    renderizar('/termos')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Termos de Uso' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Menu principal' })).not.toBeInTheDocument()
+  })
+})
