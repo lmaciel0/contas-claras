@@ -39,7 +39,7 @@ describe('RotaProtegida', () => {
     expect(screen.queryByText('Conteúdo protegido')).not.toBeInTheDocument()
   })
 
-  it('sessao_perdida_em_conta_excluir_vai_para_login_sem_voltar', async () => {
+  it('sem_sessao_ao_abrir_conta_excluir_vai_para_login_sem_voltar', async () => {
     semSessao()
     renderComApp(
       <AuthProvider>

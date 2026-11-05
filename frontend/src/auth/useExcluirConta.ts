@@ -20,8 +20,8 @@ export function useExcluirConta() {
     mutationFn: (pedido) => endpoints.auth.excluirConta(pedido),
     onSuccess: () => {
       queryClient.clear()
-      // Com a sessão zerada a `RotaProtegida` também leva a `/login` (sem `voltar` em `/conta/excluir`); o `navegar`
-      // garante o destino mesmo se esta página sair de baixo dela.
+      // A `RotaProtegida` também leva a `/login` sem `voltar` quando a sessão é zerada em `/conta/excluir`; o `navegar`
+      // só antecipa esse destino (e vale mesmo se a `RotaProtegida` não estiver montada, como em testes isolados).
       navegar('/login', { replace: true })
       limparSessao()
     },

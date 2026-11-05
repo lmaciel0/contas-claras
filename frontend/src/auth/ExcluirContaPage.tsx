@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link } from 'react-router'
 import { ErroApi } from '../api/cliente'
+import { CONTATO_EMAIL } from '../legal/responsavel'
 import { BotaoGoogle } from './BotaoGoogle'
 import { CampoTexto, classeBotaoSecundario, MensagemDeErro } from './CampoTexto'
 import { mensagemDoErro } from './mensagemDoErro'
@@ -26,6 +27,8 @@ const classeBotaoPerigo =
 export function ExcluirContaPage() {
   const { usuario } = useAuth()
   const temSenha = usuario?.temSenha === true
+  // Sem `VITE_GOOGLE_CLIENT_ID` o `BotaoGoogle` não renderiza: a conta só-Google não teria como se reautenticar aqui.
+  const googleDisponivel = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID)
   const excluir = useExcluirConta()
   const [senha, setSenha] = useState('')
   const [ciente, setCiente] = useState(false)
@@ -107,7 +110,7 @@ export function ExcluirContaPage() {
               excluir.reset()
             }}
           />
-        ) : (
+        ) : googleDisponivel ? (
           <div className="flex flex-col items-center gap-2">
             <p className="m-0 text-center text-sm">
               Esta conta entra com o Google. Para confirmar que é você, use o botão abaixo.
@@ -125,6 +128,11 @@ export function ExcluirContaPage() {
               </p>
             )}
           </div>
+        ) : (
+          <p className="m-0 text-center text-sm">
+            Esta conta entra com o Google, e o login com o Google não está disponível neste ambiente. Para pedir a
+            exclusão, escreva para <a href={`mailto:${CONTATO_EMAIL}`} className="underline">{CONTATO_EMAIL}</a>.
+          </p>
         )}
 
         <MensagemDeErro texto={erro} />

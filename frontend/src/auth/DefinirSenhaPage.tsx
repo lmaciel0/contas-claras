@@ -18,6 +18,8 @@ import { useAuth } from './useAuth'
 export function DefinirSenhaPage() {
   const { usuario, recarregar, limparSessao } = useAuth()
   const temSenha = usuario?.temSenha === true
+  // Sem `VITE_GOOGLE_CLIENT_ID` o `BotaoGoogle` não renderiza: a conta só-Google não consegue confirmar a identidade.
+  const googleDisponivel = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID)
   const [senhaAtual, setSenhaAtual] = useState('')
   const [novaSenha, setNovaSenha] = useState('')
   const [confirmacao, setConfirmacao] = useState('')
@@ -109,6 +111,11 @@ export function DefinirSenhaPage() {
           <button type="submit" disabled={enviando} className={classeBotaoPrimario}>
             {enviando ? 'Salvando…' : 'Salvar senha'}
           </button>
+        ) : !googleDisponivel ? (
+          <p className="m-0 text-center text-sm">
+            O login com o Google não está disponível neste ambiente, e é ele que confirma a sua identidade para definir
+            a senha. Por isso não dá para definir uma senha por aqui.
+          </p>
         ) : (
           <div className="flex flex-col items-center gap-2">
             <p className="m-0 text-center text-sm">

@@ -62,6 +62,15 @@ describe('PrivacidadePage', () => {
     expect(texto).toContain('apagado no uso seguinte')
   })
 
+  it('exclusao_da_conta_ressalva_copias_de_seguranca_e_logs_dos_provedores', () => {
+    renderizar()
+    const paragrafo = screen.getByText('Exclusão da conta:').closest('p')
+
+    expect(paragrafo).not.toBeNull()
+    expect(paragrafo?.textContent).toContain('cópias de segurança e registros (logs) dos provedores')
+    expect(paragrafo?.textContent).toContain('seção 6')
+  })
+
   it('nao_afirma_retencao_que_o_backend_nao_cumpre', () => {
     const { container } = renderizar()
     const texto = container.textContent ?? ''

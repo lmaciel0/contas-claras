@@ -170,6 +170,46 @@ describe('ExcluirContaPage', () => {
     expect(botao.closest('[inert]')).toBeNull()
   })
 
+  it('google_sem_marcar_a_ciencia_nao_chama_a_api_e_pede_a_ciencia', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'cliente-de-teste.apps.googleusercontent.com')
+    const { inicializar } = instalarGoogleFalso()
+    comSessao({ ...usuarioFicticio, temSenha: false })
+    let chamadas = 0
+    servidor.use(
+      http.delete('/api/auth/conta', () => {
+        chamadas += 1
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    renderizar()
+    await screen.findByTestId('botao-google')
+    await waitFor(() => expect(inicializar).toHaveBeenCalled())
+    const configuracao = inicializar.mock.calls.at(-1)?.[0] as ConfiguracaoGoogle
+
+    configuracao.callback({ credential: 'id-token-do-google' })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Marque "Entendo que é definitivo" antes de confirmar.',
+    )
+    expect(chamadas).toBe(0)
+    expect(screen.getByRole('heading', { level: 1, name: 'Excluir conta' })).toBeInTheDocument()
+  })
+
+  it('conta_so_google_sem_client_id_aponta_o_email_de_contato_em_vez_do_botao', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '')
+    comSessao({ ...usuarioFicticio, temSenha: false })
+    renderizar()
+    await screen.findByRole('heading', { name: 'Excluir conta' })
+
+    expect(screen.queryByTestId('botao-google')).not.toBeInTheDocument()
+    expect(screen.queryByText(/use o botão abaixo/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'aprumo.assistente@gmail.com' })).toHaveAttribute(
+      'href',
+      'mailto:aprumo.assistente@gmail.com',
+    )
+    expect(screen.getByText(/não está disponível neste ambiente/i)).toBeInTheDocument()
+  })
+
   it('google_de_outra_conta_mostra_erro_e_continua_logado', async () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'cliente-de-teste.apps.googleusercontent.com')
     const { inicializar } = instalarGoogleFalso()

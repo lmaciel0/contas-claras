@@ -42,6 +42,17 @@ const campoConfirmacao = () => screen.getByLabelText('Confirmar nova senha')
 const salvar = () => screen.getByRole('button', { name: 'Salvar senha' })
 
 describe('DefinirSenhaPage', () => {
+  it('conta_so_google_sem_client_id_avisa_que_o_login_google_nao_esta_disponivel', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '')
+    comSessao({ ...usuarioFicticio, temSenha: false })
+    renderizar()
+    await screen.findByRole('heading', { name: 'Definir senha' })
+
+    expect(screen.queryByTestId('botao-google')).not.toBeInTheDocument()
+    expect(screen.getByText(/login com o Google não está disponível neste ambiente/i)).toBeInTheDocument()
+    expect(screen.queryByText(/confirme com o Google/i)).not.toBeInTheDocument()
+  })
+
   it('quem_ja_tem_senha_informa_a_senha_atual', async () => {
     comSessao({ ...usuarioFicticio, temSenha: true })
     let corpo: unknown
