@@ -50,4 +50,15 @@ app:
 server:
   # O Render (e qualquer PaaS) define PORT; sem ela, 8080.
   port: ${PORT:8080}
-  forward-headers-strategy: framework
+  # forward-headers-strategy explícito em none, de propósito. Sem ele, o padrão do Boot muda para native quando
+  # detecta uma plataforma de nuvem (CloudPlatform, ex. Kubernetes), e o RemoteIpValve do Tomcat consumiria e
+  # reescreveria o X-Forwarded-For antes do nosso código, quebrando a contagem do XFF cru em IpDoCliente.
+  # A estratégia "framework" também não serve: reescreveria getRemoteAddr() com o IP mais à esquerda do XFF,
+  # que o cliente forja. O XFF é lido cru em IpDoCliente.
+  forward-headers-strategy: none
+
+aprumo:
+  proxy:
+    # Segredo que o rewrite da Vercel envia em X-Aprumo-Origem. Com ele, IpDoCliente sabe que há um salto a mais
+    # (Vercel) antes da borda do Render. Vazio: nenhum pedido é tratado como vindo da Vercel.
+    segredo-origem: ${ORIGEM_SEGREDO:}
