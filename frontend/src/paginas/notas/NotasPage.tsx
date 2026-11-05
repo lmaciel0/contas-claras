@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Outlet, useNavigate, useSearchParams } from 'react-router'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 import type { NotaResumoResponse } from '../../api/tipos'
 import { mensagemDoErro } from '../../auth/mensagemDoErro'
 import { CartaoNota } from './CartaoNota'
@@ -30,29 +30,25 @@ export function NotasPage() {
   const categorias = useCategoriasNota()
   const criar = useCriarNota()
   const fixar = useFixarNota()
-  const [params, setParams] = useSearchParams()
+  const { state } = useLocation()
   const { mutate: criarNota } = criar
   const criandoPelaAcaoRapida = useRef(false)
+  const pedidoDaAcaoRapida = (state as { nova?: unknown } | null)?.nova === true
 
-  // `?nova=1` vem do "Nova nota" da ação rápida do celular: cria a nota (sem categoria) e abre a edição, como o botão
-  // "Nova nota". O parâmetro sai da URL (replace) na hora, e a trava evita criar duas vezes (efeito duplo do StrictMode).
+  // `{ nova: true }` no estado de navegação vem do "Nova nota" da ação rápida do celular: cria a nota (sem categoria) e
+  // abre a edição, como o botão "Nova nota". Estado de navegação (e não `?nova=1`) porque um link externo ou favorito
+  // não consegue defini-lo: abrir uma URL nunca cria nota. O estado sai do histórico (replace) antes da criação, pois
+  // `history.state` sobrevive ao recarregar; a trava evita criar duas vezes no efeito duplo do StrictMode.
   useEffect(() => {
-    if (params.get('nova') !== '1') {
+    if (!pedidoDaAcaoRapida) {
       criandoPelaAcaoRapida.current = false
       return
     }
     if (criandoPelaAcaoRapida.current) return
     criandoPelaAcaoRapida.current = true
-    setParams(
-      (atual) => {
-        const proximo = new URLSearchParams(atual)
-        proximo.delete('nova')
-        return proximo
-      },
-      { replace: true },
-    )
+    void navegar('.', { replace: true, state: null })
     criarNota(null, { onSuccess: (nota) => navegar(`/notas/${nota.id}`) })
-  }, [params, setParams, criarNota, navegar])
+  }, [pedidoDaAcaoRapida, criarNota, navegar])
 
   useEffect(() => {
     const relogio = setTimeout(() => setBuscaAplicada(busca.trim()), PAUSA_BUSCA_MS)

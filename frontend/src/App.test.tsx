@@ -178,7 +178,7 @@ describe('toast de saída', () => {
     expect(aviso).toHaveClass('pointer-events-auto')
   })
 
-  it('no celular o aviso sobe para ficar acima da dock inferior', async () => {
+  it('no celular o aviso sobe para ficar acima da dock inferior e do botão "Criar"', async () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 390 })
     comSessao()
     responderTudo()
@@ -189,7 +189,7 @@ describe('toast de saída', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Sair' }))
 
     const aviso = await screen.findByText('Saindo…')
-    expect(aviso.parentElement).toHaveClass('bottom-[calc(5.5rem+env(safe-area-inset-bottom))]')
+    expect(aviso.parentElement).toHaveClass('bottom-[calc(8.75rem+env(safe-area-inset-bottom))]')
     expect(aviso.parentElement).not.toHaveClass('bottom-6')
     expect(aviso.parentElement).toHaveClass('pointer-events-none')
   })

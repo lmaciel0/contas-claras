@@ -1,7 +1,8 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { Route, Routes } from 'react-router'
+import { StrictMode } from 'react'
+import { Link, Route, Routes, useLocation } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CategoriaNotaResponse, NotaResumoResponse } from '../../api/tipos'
 import { renderComApp } from '../../teste/render'
@@ -177,34 +178,91 @@ describe('NotasPage', () => {
   })
 })
 
-describe('NotasPage com ?nova=1 (ação rápida do celular)', () => {
-  it('cria a nota uma única vez e abre a edição', async () => {
+function EstadoAtual() {
+  const { pathname, search, state } = useLocation()
+  return <p data-testid="estado-atual">{`${pathname}${search} ${JSON.stringify(state)}`}</p>
+}
+
+function Origem() {
+  return (
+    <Link to="/notas" state={{ nova: true }}>
+      Nova nota (ação rápida)
+    </Link>
+  )
+}
+
+function renderizarComOrigem(estrito: boolean) {
+  const rotas = (
+    <Routes>
+      <Route path="/" element={<Origem />} />
+      <Route
+        path="/notas"
+        element={
+          <>
+            <NotasPage />
+            <EstadoAtual />
+          </>
+        }
+      >
+        <Route path=":id" element={<p>Editando a nota</p>} />
+      </Route>
+    </Routes>
+  )
+  return renderComApp(estrito ? <StrictMode>{rotas}</StrictMode> : rotas, '/')
+}
+
+function contarPosts(corpos: unknown[], travar = false) {
+  servidor.use(
+    http.post('/api/notas', async ({ request }) => {
+      corpos.push(await request.json())
+      if (travar) return new Promise<never>(() => undefined)
+      return HttpResponse.json({ id: 42, titulo: '', conteudo: { type: 'doc' } }, { status: 201 })
+    }),
+  )
+}
+
+describe('NotasPage com estado de navegação { nova: true } (ação rápida do celular)', () => {
+  it('chegar por um link com o estado cria exatamente uma nota, mesmo em StrictMode, e abre a edição', async () => {
     api([])
     const corpos: unknown[] = []
-    servidor.use(
-      http.post('/api/notas', async ({ request }) => {
-        corpos.push(await request.json())
-        return HttpResponse.json({ id: 42, titulo: '', conteudo: { type: 'doc' } }, { status: 201 })
-      }),
-    )
-    renderizar('/notas?nova=1')
+    contarPosts(corpos)
+    renderizarComOrigem(true)
+
+    await userEvent.click(screen.getByRole('link', { name: 'Nova nota (ação rápida)' }))
 
     expect(await screen.findByText('Editando a nota')).toBeInTheDocument()
     expect(corpos).toEqual([{ categoriaId: null }])
   })
 
-  it('sem o parâmetro não cria nada', async () => {
+  it('o estado sai do histórico (replace) antes da criação terminar, para recarregar ou voltar não repetir', async () => {
     api([])
-    let criadas = 0
-    servidor.use(
-      http.post('/api/notas', () => {
-        criadas += 1
-        return HttpResponse.json({ id: 1, titulo: '', conteudo: { type: 'doc' } }, { status: 201 })
-      }),
-    )
+    const corpos: unknown[] = []
+    contarPosts(corpos, true)
+    renderizarComOrigem(true)
+
+    await userEvent.click(screen.getByRole('link', { name: 'Nova nota (ação rápida)' }))
+
+    await waitFor(() => expect(screen.getByTestId('estado-atual')).toHaveTextContent('/notas null'))
+    expect(corpos).toHaveLength(1)
+  })
+
+  it('abrir /notas?nova=1 direto (link externo ou favorito) NÃO cria nota', async () => {
+    api([])
+    const corpos: unknown[] = []
+    contarPosts(corpos)
+    renderizar('/notas?nova=1')
+
+    await screen.findByText('Nenhuma nota ainda. Crie a primeira.')
+    expect(corpos).toHaveLength(0)
+  })
+
+  it('sem o estado não cria nada', async () => {
+    api([])
+    const corpos: unknown[] = []
+    contarPosts(corpos)
     renderizar('/notas')
 
     await screen.findByText('Nenhuma nota ainda. Crie a primeira.')
-    expect(criadas).toBe(0)
+    expect(corpos).toHaveLength(0)
   })
 })

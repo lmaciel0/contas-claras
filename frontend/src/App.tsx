@@ -87,10 +87,10 @@ function MolduraDoUsuario() {
       <AppShell nomeUsuario={usuario?.nome} aoSair={aoSair} />
       {(saindo || erroAoSair !== null) && (
         // Sem `pointer-events-none` o wrapper (largura total) cobriria a dock e o erro persistente bloquearia os toques.
-        // No celular sobe acima da dock inferior.
+        // No celular sobe acima da dock inferior e do botão "Criar" (que ocupa de 5 a 8 rem).
         <div
           className={`pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 ${
-            ehCelular ? 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))]' : 'bottom-6'
+            ehCelular ? 'bottom-[calc(8.75rem+env(safe-area-inset-bottom))]' : 'bottom-6'
           }`}
         >
           {saindo ? (

@@ -1,5 +1,5 @@
 import { useCallback, useId, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { FundoDoDialogo } from './FundoDoDialogo'
 import { ICONES } from './icones'
 import { useDialogoModal } from './useDialogoModal'
@@ -9,6 +9,8 @@ const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visib
 
 const itemFolha = `flex min-h-11 items-center gap-3 rounded-2xl px-3 py-2 text-[15px] font-semibold text-[var(--cor-texto)] no-underline transition-colors duration-200 ease-out hover:bg-[var(--cor-fundo)] motion-reduce:transition-none ${foco}`
 
+const botaoFechar = `mt-1 min-h-11 cursor-pointer rounded-2xl border-t border-[var(--cor-linha)] px-3 py-2 text-[15px] font-semibold text-[var(--cor-mutado)] transition-colors duration-200 ease-out hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)] motion-reduce:transition-none ${foco}`
+
 /**
  * Botão "+" flutuante do celular (menos de 768 px) e a folha de ações rápidas que ele abre: Nova nota, Nova conta e
  * Nova tarefa. Fica 12 px acima da dock (z-30, como ela); a folha (z-[35]) cobre a dock e fica abaixo do menu (z-40) e
@@ -16,13 +18,25 @@ const itemFolha = `flex min-h-11 items-center gap-3 rounded-2xl px-3 py-2 text-[
  * `useDialogoModal`. Só renderize quando `useEhCelular()` for verdadeiro (o AppShell faz isso).
  *
  * Nota e tarefa não têm rota de criação: a nota nasce de um POST seguido de navegação, e a tarefa é o campo da própria
- * página. Por isso os links levam a `?nova=1`, que `NotasPage` e `TarefasPage` consomem.
+ * página. "Nova nota" leva `{ nova: true }` no estado de navegação (um link externo não consegue defini-lo, então abrir
+ * uma URL não cria nota) e "Nova tarefa" leva `?nova=1`, que só foca o campo.
  */
 export function AcaoRapida() {
   const { busca } = useMesSelecionado()
+  const { pathname } = useLocation()
   const [aberta, setAberta] = useState(false)
+  const [pathnameAnterior, setPathnameAnterior] = useState(pathname)
   const botao = useRef<HTMLButtonElement>(null)
   const idFolha = useId()
+
+  // Trocou de rota com a folha aberta (gesto de voltar do Android/TWA, que não tem Esc): fecha já na renderização
+  // (estado derivado, como no AppShell). Ao desmontar a folha o hook solta a rolagem do corpo.
+  if (pathnameAnterior !== pathname) {
+    setPathnameAnterior(pathname)
+    if (aberta) {
+      setAberta(false)
+    }
+  }
 
   const fechar = useCallback(() => {
     setAberta(false)
@@ -68,7 +82,7 @@ export function AcaoRapida() {
             onKeyDown={prenderFoco}
             className="folha-painel superficie absolute inset-x-2.5 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto flex max-w-md flex-col gap-1 rounded-3xl p-2"
           >
-            <Link to={{ pathname: '/notas', search: '?nova=1' }} onClick={fechar} className={itemFolha}>
+            <Link to="/notas" state={{ nova: true }} onClick={fechar} className={itemFolha}>
               {ICONES['/notas']}
               Nova nota
             </Link>
@@ -80,6 +94,9 @@ export function AcaoRapida() {
               {ICONES['/tarefas']}
               Nova tarefa
             </Link>
+            <button type="button" onClick={fechar} className={botaoFechar}>
+              Fechar
+            </button>
           </div>
         </div>
       )}
