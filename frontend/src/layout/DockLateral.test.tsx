@@ -52,6 +52,18 @@ describe('DockLateral', () => {
     expect(aoNavegar).toHaveBeenCalledTimes(1)
   })
 
+  it('tem link discreto "Excluir conta" abaixo de "Alterar senha" e fecha o menu ao navegar', () => {
+    const aoNavegar = vi.fn()
+    renderizar({ aoNavegar })
+    const alterar = screen.getByRole('link', { name: 'Alterar senha' })
+    const excluir = screen.getByRole('link', { name: 'Excluir conta' })
+    expect(excluir).toHaveAttribute('href', '/conta/excluir')
+    expect(excluir).toHaveClass('min-h-11', 'text-xs')
+    expect(alterar.compareDocumentPosition(excluir) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    fireEvent.click(excluir)
+    expect(aoNavegar).toHaveBeenCalledTimes(1)
+  })
+
   it('permite alternar entre modo expandido e modo recolhido', () => {
     renderizar()
     // Inicialmente expandida

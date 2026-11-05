@@ -31,4 +31,33 @@ describe('destinoAposEntrar', () => {
   ])('rejeita_%s', (_descricao, voltar) => {
     expect(destinoAposEntrar(voltar)).toBe('/')
   })
+
+  it.each([
+    ['caminho exato', '/conta/excluir'],
+    ['barra final', '/conta/excluir/'],
+    ['barras finais repetidas', '/conta/excluir//'],
+    ['caixa diferente', '/Conta/EXCLUIR'],
+    ['percent-encoding de uma letra', '/conta/exclu%69r'],
+    ['percent-encoding da barra', '/conta%2Fexcluir'],
+    ['percent-encoding minúsculo e maiúsculo', '/%43onta/%65xcluir'],
+    ['codificado duas vezes', '/conta/exclu%2569r'],
+    ['com query', '/conta/excluir?x=1'],
+    ['com hash', '/conta/excluir#topo'],
+    ['com query e hash', '/conta/excluir/?x=1#topo'],
+    ['segmento ponto', '/conta/./excluir'],
+    ['segmento ponto-ponto', '/conta/x/../excluir'],
+    ['ponto-ponto codificado', '/conta/x/%2e%2e/excluir'],
+  ])('recusa_a_tela_de_exclusao_de_conta_%s', (_descricao, voltar) => {
+    expect(destinoAposEntrar(voltar)).toBe('/')
+  })
+
+  it('nao_recusa_rotas_parecidas_com_a_de_exclusao', () => {
+    expect(destinoAposEntrar('/conta/senha')).toBe('/conta/senha')
+    expect(destinoAposEntrar('/conta/excluir-algo')).toBe('/conta/excluir-algo')
+    expect(destinoAposEntrar('/conta')).toBe('/conta')
+  })
+
+  it('pathname_com_percent_encoding_invalido_vai_para_o_inicio', () => {
+    expect(destinoAposEntrar('/conta/%E0%A4%A')).toBe('/')
+  })
 })

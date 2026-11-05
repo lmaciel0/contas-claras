@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,6 +19,7 @@ import dev.lmaciel.aprumo.auth.dto.CadastroRequest;
 import dev.lmaciel.aprumo.auth.dto.ConfirmarCadastroRequest;
 import dev.lmaciel.aprumo.auth.dto.DefinirSenhaRequest;
 import dev.lmaciel.aprumo.auth.dto.EmailRequest;
+import dev.lmaciel.aprumo.auth.dto.ExcluirContaRequest;
 import dev.lmaciel.aprumo.auth.dto.GoogleLoginRequest;
 import dev.lmaciel.aprumo.auth.dto.LoginRequest;
 import dev.lmaciel.aprumo.auth.dto.RedefinirSenhaRequest;
@@ -111,10 +113,19 @@ public class AuthController {
 
     @PutMapping(path = "/senha", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> definirSenha(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DefinirSenhaRequest req) {
-        Usuario usuario = auth.definirSenha(UsuarioLogado.de(jwt).id(), req.senhaAtual(), req.senha());
+        Usuario usuario = auth.definirSenha(UsuarioLogado.de(jwt).id(), req.senhaAtual(), req.credencialGoogle(), req.senha());
         // As sessões antigas deixam de valer; este aparelho segue logado com o cookie novo.
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, sessaoCookie.criar(tokens.emitir(usuario)).toString())
+                .build();
+    }
+
+    /** Apaga a conta e todos os dados dela; exige a reautenticação no corpo. Devolve o cookie já expirado. */
+    @DeleteMapping(path = "/conta", consumes = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Void> excluirConta(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ExcluirContaRequest req) {
+        auth.excluirConta(UsuarioLogado.de(jwt).id(), req);
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, sessaoCookie.limpar().toString())
                 .build();
     }
 

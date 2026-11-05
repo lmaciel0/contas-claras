@@ -95,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setUsuario(null)
     },
+    limparSessao: () => setUsuario(null),
     recarregar: async () => {
       setUsuario(await endpoints.auth.me())
     },

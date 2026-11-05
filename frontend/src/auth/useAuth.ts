@@ -20,6 +20,8 @@ export interface Auth {
    * falha rejeita e mantém `usuario`: o cookie ainda vale no servidor, e a tela deve avisar.
    */
   sair: () => Promise<void>
+  /** Zera a sessão só no front, sem chamar a API (ex.: a conta acabou de ser excluída e o cookie já expirou). */
+  limparSessao: () => void
   /** Relê `GET /api/auth/me` sem voltar a `carregando` (ex.: `temSenha` mudou). */
   recarregar: () => Promise<void>
 }

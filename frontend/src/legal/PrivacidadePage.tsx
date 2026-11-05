@@ -113,8 +113,9 @@ export function PrivacidadePage() {
         <h2 id="retencao">6. Por quanto tempo guardamos</h2>
         <ul>
           <li>
-            <strong>Dados da conta e conteúdo:</strong> enquanto a conta estiver ativa. Você pode pedir a exclusão a
-            qualquer momento (veja a seção 8).
+            <strong>Dados da conta e conteúdo:</strong> enquanto a conta estiver ativa. Você pode excluir a conta a
+            qualquer momento (veja a seção 8). A exclusão é imediata e definitiva: apagamos a conta e todo o conteúdo
+            dela, e não há como recuperar depois.
           </li>
           <li>
             <strong>Códigos e links de verificação (com seu e-mail e nome):</strong> expiram em 15 minutos, com no máximo
@@ -155,7 +156,14 @@ export function PrivacidadePage() {
           <li>revogação de consentimento, quando ele for a base do tratamento.</li>
         </ul>
         <p>
-          Hoje esses pedidos são feitos por e-mail, em {email}, e não por botões no app. Respondemos em até 15 dias.
+          <strong>Exclusão da conta:</strong> você mesmo faz isso no app, em Excluir conta (no menu lateral, perto de
+          Alterar senha), confirmando com a sua senha ou, se a conta entra com o Google, com o Google. A exclusão é
+          imediata e definitiva e apaga a conta e todos os dados dela no Aprumo, mas não as cópias de segurança e
+          registros (logs) dos provedores, que seguem o prazo de cada um (veja a seção 6). Se não conseguir entrar,
+          escreva para {email}. Veja também <LinkLegal to="/excluir-conta">como excluir sua conta</LinkLegal>.
+        </p>
+        <p>
+          Os demais pedidos são feitos por e-mail, em {email}, e não por botões no app. Respondemos em até 15 dias.
           Para sua segurança, podemos pedir que você confirme sua identidade antes de atender.
         </p>
         <p>

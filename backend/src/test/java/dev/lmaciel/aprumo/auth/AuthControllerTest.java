@@ -3,6 +3,7 @@ package dev.lmaciel.aprumo.auth;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -18,6 +19,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,16 +40,21 @@ import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import dev.lmaciel.aprumo.IntegracaoTest;
+import dev.lmaciel.aprumo.auth.GoogleTokenVerifier.IdentidadeGoogle;
 import jakarta.servlet.http.Cookie;
 
 class AuthControllerTest extends IntegracaoTest {
 
     private static final String SENHA = "senha-segura-1";
     private static final Instant AGORA = Instant.parse("2026-10-29T15:00:00Z");
+
+    @MockitoBean
+    GoogleTokenVerifier verificador;
 
     @Autowired
     JdbcTemplate jdbc;
@@ -111,6 +118,13 @@ class AuthControllerTest extends IntegracaoTest {
     private long inserirUsuarioSemSenha(String email) {
         return jdbc.queryForObject(
                 "insert into usuario (nome, email) values ('Sem Senha', ?) returning id", Long.class, email);
+    }
+
+    /** Conta só com Google: sem senha e com {@code google_sub}. */
+    private long inserirUsuarioSoGoogle(String email, String sub) {
+        return jdbc.queryForObject(
+                "insert into usuario (nome, email, google_sub) values ('So Google', ?, ?) returning id",
+                Long.class, email, sub);
     }
 
     // ---- cadastro ----------------------------------------------------------------------
@@ -368,12 +382,14 @@ class AuthControllerTest extends IntegracaoTest {
 
     @Test
     void definir_senha_logado_permite_login_com_nova_senha() throws Exception {
-        long id = inserirUsuarioSemSenha("outra@exemplo.com");
+        long id = inserirUsuarioSoGoogle("outra@exemplo.com", "sub-outra");
         Cookie cookie = new Cookie("cc_session", jwt(JWT_SECRET_TESTE, id, AGORA.plusSeconds(3600)));
+        when(verificador.verificar("token-google-outra")).thenReturn(
+                Optional.of(new IdentidadeGoogle("sub-outra", "outra@exemplo.com", true, "Outra", AGORA)));
 
         MvcResult resposta = mvc.perform(put("/api/auth/senha").cookie(cookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"senha\":\"nova-senha-123\"}"))
+                .content("{\"credencialGoogle\":\"token-google-outra\",\"senha\":\"nova-senha-123\"}"))
                 .andExpect(status().isNoContent())
                 .andReturn();
 

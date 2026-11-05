@@ -32,9 +32,16 @@ function carregarScript(): Promise<void> {
 /**
  * Ícone redondo do Google (Google Identity Services); o texto "ou continue com" é do `LayoutAuth`. O Google devolve
  * um `credential` (ID token) ao callback, que o envia à API em `entrarComGoogle`. Sem `VITE_GOOGLE_CLIENT_ID` não
- * renderiza nada nem baixa o script.
+ * renderiza nada nem baixa o script. Com `aoCredential` o `credential` vai para quem chamou, em vez de abrir sessão
+ * (reautenticação, ex.: excluir a conta).
  */
-export function BotaoGoogle({ aoErro }: { aoErro: (mensagem: string) => void }) {
+export function BotaoGoogle({
+  aoErro,
+  aoCredential,
+}: {
+  aoErro: (mensagem: string) => void
+  aoCredential?: (credential: string) => void
+}) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
   const { entrarComGoogle } = useAuth()
   const alvo = useRef<HTMLDivElement>(null)
@@ -45,6 +52,10 @@ export function BotaoGoogle({ aoErro }: { aoErro: (mensagem: string) => void }) 
   useEffect(() => {
     aoFalhar.current = aoErro
     aoReceberCredential.current = (credential) => {
+      if (aoCredential) {
+        aoCredential(credential)
+        return
+      }
       entrarComGoogle(credential).catch((erro: unknown) => aoErro(mensagemDoErro(erro)))
     }
   })

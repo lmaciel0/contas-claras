@@ -283,6 +283,13 @@ export function DockLateral({
               Alterar senha
             </Link>
             <Link
+              to="/conta/excluir"
+              onClick={aoNavegar}
+              className={`${linhaBase} text-xs text-[var(--cor-mutado)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)]`}
+            >
+              Excluir conta
+            </Link>
+            <Link
               to="/privacidade"
               onClick={aoNavegar}
               className={`${linhaBase} text-xs text-[var(--cor-mutado)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)]`}

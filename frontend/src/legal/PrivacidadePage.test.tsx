@@ -62,6 +62,15 @@ describe('PrivacidadePage', () => {
     expect(texto).toContain('apagado no uso seguinte')
   })
 
+  it('exclusao_da_conta_ressalva_copias_de_seguranca_e_logs_dos_provedores', () => {
+    renderizar()
+    const paragrafo = screen.getByText('Exclusão da conta:').closest('p')
+
+    expect(paragrafo).not.toBeNull()
+    expect(paragrafo?.textContent).toContain('cópias de segurança e registros (logs) dos provedores')
+    expect(paragrafo?.textContent).toContain('seção 6')
+  })
+
   it('nao_afirma_retencao_que_o_backend_nao_cumpre', () => {
     const { container } = renderizar()
     const texto = container.textContent ?? ''
@@ -78,6 +87,16 @@ describe('PrivacidadePage', () => {
     expect(texto).toContain('O Aprumo não grava o IP em texto aberto')
     expect(texto).not.toContain('e o IP não é gravado em texto aberto')
     expect(texto).toContain('IP e dados técnicos de acesso nos próprios logs')
+  })
+
+  it('cita_a_exclusao_de_conta_imediata_e_definitiva_no_app_e_por_email', () => {
+    const { container } = renderizar()
+    const texto = container.textContent ?? ''
+
+    expect(texto).toContain('imediata e definitiva')
+    expect(texto).toContain('Excluir conta')
+    expect(texto).not.toContain('Hoje esses pedidos são feitos por e-mail')
+    expect(screen.getByRole('link', { name: /excluir sua conta/i })).toHaveAttribute('href', '/excluir-conta')
   })
 
   it('nao_tem_link_com_href_vazio', () => {

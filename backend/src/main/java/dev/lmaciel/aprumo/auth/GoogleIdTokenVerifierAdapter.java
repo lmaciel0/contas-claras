@@ -2,6 +2,7 @@ package dev.lmaciel.aprumo.auth;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,10 +60,12 @@ class GoogleIdTokenVerifierAdapter implements GoogleTokenVerifier {
 
     private static IdentidadeGoogle identidade(Payload payload) {
         Object nome = payload.get("name");
+        Long iat = payload.getIssuedAtTimeSeconds();
         return new IdentidadeGoogle(
                 payload.getSubject(),
                 payload.getEmail(),
                 Boolean.TRUE.equals(payload.getEmailVerified()),
-                nome instanceof String texto ? texto : null);
+                nome instanceof String texto ? texto : null,
+                iat == null ? null : Instant.ofEpochSecond(iat));
     }
 }
