@@ -1,9 +1,8 @@
 import { Link, matchPath, useLocation } from 'react-router'
+import { foco } from './classesFoco'
 import { ICONES } from './icones'
 import { ITENS_DOCK, type ItemMenu } from './itensMenu'
 import { useMesSelecionado } from './useMesSelecionado'
-
-const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
 
 const baseItem = `flex min-h-11 min-w-11 items-center justify-center rounded-full text-xs font-bold no-underline transition-colors duration-200 ease-out motion-safe:active:scale-95 motion-reduce:transition-none ${foco}`
 

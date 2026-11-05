@@ -318,47 +318,38 @@ body {
   animation: menu-fundo-entra 200ms ease-out;
 }
 
-/* Folha "Criar" do celular: sobe de baixo (o fundo reaproveita .menu-fundo). */
-@keyframes folha-painel-entra {
+/*
+ * Entrada com fade e deslize de um eixo, parametrizada por `--entra-x`/`--entra-y` (só opacity e transform). Usada pela
+ * folha "Criar" do celular (sobe de baixo; o fundo reaproveita .menu-fundo) e pelo rótulo do item ativo da dock inferior.
+ */
+@keyframes entra-deslizando {
   from {
     opacity: 0;
-    transform: translateY(1rem);
+    transform: translate(var(--entra-x, 0), var(--entra-y, 0));
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(0, 0);
   }
 }
 
+.folha-painel,
+.dock-rotulo {
+  animation: entra-deslizando 200ms ease-out;
+}
+
 .folha-painel {
-  animation: folha-painel-entra 200ms ease-out;
+  --entra-y: 1rem;
+}
+
+.dock-rotulo {
+  --entra-x: -4px;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .menu-painel,
   .menu-fundo,
-  .folha-painel {
-    animation: none;
-  }
-}
-
-/* Dock inferior do celular: o rótulo do item ativo entra com fade e um leve deslize (só opacity e transform). */
-@keyframes dock-rotulo-entra {
-  from {
-    opacity: 0;
-    transform: translateX(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.dock-rotulo {
-  animation: dock-rotulo-entra 200ms ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
+  .folha-painel,
   .dock-rotulo {
     animation: none;
   }

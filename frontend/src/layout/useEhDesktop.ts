@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useLarguraJanela } from './useLarguraJanela'
 
 /**
  * A partir desta largura (px) o layout troca a barra fina do topo (com o menu deslizante) pela dock lateral e pelo
@@ -8,16 +8,7 @@ import { useSyncExternalStore } from 'react'
  */
 export const LARGURA_DESKTOP = 1280
 
-function assinar(aoMudar: () => void) {
-  window.addEventListener('resize', aoMudar)
-  return () => window.removeEventListener('resize', aoMudar)
-}
-
 /** `true` em telas de 1280 px ou mais. Lê `window.innerWidth` (e não CSS) para renderizar só um dos layouts. */
 export function useEhDesktop(): boolean {
-  return useSyncExternalStore(
-    assinar,
-    () => window.innerWidth >= LARGURA_DESKTOP,
-    () => true,
-  )
+  return useLarguraJanela((largura) => largura >= LARGURA_DESKTOP, true)
 }

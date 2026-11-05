@@ -1,15 +1,22 @@
 import { useCallback, useId, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, type To } from 'react-router'
+import { foco } from './classesFoco'
 import { FundoDoDialogo } from './FundoDoDialogo'
 import { ICONES } from './icones'
 import { useDialogoModal } from './useDialogoModal'
 import { useMesSelecionado } from './useMesSelecionado'
 
-const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
-
 const itemFolha = `flex min-h-11 items-center gap-3 rounded-2xl px-3 py-2 text-[15px] font-semibold text-[var(--cor-texto)] no-underline transition-colors duration-200 ease-out hover:bg-[var(--cor-fundo)] motion-reduce:transition-none ${foco}`
 
 const botaoFechar = `mt-1 min-h-11 cursor-pointer rounded-2xl border-t border-[var(--cor-linha)] px-3 py-2 text-[15px] font-semibold text-[var(--cor-mutado)] transition-colors duration-200 ease-out hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)] motion-reduce:transition-none ${foco}`
+
+interface ItemFolha {
+  rotulo: string
+  /** Chave de `ICONES`. */
+  icone: string
+  para: To
+  state?: { nova: true }
+}
 
 /**
  * Botão "+" flutuante do celular (menos de 768 px) e a folha de ações rápidas que ele abre: Nova nota, Nova conta e
@@ -28,6 +35,11 @@ export function AcaoRapida() {
   const [pathnameAnterior, setPathnameAnterior] = useState(pathname)
   const botao = useRef<HTMLButtonElement>(null)
   const idFolha = useId()
+  const itens: ItemFolha[] = [
+    { rotulo: 'Nova nota', icone: '/notas', para: '/notas', state: { nova: true } },
+    { rotulo: 'Nova conta', icone: '/lancamentos', para: { pathname: '/lancamentos/novo', search: busca } },
+    { rotulo: 'Nova tarefa', icone: '/tarefas', para: { pathname: '/tarefas', search: '?nova=1' } },
+  ]
 
   // Trocou de rota com a folha aberta (gesto de voltar do Android/TWA, que não tem Esc): fecha já na renderização
   // (estado derivado, como no AppShell). Ao desmontar a folha o hook solta a rolagem do corpo.
@@ -82,18 +94,12 @@ export function AcaoRapida() {
             onKeyDown={prenderFoco}
             className="folha-painel superficie absolute inset-x-2.5 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto flex max-w-md flex-col gap-1 rounded-3xl p-2"
           >
-            <Link to="/notas" state={{ nova: true }} onClick={fechar} className={itemFolha}>
-              {ICONES['/notas']}
-              Nova nota
-            </Link>
-            <Link to={{ pathname: '/lancamentos/novo', search: busca }} onClick={fechar} className={itemFolha}>
-              {ICONES['/lancamentos']}
-              Nova conta
-            </Link>
-            <Link to={{ pathname: '/tarefas', search: '?nova=1' }} onClick={fechar} className={itemFolha}>
-              {ICONES['/tarefas']}
-              Nova tarefa
-            </Link>
+            {itens.map(({ rotulo, icone, para, state }) => (
+              <Link key={rotulo} to={para} state={state} onClick={fechar} className={itemFolha}>
+                {ICONES[icone]}
+                {rotulo}
+              </Link>
+            ))}
             <button type="button" onClick={fechar} className={botaoFechar}>
               Fechar
             </button>

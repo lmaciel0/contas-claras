@@ -11,6 +11,7 @@ import { DockLateral } from './DockLateral'
 import { PreferenciasModal } from '../preferencias/PreferenciasModal'
 import { usePreferencias } from '../preferencias/usePreferencias'
 import { AcaoRapida } from './AcaoRapida'
+import { foco } from './classesFoco'
 import { FundoDoDialogo } from './FundoDoDialogo'
 import { useDialogoModal } from './useDialogoModal'
 import { useEhCelular } from './useEhCelular'
@@ -21,7 +22,6 @@ interface Props {
   aoSair?: () => void
 }
 
-const foco = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
 const botaoIcone = `grid min-h-11 min-w-11 shrink-0 cursor-pointer place-items-center rounded-xl text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] ${foco}`
 
 /** Folga embaixo do `main` no celular: o último item e o botão "Salvar" ficam acima da dock flutuante, do botão "Criar" (que sobe até 8 rem) e da área segura. */
