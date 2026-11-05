@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -25,6 +25,26 @@ async function preencher(nome: string, email: string) {
 const botaoCriar = () => screen.getByRole('button', { name: 'Criar conta' })
 
 describe('CadastroPage', () => {
+  it('mostra_a_ciencia_de_privacidade_e_termos_antes_do_botao_de_envio', async () => {
+    semSessao()
+    renderizar()
+
+    const aviso = await screen.findByTestId('aviso-cadastro')
+    expect(aviso).toHaveTextContent(
+      'Ao criar a conta, você declara ter lido a Política de Privacidade e os Termos de Uso.',
+    )
+    expect(aviso.compareDocumentPosition(botaoCriar())).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    const privacidade = within(aviso).getByRole('link', { name: 'Política de Privacidade' })
+    const termos = within(aviso).getByRole('link', { name: 'Termos de Uso' })
+    expect(privacidade).toHaveAttribute('href', '/privacidade')
+    expect(termos).toHaveAttribute('href', '/termos')
+    for (const link of [privacidade, termos]) {
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link.getAttribute('rel')).toMatch(/noopener/)
+      expect(link.getAttribute('rel')).toMatch(/noreferrer/)
+    }
+  })
+
   it('muitos_pedidos_mostra_a_mensagem_da_api', async () => {
     const me = semSessao()
     servidor.use(

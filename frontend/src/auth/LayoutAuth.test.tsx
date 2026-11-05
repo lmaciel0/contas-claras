@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { Link, Route, Routes } from 'react-router'
@@ -173,5 +173,68 @@ describe('LayoutAuth: Google', () => {
     inicializar.mock.calls[0]?.[0].callback({ credential: 'token-fictício' })
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível entrar com o Google.')
+  })
+})
+
+describe('LayoutAuth: links legais', () => {
+  it.each(['/login', '/cadastro', '/confirmar', '/esqueci-senha'])(
+    'rodape_com_privacidade_e_termos_em_%s',
+    async (rota) => {
+      semSessao()
+      renderizar(rota)
+
+      const rodape = await screen.findByRole('navigation', { name: 'Documentos legais' })
+      const privacidade = within(rodape).getByRole('link', { name: 'Política de Privacidade' })
+      const termos = within(rodape).getByRole('link', { name: 'Termos de Uso' })
+      expect(privacidade).toHaveAttribute('href', '/privacidade')
+      expect(termos).toHaveAttribute('href', '/termos')
+      for (const link of [privacidade, termos]) {
+        expect(link).toHaveAttribute('target', '_blank')
+        expect(link.getAttribute('rel')).toMatch(/noopener/)
+        expect(link.getAttribute('rel')).toMatch(/noreferrer/)
+        expect(link).toHaveClass('min-h-11')
+      }
+    },
+  )
+
+  it.each(['/login', '/cadastro'])('aviso_do_google_abaixo_do_botao_em_%s', async (rota) => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', CLIENT_ID)
+    instalarGoogleFalso()
+    semSessao()
+    renderizar(rota)
+
+    const aviso = await screen.findByTestId('aviso-google')
+    expect(aviso).toHaveTextContent(
+      'Ao continuar com o Google, você declara ter lido a Política de Privacidade e os Termos de Uso.',
+    )
+    expect(screen.getByTestId('botao-google').compareDocumentPosition(aviso)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    const privacidade = within(aviso).getByRole('link', { name: 'Política de Privacidade' })
+    const termos = within(aviso).getByRole('link', { name: 'Termos de Uso' })
+    expect(privacidade).toHaveAttribute('href', '/privacidade')
+    expect(termos).toHaveAttribute('href', '/termos')
+    for (const link of [privacidade, termos]) {
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link.getAttribute('rel')).toMatch(/noopener/)
+      expect(link.getAttribute('rel')).toMatch(/noreferrer/)
+    }
+  })
+
+  it('sem_google_nao_mostra_o_aviso_do_google_mas_mantem_o_rodape', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '')
+    semSessao()
+    renderizar('/login')
+
+    expect(await screen.findByRole('navigation', { name: 'Documentos legais' })).toBeInTheDocument()
+    expect(screen.queryByTestId('aviso-google')).not.toBeInTheDocument()
+  })
+
+  it('aviso_do_google_nao_aparece_em_confirmar', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', CLIENT_ID)
+    instalarGoogleFalso()
+    semSessao()
+    renderizar('/confirmar')
+
+    expect(await screen.findByRole('heading', { name: 'Confirmar' })).toBeInTheDocument()
+    expect(screen.queryByTestId('aviso-google')).not.toBeInTheDocument()
   })
 })

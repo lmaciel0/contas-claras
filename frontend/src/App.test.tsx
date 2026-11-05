@@ -1,11 +1,11 @@
-import { screen } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { CartoesResponse, RelatorioAnualResponse, ResumoResponse } from './api/tipos'
 import { App } from './App'
 import { AuthProvider } from './auth/AuthProvider'
-import { comSessao, semSessao } from './teste/auth'
+import { comSessao, semSessao, type ContadorDeMe } from './teste/auth'
 import { responderCategorias } from './teste/lancamentos'
 import { renderComApp } from './teste/render'
 import { servidor } from './teste/servidor'
@@ -21,6 +21,14 @@ function renderizar(rota: string) {
     </AuthProvider>,
     rota,
   )
+}
+
+/** Espera `GET /api/auth/me` responder e a árvore assentar, para pegar redirecionamento que chega depois. */
+async function aguardarSessaoResolver(contador: ContadorDeMe) {
+  await waitFor(() => expect(contador.chamadas).toBeGreaterThan(0))
+  await act(async () => {
+    await new Promise((resolver) => setTimeout(resolver, 50))
+  })
 }
 
 describe('rota inexistente', () => {
@@ -40,10 +48,12 @@ describe('rota inexistente', () => {
   })
 
   it('visitante_nunca_ve_tela_em_branco_e_cai_no_login', async () => {
-    semSessao()
+    const me = semSessao()
     renderizar('/rota-que-nao-existe')
 
     expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
+    await aguardarSessaoResolver(me)
+    expect(screen.getByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
   })
 })
 
@@ -165,5 +175,53 @@ describe('rota de projetos', () => {
 
     expect(await screen.findByRole('heading', { name: 'Projetos' })).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
+  })
+})
+
+describe('rota pública de privacidade', () => {
+  it('visitante_sem_sessao_ve_a_politica_e_nao_o_login', async () => {
+    const me = semSessao()
+    renderizar('/privacidade')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Política de Privacidade' })).toBeInTheDocument()
+    await aguardarSessaoResolver(me)
+    expect(screen.getByRole('heading', { level: 1, name: 'Política de Privacidade' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('logado_tambem_ve_a_politica_sem_ser_redirecionado', async () => {
+    const me = comSessao()
+    renderizar('/privacidade')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Política de Privacidade' })).toBeInTheDocument()
+    await aguardarSessaoResolver(me)
+    expect(screen.getByRole('heading', { level: 1, name: 'Política de Privacidade' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Menu principal' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
+  })
+})
+
+describe('rota pública de termos', () => {
+  it('visitante_sem_sessao_ve_os_termos_e_nao_o_login', async () => {
+    const me = semSessao()
+    renderizar('/termos')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Termos de Uso' })).toBeInTheDocument()
+    await aguardarSessaoResolver(me)
+    expect(screen.getByRole('heading', { level: 1, name: 'Termos de Uso' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('logado_tambem_ve_os_termos_sem_ser_redirecionado', async () => {
+    const me = comSessao()
+    renderizar('/termos')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Termos de Uso' })).toBeInTheDocument()
+    await aguardarSessaoResolver(me)
+    expect(screen.getByRole('heading', { level: 1, name: 'Termos de Uso' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Menu principal' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument()
   })
 })

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { AvisoServidor } from '../layout/AvisoServidor'
+import { AvisoCiencia, RodapeLegal } from '../legal/AvisosLegais'
 import { BotaoGoogle } from './BotaoGoogle'
 import { MensagemDeErro } from './CampoTexto'
 import { TelaCarregando } from './TelaAuth'
@@ -73,9 +74,11 @@ export function LayoutAuth() {
               <p className="m-0 text-xs font-medium text-[var(--cor-texto)]">ou continue com</p>
               <BotaoGoogle aoErro={(texto) => setErroGoogle({ caminho: pathname, texto })} />
               <MensagemDeErro texto={erroGoogle?.caminho === pathname ? erroGoogle.texto : null} />
+              <AvisoCiencia acao="continuar com o Google" testId="aviso-google" />
             </div>
           )}
         </section>
+        <RodapeLegal />
       </main>
     </div>
   )
