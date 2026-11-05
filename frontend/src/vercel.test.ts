@@ -18,10 +18,25 @@ interface Servico {
   rewrites?: Rewrite[]
 }
 
+interface Transform {
+  type: string
+  op: string
+  target: { key: string }
+  args: string
+  env?: string[]
+}
+
+interface Rota {
+  src: string
+  dest: string
+  transforms?: Transform[]
+}
+
 interface ConfigVercel {
   regions: string[]
   services: Record<string, Servico>
   rewrites: Rewrite[]
+  routes: Rota[]
   headers: Regra[]
 }
 
@@ -109,11 +124,32 @@ describe('vercel.json: projeto com Vercel Services', () => {
     expect(Object.keys(vercel.services)).toEqual(['web'])
   })
 
-  it('repassa_api_ao_render_e_o_resto_ao_web_nessa_ordem', () => {
-    expect(vercel.rewrites).toEqual([
-      { source: '/api/(.*)', destination: 'https://api.useaprumo.com.br/api/$1' },
-      { source: '/(.*)', destination: { service: 'web' } },
+  it('rewrites_manda_tudo_ao_web', () => {
+    expect(vercel.rewrites).toEqual([{ source: '/(.*)', destination: { service: 'web' } }])
+  })
+
+  it('tem_uma_unica_rota_repassando_api_ao_render', () => {
+    expect(vercel.routes).toHaveLength(1)
+    expect(vercel.routes[0]).toMatchObject({
+      src: '/api/(.*)',
+      dest: 'https://api.useaprumo.com.br/api/$1',
+    })
+  })
+
+  it('rota_da_api_seta_o_cabecalho_de_origem_a_partir_da_variavel', () => {
+    expect(vercel.routes[0]?.transforms).toEqual([
+      {
+        type: 'request.headers',
+        op: 'set',
+        target: { key: 'X-Aprumo-Origem' },
+        args: '$ORIGEM_SEGREDO',
+        env: ['ORIGEM_SEGREDO'],
+      },
     ])
+  })
+
+  it('segredo_de_origem_nunca_aparece_em_claro', () => {
+    expect(JSON.stringify(vercel)).not.toMatch(/[0-9a-fA-F]{32,}/)
   })
 
   it('roda_na_regiao_de_sao_paulo', () => {
