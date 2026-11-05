@@ -1,5 +1,7 @@
 package dev.lmaciel.aprumo.auth;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,6 +31,9 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    // TEMPORARIO DIAG-IP: remover na Task 2
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService auth;
     private final FluxoEmailService fluxoEmail;
@@ -73,6 +78,8 @@ public class AuthController {
     /** Sempre 202: com ou sem conta, sai um e-mail. */
     @PostMapping(path = "/esqueci-senha", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> esqueciSenha(@Valid @RequestBody EmailRequest req, HttpServletRequest http) {
+        // TEMPORARIO DIAG-IP: remover na Task 2
+        log.info("DIAG-IP remoteAddr={} xff={}", http.getRemoteAddr(), http.getAttribute(DiagIpListener.ATRIBUTO));
         fluxoEmail.esqueciSenha(req.email(), http.getRemoteAddr());
         return ResponseEntity.accepted().build();
     }
