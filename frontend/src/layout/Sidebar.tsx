@@ -1,66 +1,8 @@
-import type { ReactNode } from 'react'
 import { Link, NavLink } from 'react-router'
 import { BotaoTema } from '../tema/BotaoTema'
+import { ICONES } from './icones'
 import { GRUPOS_MENU } from './itensMenu'
 import { useMesSelecionado } from './useMesSelecionado'
-
-const iconeProps = {
-  width: 20,
-  height: 20,
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 2,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-  'aria-hidden': true,
-} as const
-
-const ICONES: Record<string, ReactNode> = {
-  '/': (
-    <svg {...iconeProps}>
-      <path d="M3 11l9-8 9 8" />
-      <path d="M5 10v10h14V10" />
-    </svg>
-  ),
-  '/projetos': (
-    <svg {...iconeProps}>
-      <rect x="3" y="3" width="5" height="18" rx="1" />
-      <rect x="11" y="3" width="5" height="12" rx="1" />
-      <rect x="19" y="3" width="5" height="15" rx="1" />
-    </svg>
-  ),
-  '/financeiro': (
-    <svg {...iconeProps}>
-      <rect x="3" y="3" width="7" height="9" rx="1.5" />
-      <rect x="14" y="3" width="7" height="5" rx="1.5" />
-      <rect x="14" y="12" width="7" height="9" rx="1.5" />
-      <rect x="3" y="16" width="7" height="5" rx="1.5" />
-    </svg>
-  ),
-  '/lancamentos': (
-    <svg {...iconeProps}>
-      <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-    </svg>
-  ),
-  '/cartoes': (
-    <svg {...iconeProps}>
-      <rect x="2" y="5" width="20" height="14" rx="3" />
-      <path d="M2 10h20" />
-    </svg>
-  ),
-  '/categorias': (
-    <svg {...iconeProps}>
-      <path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" />
-      <path d="M7.5 7.5h.01" />
-    </svg>
-  ),
-  '/relatorios': (
-    <svg {...iconeProps}>
-      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
-    </svg>
-  ),
-}
 
 interface Props {
   nomeUsuario?: string
