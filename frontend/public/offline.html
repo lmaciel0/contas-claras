@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Sem conexão · Aprumo</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- Página independente: sem JS (a CSP bloqueia script inline) e com cores literais, espelhando src/index.css. -->
+    <style>
+      :root {
+        --fundo: #f7f7ff;
+        --texto: #16123a;
+        --mutado: #706e8a;
+        --principal: #27187e;
+        --sobre-principal: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fundo: #0b0d13;
+          --texto: #f1f3f9;
+          --mutado: #8e95b0;
+          --principal: #60a5fa;
+          --sobre-principal: #0b0d13;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: var(--fundo);
+        color: var(--texto);
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.5;
+        text-align: center;
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        max-width: 360px;
+      }
+      img {
+        border-radius: 16px;
+      }
+      h1 {
+        margin: 4px 0 0;
+        font-size: 1.5rem;
+      }
+      p {
+        margin: 0;
+        color: var(--mutado);
+      }
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        min-width: 44px;
+        margin-top: 8px;
+        padding: 0 24px;
+        border-radius: 10px;
+        background: var(--principal);
+        color: var(--sobre-principal);
+        font-weight: 600;
+        text-decoration: none;
+        transition: opacity 150ms;
+      }
+      a:hover {
+        opacity: 0.9;
+      }
+      a:focus-visible {
+        outline: 3px solid var(--texto);
+        outline-offset: 3px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        a {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icon-192.png" alt="" width="96" height="96" />
+      <h1>Sem conexão</h1>
+      <p>O Aprumo precisa de internet para mostrar seus dados.</p>
+      <a href="/">Tentar de novo</a>
+    </main>
+  </body>
+</html>

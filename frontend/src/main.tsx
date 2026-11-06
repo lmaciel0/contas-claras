@@ -5,10 +5,12 @@ import { BrowserRouter } from 'react-router'
 import { App } from './App'
 import { AuthProvider } from './auth/AuthProvider'
 import { instalarRecarregarNoErroDeChunk } from './recarregarNoErroDeChunk'
+import { registrarServiceWorker } from './registrarServiceWorker'
 import '@fontsource-variable/inter'
 import './index.css'
 
 instalarRecarregarNoErroDeChunk()
+registrarServiceWorker()
 
 const queryClient = new QueryClient({
   defaultOptions: {
