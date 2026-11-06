@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "br.com.useaprumo.app",
+      "sha256_cert_fingerprints": [
+        "C9:62:B2:67:40:9F:23:48:F4:F8:4B:12:6C:3F:55:22:A7:8A:CA:2A:24:CD:FC:C4:9E:A6:45:C9:2D:D8:61:D1"
+      ]
+    }
+  }
+]
