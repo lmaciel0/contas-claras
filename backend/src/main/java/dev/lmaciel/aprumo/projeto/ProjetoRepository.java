@@ -35,7 +35,7 @@ public interface ProjetoRepository extends JpaRepository<Projeto, Long> {
 
     /** Todos os projetos do usuário com as subtarefas numa consulta só (sem N+1), para a exportação. */
     @Query("""
-        SELECT DISTINCT p FROM Projeto p LEFT JOIN FETCH p.subtarefas
+        SELECT p FROM Projeto p LEFT JOIN FETCH p.subtarefas
         WHERE p.usuario.id = :usuarioId
         ORDER BY p.estagio ASC, p.ordem ASC, p.id ASC
     """)

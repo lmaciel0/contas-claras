@@ -24,7 +24,6 @@ public record ExportacaoResponse(
         List<ItemExportado> itens,
         List<ItemExportado> cartoes,
         List<LancamentoExportado> lancamentos,
-        List<SaldoExportado> saldos,
         List<TarefaExportada> tarefas,
         List<CategoriaNotaExportada> categoriasNota,
         List<NotaExportada> notas,
@@ -42,10 +41,6 @@ public record ExportacaoResponse(
 
     public record LancamentoExportado(long itemId, String item, String categoria, int ano, int mes, BigDecimal valor,
             StatusLancamento status, LocalDate vencimento) {
-    }
-
-    /** Saldo do fim do mês e o que entrou nele, só para meses com lançamento e depois do início do saldo. */
-    public record SaldoExportado(int ano, int mes, BigDecimal saldo, BigDecimal recebidoNoMes) {
     }
 
     public record TarefaExportada(String titulo, LocalDate data, Instant concluidaEm, Instant criadoEm) {
