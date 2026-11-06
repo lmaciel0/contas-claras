@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,7 +99,10 @@ public class NotaService {
     private static final org.springframework.data.domain.Pageable LIMITE_LISTAGEM =
             org.springframework.data.domain.PageRequest.of(0, 100);
 
-    /** Fixar tira a fixação da anterior na mesma transação; o índice único do banco decide as corridas. */
+    /**
+     * Fixar tira a fixação da anterior na mesma transação; o índice único do banco decide as corridas. Lock,
+     * deadlock e falha de serialização ({@link PessimisticLockingFailureException} e filhas) também viram 409.
+     */
     @Transactional
     public NotaResponse fixar(long id, boolean fixada, UsuarioLogado u) {
         Nota nota = buscarDoUsuario(id, u);
@@ -112,7 +116,7 @@ public class NotaService {
             notas.flush();
         } catch (DataIntegrityViolationException e) {
             throw ViolacaoDeUnicidade.ocorreu(e) ? new ConflitoException(FIXACAO_CONCORRENTE) : e;
-        } catch (org.springframework.dao.CannotAcquireLockException e) {
+        } catch (PessimisticLockingFailureException e) {
             throw new ConflitoException(FIXACAO_CONCORRENTE);
         }
         return resposta(nota);
