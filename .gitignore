@@ -38,3 +38,27 @@ android/*.aab
 android/*.apk
 android/local.properties
 android/node_modules/
+
+# Android: chaves e pacotes em qualquer pasta (repo público)
+*.jks
+*.keystore
+*.p12
+*.aab
+*.apk
+android/**/build/
+android/.gradle/
+android/**/local.properties
+android/**/key.properties
+android/**/signing.properties
+
+# Android: projeto Gradle gerado pelo Bubblewrap (reproduzível via `bubblewrap update`).
+# Só android/twa-manifest.json e android/README.md ficam versionados.
+android/app/
+android/gradle/
+android/gradlew
+android/gradlew.bat
+android/build.gradle
+android/settings.gradle
+android/gradle.properties
+android/manifest-checksum.txt
+android/store_icon.png

@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -104,6 +105,69 @@ describe('.gitignore: material do projeto Android', () => {
     'android/node_modules/',
   ])('ignora_%s', (linha) => {
     expect(linhasGitignore).toContain(linha)
+  })
+})
+
+function ignorado(caminho: string): boolean {
+  try {
+    execFileSync('git', ['check-ignore', '-q', '--', caminho], { cwd: raiz, stdio: 'ignore' })
+    return true
+  } catch {
+    return false
+  }
+}
+
+describe('.gitignore: chaves e artefatos em qualquer pasta (git check-ignore real)', () => {
+  it.each([
+    'keystore.jks',
+    'upload.jks',
+    'aprumo.keystore',
+    'chave.p12',
+    'app-release.aab',
+    'app-release.apk',
+    'android/aprumo-upload.jks',
+    'android/sub/x.jks',
+    'android/app/release.jks',
+    'android/build/saida.txt',
+    'android/app/build/outputs/x.txt',
+    'android/app/app-release.aab',
+    'android/x/y.apk',
+    'android/.gradle/cache.bin',
+    'android/local.properties',
+    'android/app/local.properties',
+    'android/key.properties',
+    'android/app/key.properties',
+    'android/signing.properties',
+    'android/app/signing.properties',
+  ])('ignora_%s', (caminho) => {
+    expect(ignorado(caminho)).toBe(true)
+  })
+
+  it.each([
+    'android/app/src/main/AndroidManifest.xml',
+    'android/gradle/wrapper/gradle-wrapper.properties',
+    'android/gradlew',
+    'android/gradlew.bat',
+    'android/build.gradle',
+    'android/settings.gradle',
+    'android/gradle.properties',
+    'android/manifest-checksum.txt',
+    'android/store_icon.png',
+  ])('ignora_o_projeto_gradle_gerado_%s', (caminho) => {
+    expect(ignorado(caminho)).toBe(true)
+  })
+
+  it.each(['android/twa-manifest.json', 'android/README.md', 'frontend/public/.well-known/assetlinks.json'])(
+    'nao_ignora_%s',
+    (caminho) => {
+      expect(ignorado(caminho)).toBe(false)
+    },
+  )
+
+  it('nenhum_arquivo_versionado_e_chave_ou_pacote_android', () => {
+    const versionados = execFileSync('git', ['ls-files'], { cwd: raiz, encoding: 'utf8' }).split('\n')
+
+    expect(versionados.filter((arquivo) => /\.(jks|keystore|p12|aab|apk)$/.test(arquivo))).toEqual([])
   })
 })
 

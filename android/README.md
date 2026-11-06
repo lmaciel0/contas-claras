@@ -16,20 +16,29 @@ Projeto Android do Aprumo como Trusted Web Activity: o app da Play Store abre `h
 
 1. Confira `android/twa-manifest.json`. O `appVersionCode` precisa subir a cada envio para a Play (e `appVersionName`/`appVersion` acompanham).
 2. Deixe a keystore de upload ao lado do manifesto, com o nome `aprumo-upload.jks` (veja a seção abaixo). Ela está no `.gitignore`.
-3. Rode, dentro de `android/`:
+3. Num checkout limpo só existe `twa-manifest.json`: o projeto Gradle (`app/`, `gradle/`, `gradlew` etc.) é gerado pelo Bubblewrap e está no `.gitignore`. Dentro de `android/`, gere-o a partir do manifesto:
+
+   ```bash
+   bubblewrap update
+   ```
+
+   Responda "sim" quando ele perguntar se deve aplicar as mudanças do manifesto.
+4. Ainda em `android/`, gere o pacote:
 
    ```bash
    bubblewrap build
    ```
 
-   O Bubblewrap pergunta a senha da keystore e da chave. Digite no terminal; nunca grave em arquivo do repo.
-4. O resultado é `app-release-bundle.aab` (para a Play) e `app-release-signed.apk` (para teste direto no aparelho). Ambos estão no `.gitignore`.
+   O `build` pede a senha da keystore e a do alias da chave. Digite no terminal; nunca grave em arquivo do repo.
+5. O resultado é `app-release-bundle.aab` (para a Play) e `app-release-signed.apk` (para teste direto no aparelho). Ambos estão no `.gitignore`.
 
-`minSdkVersion` deve ficar em 24. Com 21 o build quebra, porque a biblioteca de TWA exige 24. Um teste (`frontend/src/assetlinks.test.ts`) falha se alguém baixar esse valor.
+Status da validação: o `bubblewrap build` com Bubblewrap 1.27 funcionou no spike, que foi aprovado em aparelho real. O fluxo acima (`update` seguido de `build` a partir de um checkout limpo do repo) ainda não foi validado de ponta a ponta. Ao rodá-lo pela primeira vez, anote aqui qualquer ajuste necessário.
+
+`minSdkVersion` deve ficar em 24. 23 ou menos quebra o build (androidbrowserhelper 2.7.4 exige 24). Um teste (`frontend/src/assetlinks.test.ts`) falha se alguém baixar esse valor.
 
 ## Keystore de produção
 
-- A keystore de produção fica FORA do repositório, por exemplo em `~/Documentos/aprumo-chaves/`, com backup em outro local seguro (perder a chave de upload obriga a pedir reset à Play).
+- A keystore de produção fica em uma pasta fora do repositório, com backup em outro local seguro (perder a chave de upload obriga a pedir reset à Play).
 - A senha da keystore e da chave nunca vai ao repositório, a este README, a issues nem a PRs.
 - Para gerar o `.aab`, copie ou aponte a keystore para `android/aprumo-upload.jks` (alias `aprumo-upload`). O `.gitignore` bloqueia `android/*.jks` e `android/*.keystore`.
 - Não use caminho absoluto no `signingKey.path` do manifesto versionado: ele fica `./aprumo-upload.jks`.
