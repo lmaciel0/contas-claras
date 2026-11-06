@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { DockInferior } from './DockInferior'
-import { GRUPOS_MENU, ITENS_DOCK } from './itensMenu'
+import { ICONE_ENGRENAGEM, ICONES } from './icones'
+import { CAMINHOS_MAIS, GRUPOS_MENU, ITENS_DOCK, ITENS_MAIS } from './itensMenu'
 
 function renderizar(rota = '/') {
   return render(
@@ -14,19 +15,49 @@ function renderizar(rota = '/') {
 }
 
 describe('ITENS_DOCK', () => {
-  it('tem Início, Tarefas, Notas e Finanças, nessa ordem', () => {
+  it('tem Início, Notas, Orçamento e Mais, nessa ordem', () => {
+    expect(ITENS_DOCK.map((i) => i.rotulo)).toEqual(['Início', 'Notas', 'Orçamento', 'Mais'])
     expect(ITENS_DOCK).toEqual([
       { rotulo: 'Início', caminho: '/', exata: true },
-      { rotulo: 'Tarefas', caminho: '/tarefas' },
       { rotulo: 'Notas', caminho: '/notas' },
-      { rotulo: 'Finanças', caminho: '/financeiro', comMes: true, tambemAtivoEm: expect.any(Array) },
+      { rotulo: 'Orçamento', caminho: '/lancamentos', comMes: true },
+      { rotulo: 'Mais', caminho: '/mais', tambemAtivoEm: CAMINHOS_MAIS },
+    ])
+  })
+})
+
+describe('ITENS_MAIS e CAMINHOS_MAIS', () => {
+  it('ITENS_MAIS vem de GRUPOS_MENU, na ordem Tarefas, Projetos, Visão geral, Cartões, Categorias, Relatórios', () => {
+    expect(ITENS_MAIS.map((i) => i.rotulo)).toEqual([
+      'Tarefas',
+      'Projetos',
+      'Visão geral',
+      'Cartões',
+      'Categorias',
+      'Relatórios',
+    ])
+    const todos = GRUPOS_MENU.flatMap((g) => g.itens)
+    for (const item of ITENS_MAIS) {
+      expect(todos).toContain(item)
+    }
+  })
+
+  it('CAMINHOS_MAIS tem os atalhos, /mais, /conta/senha e /conta/excluir', () => {
+    expect(CAMINHOS_MAIS).toEqual([
+      '/tarefas',
+      '/projetos',
+      '/financeiro',
+      '/cartoes',
+      '/categorias',
+      '/relatorios',
+      '/mais',
+      '/conta/senha',
+      '/conta/excluir',
     ])
   })
 
-  it('Finanças fica ativo em todo o grupo Financeiro do menu, sem repetir a lista de rotas à mão', () => {
-    const financeiro = GRUPOS_MENU.find((g) => g.titulo === 'Financeiro')?.itens.map((i) => i.caminho)
-    expect(financeiro).toEqual(['/financeiro', '/lancamentos', '/cartoes', '/categorias', '/relatorios'])
-    expect(ITENS_DOCK.find((i) => i.rotulo === 'Finanças')?.tambemAtivoEm).toEqual(financeiro)
+  it('o ícone de /mais é a engrenagem compartilhada', () => {
+    expect(ICONES['/mais']).toBe(ICONE_ENGRENAGEM)
   })
 })
 

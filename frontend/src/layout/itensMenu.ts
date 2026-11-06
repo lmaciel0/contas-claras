@@ -37,12 +37,20 @@ export const GRUPOS_MENU: GrupoMenu[] = [
   },
 ]
 
-const CAMINHOS_FINANCEIRO = GRUPOS_MENU.find((g) => g.titulo === 'Financeiro')?.itens.map((i) => i.caminho) ?? []
+const TODOS_OS_ITENS = GRUPOS_MENU.flatMap((g) => g.itens)
 
-/** Os quatro destinos da dock inferior do celular. O resto (Projetos, Cartões, Relatórios...) fica no menu do topo; Finanças fica ativo em todo o grupo Financeiro. */
+/** Atalhos que ficam fora da dock do celular e moram na página Mais, nesta ordem. */
+const ORDEM_MAIS = ['/tarefas', '/projetos', '/financeiro', '/cartoes', '/categorias', '/relatorios']
+
+export const ITENS_MAIS: ItemMenu[] = ORDEM_MAIS.flatMap((caminho) => TODOS_OS_ITENS.filter((i) => i.caminho === caminho))
+
+/** Rotas em que o item "Mais" da dock fica ativo: os atalhos da página e as telas de conta. */
+export const CAMINHOS_MAIS: string[] = [...ITENS_MAIS.map((i) => i.caminho), '/mais', '/conta/senha', '/conta/excluir']
+
+/** Os destinos da dock inferior do celular. O botão "Criar" fica entre Notas e Orçamento e não é item. O resto mora em Mais. */
 export const ITENS_DOCK: ItemMenu[] = [
   { rotulo: 'Início', caminho: '/', exata: true },
-  { rotulo: 'Tarefas', caminho: '/tarefas' },
   { rotulo: 'Notas', caminho: '/notas' },
-  { rotulo: 'Finanças', caminho: '/financeiro', comMes: true, tambemAtivoEm: CAMINHOS_FINANCEIRO },
+  { rotulo: 'Orçamento', caminho: '/lancamentos', comMes: true },
+  { rotulo: 'Mais', caminho: '/mais', tambemAtivoEm: CAMINHOS_MAIS },
 ]
