@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -169,12 +170,16 @@ public class AuthService {
      * <li>com senha: {@code senhaAtual} (400 se errada, 429 se estourar o limite); {@code credencialGoogle}
      * é ignorada;</li>
      * <li>sem senha (só Google): {@code credencialGoogle} do mesmo Google da conta (401 se ausente, inválida
-     * ou de outro usuário); {@code senhaAtual} é ignorada. Sem isso uma sessão roubada criaria uma senha e
+     * ou de outro usuário; 429 se estourar o mesmo limite); {@code senhaAtual} é ignorada. Sem isso uma sessão roubada criaria uma senha e
      * a usaria para excluir a conta, contornando o Google.</li>
      * </ul>
+     * Ao gravar, relê o usuário com lock e responde 401 se a versão da sessão ou o hash mudaram desde a leitura.
      */
     public Usuario definirSenha(long id, String senhaAtual, String credencialGoogle, String senhaNova) {
         Usuario usuario = buscar(id);
+        // A conferência abaixo roda sem transação e leva tempo; guarda o que foi lido para revalidar ao gravar.
+        int versaoLida = usuario.getSessaoVersao();
+        String hashLido = usuario.getSenhaHash();
         if (usuario.temSenha()) {
             reservarTentativaDeReautenticacao(id);
             if (!senhaAtualConfere(usuario, senhaAtual)) {
@@ -182,12 +187,18 @@ public class AuthService {
             }
             limiteReautenticacao.registrarSucesso(chaveReautenticacao(id));
         } else {
+            reservarTentativaDeReautenticacao(id);
             exigirGoogleDoUsuario(usuario, credencialGoogle);
+            limiteReautenticacao.registrarSucesso(chaveReautenticacao(id));
         }
         // BCrypt e Google ficam fora da transação, como no redefinirSenha: só a gravação segura conexão.
         String hashNovo = hashDaSenha(senhaNova);
         return tx.execute(status -> {
-            Usuario atual = usuarios.findById(id).orElseThrow(NaoAutenticadoException::new);
+            Usuario atual = usuarios.findByIdParaAtualizar(id).orElseThrow(NaoAutenticadoException::new);
+            // Outra troca de senha, login Google ou exclusão de sessões no meio: a reautenticação já não vale.
+            if (atual.getSessaoVersao() != versaoLida || !Objects.equals(atual.getSenhaHash(), hashLido)) {
+                throw new NaoAutenticadoException();
+            }
             atual.setSenhaHash(hashNovo);
             atual.invalidarSessoes();
             return atual;

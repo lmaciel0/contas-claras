@@ -4,7 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -19,6 +23,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -608,6 +613,82 @@ class ExclusaoContaIntegracaoTest extends IntegracaoTest {
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"%s\",\"senha\":\"senha-nova-12345\"}".formatted(EMAIL_A)))
                 .andExpect(status().isOk());
+    }
+
+    // ---- definirSenha: revalidação ao gravar e limite no caminho Google ---------------------
+
+    @Test
+    void definirSenhaComSessaoInvalidadaNoMeioDaOperacaoRetorna401ENaoGrava() throws Exception {
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+        long a = idDe(EMAIL_A);
+        String hashAntigo = senhaHashDe(a);
+        // Outra requisição derruba as sessões depois da leitura e antes da gravação (durante o BCrypt).
+        doAnswer(inv -> {
+            jdbc.update("update usuario set sessao_versao = sessao_versao + 1 where id = ?", a);
+            return inv.callRealMethod();
+        }).when(encoder).encode(anyString());
+
+        definirSenha(cookie, corpoDefinirSenha(SENHA_PADRAO_TESTE, null, "senha-nova-12345"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+
+        assertThat(senhaHashDe(a)).isEqualTo(hashAntigo);
+    }
+
+    @Test
+    void definirSenhaComHashTrocadoNoMeioDaOperacaoRetorna401ENaoGrava() throws Exception {
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+        long a = idDe(EMAIL_A);
+        doAnswer(inv -> {
+            jdbc.update("update usuario set senha_hash = 'hash-trocado' where id = ?", a);
+            return inv.callRealMethod();
+        }).when(encoder).encode(anyString());
+
+        definirSenha(cookie, corpoDefinirSenha(SENHA_PADRAO_TESTE, null, "senha-nova-12345"))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(senhaHashDe(a)).isEqualTo("hash-trocado");
+    }
+
+    @Test
+    void doisDefinirSenhaComAMesmaVersaoLidaFalhaOSegundo() throws Exception {
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+        long a = idDe(EMAIL_A);
+        AtomicBoolean aninhado = new AtomicBoolean();
+        // O primeiro pedido grava inteiro durante o BCrypt do segundo, que já tinha lido a mesma versão.
+        doAnswer(inv -> {
+            if (aninhado.compareAndSet(false, true)) {
+                definirSenha(cookie, corpoDefinirSenha(SENHA_PADRAO_TESTE, null, "senha-do-primeiro-1"))
+                        .andExpect(status().isNoContent());
+            }
+            return inv.callRealMethod();
+        }).when(encoder).encode(anyString());
+
+        definirSenha(cookie, corpoDefinirSenha(SENHA_PADRAO_TESTE, null, "senha-do-segundo-12"))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(encoder.matches("senha-do-primeiro-1", senhaHashDe(a))).isTrue();
+        assertThat(encoder.matches("senha-do-segundo-12", senhaHashDe(a))).isFalse();
+    }
+
+    @Test
+    void definirSenhaComGoogleReservaTentativaEBloqueiaSemChamarOGoogle() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        long a = idDe(EMAIL_A);
+        when(verificador.verificar("token-invalido")).thenReturn(Optional.empty());
+        clearInvocations(verificador);
+
+        for (int i = 0; i < LimiteTentativasLogin.MAX_TENTATIVAS; i++) {
+            definirSenha(cookie, corpoDefinirSenha(null, "token-invalido", "senha-do-atacante-1"))
+                    .andExpect(status().isUnauthorized());
+        }
+        definirSenha(cookie, corpoDefinirSenha(null, TOKEN_A, "senha-do-atacante-1"))
+                .andExpect(status().isTooManyRequests());
+
+        verify(verificador, times(LimiteTentativasLogin.MAX_TENTATIVAS)).verificar("token-invalido");
+        verify(verificador, never()).verificar(TOKEN_A);
+        assertThat(senhaHashDe(a)).isNull();
     }
 
     // ---- validação do corpo -------------------------------------------------------------

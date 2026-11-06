@@ -67,6 +67,11 @@ class ApiExceptionHandlerTest {
             throw new EmailIndisponivelException();
         }
 
+        @GetMapping("/sonda/lock")
+        void lock() {
+            throw new org.springframework.dao.CannotAcquireLockException("detalhe de SQL que não pode vazar");
+        }
+
         @GetMapping("/sonda/erro")
         void erro() {
             throw new IllegalStateException("detalhe interno que não pode vazar");
@@ -129,6 +134,14 @@ class ApiExceptionHandlerTest {
         mvc.perform(get("/sonda/parametro").param("q", "ab"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value("Informe ao menos 3 letras"));
+    }
+
+    @Test
+    void falha_de_lock_pessimista_vira_409_com_mensagem_generica() throws Exception {
+        mvc.perform(get("/sonda/lock"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.erro").value("Outra operação está em andamento. Tente de novo."))
+                .andExpect(content().string(not(containsString("detalhe de SQL"))));
     }
 
     @Test
