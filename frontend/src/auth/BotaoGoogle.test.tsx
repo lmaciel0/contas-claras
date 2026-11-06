@@ -59,6 +59,16 @@ describe('BotaoGoogle', () => {
     )
   })
 
+  it('o_container_usa_color_scheme_light_para_o_iframe_ficar_transparente_no_tema_escuro', async () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'cliente-de-teste.apps.googleusercontent.com')
+    const { desenharBotao } = instalarGoogleFalso()
+    semSessao()
+    renderizar()
+
+    await waitFor(() => expect(desenharBotao).toHaveBeenCalledTimes(1))
+    expect(screen.getByTestId('botao-google').style.colorScheme).toBe('light')
+  })
+
   it('o_callback_envia_a_credential_para_a_api_e_entra', async () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'cliente-de-teste.apps.googleusercontent.com')
     const { inicializar } = instalarGoogleFalso()
