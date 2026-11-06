@@ -107,18 +107,50 @@ class DiagnosticoControllerTest extends IntegracaoTest {
                 .andExpect(status().isNoContent());
 
         assertThat(saida.getAll())
-                .contains("erro no front rota=/forjar mensagem=primeira  WARN linha-forjada pilha=pilha OUTRA-FORJADA");
+                .contains("erro no front rota=\"/forjar\" mensagem=\"primeira??WARN linha-forjada\" "
+                        + "pilha=\"pilha?OUTRA-FORJADA\"");
         assertThat(saida.getAll().lines())
                 .noneMatch(linha -> linha.startsWith("WARN linha-forjada") || linha.startsWith("OUTRA-FORJADA"));
     }
 
     @Test
-    void pilha_e_cortada_em_1000_caracteres_no_log(CapturedOutput saida) throws Exception {
-        relatar(ipNovo(), corpo("corte", "p".repeat(3000), "/corte")).andExpect(status().isNoContent());
+    void esc_nel_separador_de_linha_e_bidi_viram_interrogacao_no_log(CapturedOutput saida) throws Exception {
+        relatar(ipNovo(), corpo("a\\u001bb\\u0085c\\u2028d\\u202ee", "", "/controles"))
+                .andExpect(status().isNoContent());
 
-        String linha = saida.getAll().lines().filter(l -> l.contains("rota=/corte")).findFirst().orElseThrow();
-        String pilha = linha.substring(linha.indexOf("pilha=") + "pilha=".length());
-        assertThat(pilha).isEqualTo("p".repeat(1000));
+        assertThat(saida.getAll()).contains("rota=\"/controles\" mensagem=\"a?b?c?d?e\"");
+    }
+
+    @Test
+    void aspas_na_mensagem_sao_escapadas_e_nao_forjam_outro_campo(CapturedOutput saida) throws Exception {
+        relatar(ipNovo(), corpo("x\\\" pilha=\\\"forjada", "real", "/aspas")).andExpect(status().isNoContent());
+
+        assertThat(saida.getAll())
+                .contains("mensagem=\"x\\\" pilha=\\\"forjada\" pilha=\"real\"");
+    }
+
+    @Test
+    void servidor_limpa_email_token_query_e_id_da_rota_mesmo_que_o_cliente_nao_limpe(CapturedOutput saida)
+            throws Exception {
+        relatar(ipNovo(), corpo("falha de ana@exemplo.com em /x?a=1",
+                "at f (https://app/x.js?token=segredo:1:1) abcdefghijklmnopqrstuvwxyz012345", "/itens/42/editar"))
+                .andExpect(status().isNoContent());
+
+        String linha = saida.getAll().lines().filter(l -> l.contains("rota=\"/itens/:id/editar\"")).findFirst()
+                .orElseThrow();
+        assertThat(linha).contains("mensagem=\"falha de [email] em /x\"")
+                .contains("pilha=\"at f (https://app/x.js) [token]\"")
+                .doesNotContain("ana@").doesNotContain("segredo").doesNotContain("abcdefghijklmnop");
+    }
+
+    @Test
+    void pilha_e_cortada_em_1000_caracteres_no_log(CapturedOutput saida) throws Exception {
+        relatar(ipNovo(), corpo("corte", "ab ".repeat(1000), "/corte")).andExpect(status().isNoContent());
+
+        String linha = saida.getAll().lines().filter(l -> l.contains("rota=\"/corte\"")).findFirst().orElseThrow();
+        int inicio = linha.indexOf("pilha=\"") + "pilha=\"".length();
+        String pilha = linha.substring(inicio, linha.lastIndexOf('"'));
+        assertThat(pilha).hasSize(1000);
     }
 
     @Test
@@ -128,9 +160,15 @@ class DiagnosticoControllerTest extends IntegracaoTest {
 
         relatar(ip, corpo("sem-ip", "", "/privacidade")).andExpect(status().isNoContent());
 
-        String linha = saida.getAll().lines().filter(l -> l.contains("rota=/privacidade")).findFirst().orElseThrow();
+        String linha = saida.getAll().lines().filter(l -> l.contains("rota=\"/privacidade\"")).findFirst()
+                .orElseThrow();
         assertThat(linha).doesNotContain(ip).doesNotContain("203.0.113.60");
         assertThat(jdbc.queryForObject("select count(*) from usuario", Integer.class)).isEqualTo(usuariosAntes);
+    }
+
+    @Test
+    void corpo_com_content_length_acima_de_16_kb_responde_413() throws Exception {
+        relatar(ipNovo(), corpo("falhou", "a".repeat(20_000), "/")).andExpect(status().isPayloadTooLarge());
     }
 
     @Test

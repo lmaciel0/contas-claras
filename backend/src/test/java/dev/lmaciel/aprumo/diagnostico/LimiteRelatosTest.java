@@ -13,6 +13,7 @@ import java.time.ZoneOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import dev.lmaciel.aprumo.auth.CodigosEmail;
 import dev.lmaciel.aprumo.comum.MuitasTentativasException;
 
 class LimiteRelatosTest {
@@ -41,13 +42,17 @@ class LimiteRelatosTest {
         }
     }
 
+    private static final String SEGREDO = "segredo-falso-so-para-testes-0123456789";
+
     private RelogioMutavel relogio;
+    private CodigosEmail codigos;
     private LimiteRelatos limite;
 
     @BeforeEach
     void preparar() {
         relogio = new RelogioMutavel();
-        limite = new LimiteRelatos(relogio);
+        codigos = new CodigosEmail(SEGREDO);
+        limite = new LimiteRelatos(relogio, codigos);
     }
 
     private void relatar(String ip, int vezes) {
@@ -93,26 +98,60 @@ class LimiteRelatosTest {
     }
 
     @Test
-    void o_mapa_nunca_passa_de_10_mil_ips() {
-        for (int i = 0; i < LimiteRelatos.MAX_IPS; i++) {
-            limite.reservar("ip-" + i);
-        }
-        assertThat(limite.tamanho()).isEqualTo(LimiteRelatos.MAX_IPS);
+    void a_chave_do_mapa_e_o_hmac_do_ip_e_nunca_o_ip() {
+        limite.reservar("198.51.100.1");
 
-        limite.reservar("ip-novo");
-
-        assertThat(limite.tamanho()).isEqualTo(1);
+        assertThat(limite.chaves()).containsExactly(codigos.hmac("198.51.100.1"));
     }
 
     @Test
-    void ao_encher_os_baldes_vencidos_saem_primeiro() {
-        for (int i = 0; i < LimiteRelatos.MAX_IPS; i++) {
-            limite.reservar("ip-" + i);
-        }
+    void mapa_cheio_recusa_ip_novo_com_429_e_nao_limpa_nada() {
+        LimiteRelatos pequeno = new LimiteRelatos(relogio, codigos, 1000, 3);
+        pequeno.reservar("ip-1");
+        pequeno.reservar("ip-2");
+        pequeno.reservar("ip-3");
+
+        assertThatThrownBy(() -> pequeno.reservar("ip-4")).isInstanceOf(MuitasTentativasException.class);
+
+        assertThat(pequeno.tamanho()).isEqualTo(3);
+        // quem já está no mapa segue contando normalmente
+        assertThatCode(() -> pequeno.reservar("ip-1")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void mapa_cheio_poda_os_baldes_vencidos_antes_de_recusar() {
+        LimiteRelatos pequeno = new LimiteRelatos(relogio, codigos, 1000, 3);
+        pequeno.reservar("ip-1");
+        pequeno.reservar("ip-2");
+        pequeno.reservar("ip-3");
         relogio.avancar(Duration.ofMinutes(10));
 
-        limite.reservar("ip-novo");
+        assertThatCode(() -> pequeno.reservar("ip-4")).doesNotThrowAnyException();
 
-        assertThat(limite.tamanho()).isEqualTo(1);
+        assertThat(pequeno.tamanho()).isEqualTo(1);
+    }
+
+    @Test
+    void teto_global_de_200_relatos_por_minuto_vale_para_qualquer_ip() {
+        for (int i = 0; i < LimiteRelatos.MAX_GLOBAL_POR_MINUTO; i++) {
+            limite.reservar("ip-" + i);
+        }
+
+        assertThatThrownBy(() -> limite.reservar("ip-novo")).isInstanceOf(MuitasTentativasException.class);
+
+        relogio.avancar(Duration.ofMinutes(1));
+        assertThatCode(() -> limite.reservar("ip-novo")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void teto_global_e_conferido_antes_do_balde_do_ip() {
+        LimiteRelatos pequeno = new LimiteRelatos(relogio, codigos, 2, 100);
+        pequeno.reservar("ip-1");
+        pequeno.reservar("ip-2");
+
+        assertThatThrownBy(() -> pequeno.reservar("ip-3")).isInstanceOf(MuitasTentativasException.class);
+
+        // o recusado pelo teto global nem chegou a criar balde
+        assertThat(pequeno.tamanho()).isEqualTo(2);
     }
 }

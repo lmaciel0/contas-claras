@@ -36,21 +36,17 @@ public class DiagnosticoController {
     @PostMapping(path = "/erros", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> relatarErro(@Valid @RequestBody RelatoErroRequest req, HttpServletRequest http) {
         limite.reservar(ipDoCliente.de(http));
-        log.warn("erro no front rota={} mensagem={} pilha={}",
-                semQuebraDeLinha(req.rota()), semQuebraDeLinha(req.mensagem()),
-                semQuebraDeLinha(cortar(req.pilha())));
+        log.warn("erro no front rota=\"{}\" mensagem=\"{}\" pilha=\"{}\"",
+                SaneadorRelato.escapar(SaneadorRelato.rota(req.rota())),
+                SaneadorRelato.escapar(SaneadorRelato.texto(req.mensagem())),
+                SaneadorRelato.escapar(cortar(SaneadorRelato.texto(req.pilha()))));
         return ResponseEntity.noContent().build();
     }
 
     private static String cortar(String texto) {
-        if (texto == null || texto.length() <= MAX_PILHA_NO_LOG) {
+        if (texto.length() <= MAX_PILHA_NO_LOG) {
             return texto;
         }
         return texto.substring(0, MAX_PILHA_NO_LOG);
-    }
-
-    /** Quem relata controla o texto: sem CR/LF ele não consegue forjar uma linha de log. */
-    private static String semQuebraDeLinha(String texto) {
-        return texto == null ? "" : texto.replace('\r', ' ').replace('\n', ' ');
     }
 }
