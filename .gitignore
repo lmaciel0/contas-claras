@@ -29,3 +29,12 @@ GEMINI.md
 HANDOFF.md
 .vercelignore
 
+
+# Android (TWA): chaves e artefatos de build nunca no repo
+android/*.keystore
+android/*.jks
+android/build/
+android/*.aab
+android/*.apk
+android/local.properties
+android/node_modules/
