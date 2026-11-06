@@ -113,7 +113,7 @@ Coerente com `https://app.useaprumo.com.br/privacidade` (seções 2, 4 e 7).
 | Informações pessoais: IDs de usuário (identificador do Google, quando entra com Google) | Sim | Não | Gerenciamento da conta | Sim |
 | Informações financeiras: outras informações financeiras (lançamentos, cartões, valores que a pessoa digita) | Sim | Não | Funcionamento do app | Não |
 | Atividade no app: outro conteúdo gerado pelo usuário (tarefas, notas, projetos) | Sim | Não | Funcionamento do app | Não |
-| Registros de falhas (mensagem técnica do erro e tela em que ocorreu, sem dados pessoais) | Sim | Não | Funcionalidade do app, análise | Não |
+| Registros de falhas (mensagem técnica do erro, trecho do código e tela em que ocorreu, sem parâmetros nem números de registro; e-mails e códigos removidos antes do envio; ficam nos logs do provedor da API, pelo prazo dele) | Sim | Não | Funcionalidade do app, análise | Não |
 
 Não coletados: localização, contatos, mensagens, fotos e vídeos, áudio, arquivos, calendário, saúde, histórico de navegação, identificadores de dispositivo e de publicidade.
 

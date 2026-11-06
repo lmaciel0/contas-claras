@@ -106,12 +106,12 @@ describe('PrivacidadePage', () => {
     expect(item.textContent).toContain('(use Exportar meus dados, no menu)')
   })
 
-  it('declara_o_relato_de_erros_sem_dados_pessoais', () => {
+  it('declara_o_relato_de_erros_o_que_e_removido_e_onde_ficam_os_registros', () => {
     const { container } = renderizar()
     const texto = (container.textContent ?? '').replace(/\s+/g, ' ')
 
     expect(texto).toContain(
-      'Quando o app encontra um erro inesperado, enviamos ao nosso servidor a mensagem técnica do erro e a tela em que ele aconteceu, sem seus dados pessoais nem o conteúdo dos seus registros, para corrigir o problema.',
+      'Quando o app encontra um erro inesperado, enviamos ao nosso servidor a mensagem técnica do erro, o trecho do código em que ele ocorreu e a tela em que aconteceu (sem parâmetros nem números de registro). E-mails e códigos são removidos antes do envio, e o seu IP é usado só para limitar envios, como código calculado (HMAC). Esses registros ficam nos logs do provedor da API, pelo prazo dele.',
     )
   })
 

@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ErroApi } from '../api/cliente'
 import { servidor } from '../teste/servidor'
 import { criarRelator, instalarRelatoGlobal } from './relatarErro'
 
@@ -19,6 +20,13 @@ function capturarRelatos(status = 204) {
     }),
   )
   return { recebidos }
+}
+
+/** Erro com pilha fixa: o `stack` real muda de linha a cada chamada no teste, e o relator deduplica também pela origem. */
+function erroComPilha(mensagem: string, frame = 'tela (app.js:1:1)') {
+  const erro = new Error(mensagem)
+  erro.stack = `Error: ${mensagem}\n    at ${frame}`
+  return erro
 }
 
 /** Dá tempo de qualquer envio indevido chegar ao servidor antes de afirmar que ele não aconteceu. */
@@ -52,8 +60,8 @@ describe('relatarErro', () => {
   it('corta_mensagem_em_500_pilha_em_4000_e_rota_em_200', async () => {
     const { recebidos } = capturarRelatos()
     window.history.pushState({}, '', `/${'a'.repeat(300)}`)
-    const erro = new Error('m'.repeat(900))
-    erro.stack = 's'.repeat(9000)
+    const erro = new Error('mensagem '.repeat(100))
+    erro.stack = 'at pilha '.repeat(1000)
     const relatar = criarRelator({ prod: true })
 
     relatar(erro)
@@ -65,12 +73,12 @@ describe('relatarErro', () => {
     expect(recebidos[0]?.rota.startsWith('/')).toBe(true)
   })
 
-  it('mensagem_vazia_vira_erro_sem_mensagem_e_aceita_valor_que_nao_e_error', async () => {
+  it('mensagem_vazia_vira_erro_sem_mensagem_e_aceita_texto_solto', async () => {
     const { recebidos } = capturarRelatos()
     const relatar = criarRelator({ prod: true })
 
-    relatar(new Error(''))
-    relatar(undefined)
+    relatar(erroComPilha(''))
+    relatar(erroComPilha(''))
     relatar('texto solto')
 
     await vi.waitFor(() => expect(recebidos).toHaveLength(2))
@@ -97,9 +105,9 @@ describe('relatarErro', () => {
     const { recebidos } = capturarRelatos()
     const relatar = criarRelator({ prod: true })
 
-    relatar(new Error('igual'))
-    relatar(new Error('igual'))
-    relatar(new Error('igual'))
+    relatar(erroComPilha('igual'))
+    relatar(erroComPilha('igual'))
+    relatar(erroComPilha('igual'))
     for (let i = 1; i <= 4; i += 1) {
       relatar(new Error(`outro ${i}`))
     }
@@ -157,7 +165,7 @@ describe('relatarErro', () => {
     expect(() => relatar(new Error('x'))).not.toThrow()
   })
 
-  it('usa_keepalive_e_post_com_json', () => {
+  it('usa_post_com_json_sem_credenciais', () => {
     const enviar = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
     const relatar = criarRelator({ prod: true, enviar })
 
@@ -167,9 +175,127 @@ describe('relatarErro', () => {
     const [url, opcoes] = enviar.mock.calls[0] as [string, RequestInit]
     expect(url).toBe('/api/diagnostico/erros')
     expect(opcoes.method).toBe('POST')
-    expect(opcoes.keepalive).toBe(true)
+    expect(opcoes.keepalive).toBeUndefined()
     expect(opcoes.credentials).toBe('omit')
     expect(opcoes.headers).toEqual({ 'Content-Type': 'application/json' })
+  })
+
+  it('limpa_email_token_query_e_fragmento_da_mensagem_e_da_pilha', async () => {
+    const { recebidos } = capturarRelatos()
+    const relatar = criarRelator({ prod: true })
+    const token = 'abcDEF123_-abcDEF123_-abcDEF'
+    const erro = new Error(`falhou para ana@exemplo.com com ${token} em /x?mes=2026-10&e=a#topo fim`)
+    erro.stack = `Error: falhou\n    at f (https://app.useaprumo.com.br/assets/a.js:1:2?v=${token})\n    at g (http://x/y#frag)`
+
+    relatar(erro, '\n    at Tela')
+
+    await vi.waitFor(() => expect(recebidos).toHaveLength(1))
+    const { mensagem, pilha } = recebidos[0] as Relato
+    expect(mensagem).toBe('falhou para [email] com [token] em /x fim')
+    expect(pilha).not.toContain(token)
+    expect(pilha).not.toContain('?v=')
+    expect(pilha).not.toContain('#frag')
+    expect(pilha).toContain('at Tela')
+  })
+
+  it('a_limpeza_vem_antes_do_corte', async () => {
+    const { recebidos } = capturarRelatos()
+    const relatar = criarRelator({ prod: true })
+
+    relatar(new Error(`${'x '.repeat(240)}ana@exemplo.com ${'y '.repeat(100)}`))
+
+    await vi.waitFor(() => expect(recebidos).toHaveLength(1))
+    expect(recebidos[0]?.mensagem).toContain('[email]')
+    expect(recebidos[0]?.mensagem).not.toContain('@')
+  })
+
+  it('rota_troca_segmentos_numericos_por_id', async () => {
+    const { recebidos } = capturarRelatos()
+    window.history.pushState({}, '', '/projetos/123/tarefas/45')
+    const relatar = criarRelator({ prod: true })
+
+    relatar(new Error('x'))
+
+    await vi.waitFor(() => expect(recebidos).toHaveLength(1))
+    expect(recebidos[0]?.rota).toBe('/projetos/:id/tarefas/:id')
+  })
+
+  it('rota_mantem_segmentos_que_apenas_contem_digitos', async () => {
+    const { recebidos } = capturarRelatos()
+    window.history.pushState({}, '', '/2026-10/v2')
+    const relatar = criarRelator({ prod: true })
+
+    relatar(new Error('x'))
+
+    await vi.waitFor(() => expect(recebidos).toHaveLength(1))
+    expect(recebidos[0]?.rota).toBe('/2026-10/v2')
+  })
+
+  describe('ruido_ignorado_sem_gastar_vaga', () => {
+    type Evento = Parameters<ReturnType<typeof criarRelator>>[2]
+    const ruidos: Array<[string, unknown, Evento]> = [
+      ['Script error. sem objeto de erro', 'Script error.', { message: 'Script error.' }],
+      [
+        'ResizeObserver loop sem objeto de erro',
+        'ResizeObserver loop completed with undelivered notifications.',
+        { message: 'ResizeObserver loop completed with undelivered notifications.' },
+      ],
+      [
+        'arquivo de outra origem',
+        new Error('de extensao'),
+        { error: new Error('de extensao'), filename: 'chrome-extension://abc/x.js' },
+      ],
+      ['AbortError', Object.assign(new Error('abortou'), { name: 'AbortError' }), undefined],
+      ['ErroApi de rede (status 0)', new ErroApi(0, 'Servidor não respondeu. Tente de novo.'), undefined],
+      ['Failed to fetch', new TypeError('Failed to fetch'), undefined],
+      ['NetworkError', new TypeError('NetworkError when attempting to fetch resource.'), undefined],
+      ['Load failed', new TypeError('Load failed'), undefined],
+      ['rejeicao que nao e Error nem string', { codigo: 1 }, undefined],
+      ['rejeicao undefined', undefined, undefined],
+    ]
+
+    it.each(ruidos)('%s', async (_nome, erro, evento) => {
+      const { recebidos } = capturarRelatos()
+      const relatar = criarRelator({ prod: true })
+
+      relatar(erro, undefined, evento)
+      for (let i = 1; i <= 5; i += 1) {
+        relatar(new Error(`real ${i}`))
+      }
+
+      await vi.waitFor(() => expect(recebidos).toHaveLength(5))
+      await esperarEnviosIndevidos()
+      expect(recebidos.map((r) => r.mensagem)).toEqual([1, 2, 3, 4, 5].map((i) => `real ${i}`))
+    })
+
+    it('erro_da_propria_origem_e_erro_de_api_com_status_http_sao_relatados', async () => {
+      const { recebidos } = capturarRelatos()
+      const relatar = criarRelator({ prod: true })
+      const nosso = new Error('nosso')
+
+      relatar(nosso, undefined, { error: nosso, filename: `${window.location.origin}/assets/a.js` })
+      relatar(new ErroApi(500, 'Erro interno'))
+
+      await vi.waitFor(() => expect(recebidos).toHaveLength(2))
+    })
+  })
+
+  it('dedup_usa_mensagem_limpa_e_a_primeira_linha_da_pilha', async () => {
+    const { recebidos } = capturarRelatos()
+    const relatar = criarRelator({ prod: true })
+    const com = (mensagem: string, frame: string) => {
+      const erro = new Error(mensagem)
+      erro.stack = `Error: ${mensagem}\n    at ${frame}`
+      return erro
+    }
+
+    relatar(com('falhou ana@exemplo.com', 'a (x.js:1:1)'))
+    relatar(com('falhou bia@exemplo.com', 'a (x.js:1:1)'))
+    relatar(com('falhou ana@exemplo.com', 'b (y.js:2:2)'))
+
+    await vi.waitFor(() => expect(recebidos).toHaveLength(2))
+    await esperarEnviosIndevidos()
+    expect(recebidos).toHaveLength(2)
   })
 })
 
@@ -193,7 +319,7 @@ describe('instalarRelatoGlobal', () => {
 
     const erro = new Error('estourou')
     window.dispatchEvent(eventoDeErro({ error: erro, message: 'estourou' }))
-    expect(relatar).toHaveBeenLastCalledWith(erro)
+    expect(relatar).toHaveBeenLastCalledWith(erro, undefined, expect.objectContaining({ error: erro }))
 
     const motivo = new Error('promessa')
     const evento = new Event('unhandledrejection') as PromiseRejectionEvent
@@ -216,7 +342,7 @@ describe('instalarRelatoGlobal', () => {
 
     window.dispatchEvent(eventoDeErro({ message: 'Script error.' }))
 
-    expect(relatar).toHaveBeenCalledWith('Script error.')
+    expect(relatar).toHaveBeenCalledWith('Script error.', undefined, expect.objectContaining({ message: 'Script error.' }))
     remover()
   })
 })
