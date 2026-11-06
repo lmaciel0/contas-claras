@@ -106,6 +106,15 @@ describe('PrivacidadePage', () => {
     expect(item.textContent).toContain('(use Exportar meus dados, no menu)')
   })
 
+  it('declara_o_relato_de_erros_sem_dados_pessoais', () => {
+    const { container } = renderizar()
+    const texto = (container.textContent ?? '').replace(/\s+/g, ' ')
+
+    expect(texto).toContain(
+      'Quando o app encontra um erro inesperado, enviamos ao nosso servidor a mensagem técnica do erro e a tela em que ele aconteceu, sem seus dados pessoais nem o conteúdo dos seus registros, para corrigir o problema.',
+    )
+  })
+
   it('nao_tem_link_com_href_vazio', () => {
     renderizar()
 
