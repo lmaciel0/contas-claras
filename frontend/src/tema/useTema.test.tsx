@@ -27,7 +27,6 @@ describe('useTema', () => {
     instalarSistema(true)
     const { result } = renderHook(() => useTema())
     expect(result.current.tema).toBe('claro')
-    expect(document.documentElement.dataset.tema).toBe('claro')
   })
 
   it('escolha salva escuro vence o sistema claro', () => {
@@ -35,7 +34,15 @@ describe('useTema', () => {
     localStorage.setItem(CHAVE_TEMA, 'escuro')
     const { result } = renderHook(() => useTema())
     expect(result.current.tema).toBe('escuro')
+  })
+
+  it('o tema já aplicado em data-tema vale mais que o padrão, e montar o hook não aplica nem grava nada', () => {
+    instalarSistema(true)
+    document.documentElement.dataset.tema = 'escuro'
+    const { result } = renderHook(() => useTema())
+    expect(result.current.tema).toBe('escuro')
     expect(document.documentElement.dataset.tema).toBe('escuro')
+    expect(localStorage.getItem(CHAVE_TEMA)).toBeNull()
   })
 
   it('escolha salva claro vence o sistema escuro', () => {
@@ -67,6 +74,7 @@ describe('useTema', () => {
   it('a cor da barra do navegador acompanha o tema escolhido', () => {
     instalarSistema(false)
     document.head.innerHTML = '<meta name="theme-color" content="#27187E" />'
+    document.documentElement.dataset.tema = 'claro'
     const { result } = renderHook(() => useTema())
     const cor = () => document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.content
     expect(cor()).toBe('#27187E')
