@@ -26,7 +26,7 @@ function getVisualMiniCartao(nome: string): { background: string; bandeira: stri
   if (n.includes('itau') || n.includes('itaú') || n.includes('uniclass') || n.includes('personnalite')) {
     return {
       background: 'linear-gradient(135deg, #0d3b66 0%, #001833 100%)',
-      bandeira: 'Itaú',
+      bandeira: 'Cartão',
     }
   }
   if (n.includes('bradesco')) {
