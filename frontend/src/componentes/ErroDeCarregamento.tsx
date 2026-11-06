@@ -40,7 +40,7 @@ export class ErroDeCarregamento extends Component<Props, Estado> {
         <button
           type="button"
           onClick={recarregar}
-          className="min-h-11 cursor-pointer rounded-lg bg-[var(--cor-principal)] px-4 font-semibold text-[var(--cor-sobre-principal)]"
+          className="min-h-11 cursor-pointer rounded-lg bg-[var(--cor-principal)] px-4 font-semibold text-[var(--cor-sobre-principal)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cor-principal)]"
         >
           Recarregar
         </button>

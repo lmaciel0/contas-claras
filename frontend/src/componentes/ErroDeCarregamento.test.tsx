@@ -39,4 +39,14 @@ describe('ErroDeCarregamento', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Recarregar' }))
     expect(recarregar).toHaveBeenCalledTimes(1)
   })
+
+  it('botao_tem_foco_visivel', () => {
+    render(
+      <ErroDeCarregamento>
+        <Quebra />
+      </ErroDeCarregamento>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Recarregar' }).className).toContain('focus-visible:outline-2')
+  })
 })

@@ -117,6 +117,13 @@ describe('vercel.json: headers de segurança', () => {
     expect(cabecalho('Permissions-Policy')).toBe('camera=(), microphone=(), geolocation=(), payment=()')
   })
 
+  it('sw_e_pagina_offline_sempre_revalidados', () => {
+    for (const rota of ['/sw.js', '/offline.html']) {
+      const regra = regras.find((r) => r.source === rota)
+      expect(regra?.headers).toEqual([{ key: 'Cache-Control', value: 'no-cache' }])
+    }
+  })
+
   it('api_nunca_e_cacheada_no_cdn', () => {
     expect(regraApi?.headers).toEqual([{ key: 'Cache-Control', value: 'no-store' }])
   })
