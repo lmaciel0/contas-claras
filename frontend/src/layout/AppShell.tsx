@@ -10,7 +10,6 @@ import { DockInferior } from './DockInferior'
 import { DockLateral } from './DockLateral'
 import { PreferenciasModal } from '../preferencias/PreferenciasModal'
 import { usePreferencias } from '../preferencias/usePreferencias'
-import { AcaoRapida } from './AcaoRapida'
 import { foco } from './classesFoco'
 import type { ContextoShell } from './contextoShell'
 import { FundoDoDialogo } from './FundoDoDialogo'
@@ -25,8 +24,8 @@ interface Props {
 
 const botaoIcone = `grid min-h-11 min-w-11 shrink-0 cursor-pointer place-items-center rounded-xl text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] ${foco}`
 
-/** Folga embaixo do `main` no celular: o último item e o botão "Salvar" ficam acima da dock flutuante, do botão "Criar" (que sobe até 8 rem) e da área segura. */
-const FOLGA_DOCK = 'pb-[calc(8.5rem+env(safe-area-inset-bottom))]'
+/** Folga embaixo do `main` no celular: o último item e o botão "Salvar" ficam acima da dock flutuante (0,75 rem de vão + 3,5 rem de pílula), do botão "Criar" que sobe 0,75 rem acima dela, de uma respiro de 1,5 rem e da área segura. */
+const FOLGA_DOCK = 'pb-[calc(6.5rem+env(safe-area-inset-bottom))]'
 
 /**
  * No desktop o vão vem do `gap-3 p-3` do grid, então o `main` não tem padding; abaixo de 1280 px mantém o de antes e,
@@ -42,9 +41,10 @@ function classesMain(larguraTotal: boolean, ehDesktop: boolean, ehCelular: boole
 }
 
 /**
- * Moldura das telas logadas. Em ≥ 1280 px a DockLateral fica flutuante à esquerda. Abaixo disso há uma barra fina no topo com o
+ * Moldura das telas logadas. Em ≥ 1280 px a DockLateral fica flutuante à esquerda. Entre 768 e 1279 px há uma barra fina no topo com o
  * botão "Abrir menu"; o menu desliza sobre um fundo escurecido (Esc, clique no fundo ou navegar fecham; ao virar desktop ou
- * cruzar o limite de celular fecha sozinho). Em menos de 768 px entra também a DockInferior, com os quatro destinos principais.
+ * cruzar o limite de celular fecha sozinho). Em menos de 768 px não há barra nem menu: toda a navegação fica na DockInferior
+ * (Início, Notas, Orçamento, Mais e o botão Criar).
  */
 export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const ehDesktop = useEhDesktop()
@@ -61,7 +61,8 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const [celularAnterior, setCelularAnterior] = useState(ehCelular)
   const idPainel = useId()
 
-  const painelAberto = aberto && !ehDesktop
+  // No celular não há barra de topo nem painel: toda a navegação está na dock inferior.
+  const painelAberto = aberto && !ehDesktop && !ehCelular
 
   // Virou desktop com o painel aberto: zera o estado já na renderização (padrão do React para estado derivado).
   if (ehDesktop && aberto) {
@@ -180,7 +181,7 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
       <div className="min-h-dvh" style={{ background: 'var(--fundo-degrade)' }}>
         <AvisoServidor />
         <div className={ehDesktop ? `grid min-h-dvh grid-rows-[auto_1fr] gap-3 p-3 ${colunasDesktop}` : undefined}>
-          {ehDesktop ? dockDesktop : barraSuperior}
+          {ehDesktop ? dockDesktop : !ehCelular && barraSuperior}
           {ehDesktop && (
             <div
               className={`col-[2/-1] row-start-1 min-w-0 ${
@@ -238,7 +239,6 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
         </div>
 
         {ehCelular && <DockInferior />}
-        {ehCelular && <AcaoRapida />}
 
         {painelAberto && (
           <div className="fixed inset-0 z-40">
