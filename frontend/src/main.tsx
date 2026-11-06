@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import { App } from './App'
 import { AuthProvider } from './auth/AuthProvider'
+import { LimiteDeErro } from './componentes/LimiteDeErro'
 import { instalarRecarregarNoErroDeChunk } from './recarregarNoErroDeChunk'
 import { registrarServiceWorker } from './registrarServiceWorker'
 import '@fontsource-variable/inter'
@@ -27,7 +28,9 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <LimiteDeErro>
+            <App />
+          </LimiteDeErro>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
