@@ -24,9 +24,10 @@ interface Pendente {
 /**
  * Card "Nota fixada" da tela inicial: título com a cor da categoria, conteúdo somente leitura com rolagem interna e
  * caixinhas que marcam na hora (otimista) e gravam em lote após ~300 ms, com descarga ao sair da tela. Tem consulta
- * própria: a saudação e os outros cards não esperam por ele, e o erro fica só dentro do card.
+ * própria: a saudação e os outros cards não esperam por ele, e o erro fica só dentro do card. `atrasoGravacaoMs` existe
+ * para os testes alargarem a janela do lote, que não pode depender da velocidade da máquina.
  */
-export function NotaFixada() {
+export function NotaFixada({ atrasoGravacaoMs = ATRASO_GRAVACAO_MS }: { atrasoGravacaoMs?: number } = {}) {
   const queryClient = useQueryClient()
   const consulta = useNotaFixada()
   const categorias = useCategoriasNota()
@@ -87,7 +88,7 @@ export function NotaFixada() {
       queryClient.setQueryData<NotaFixadaResponse>(CHAVE, { nota: { ...atual, conteudo: pendente.current?.conteudo ?? novo } })
     })
     if (temporizador.current !== null) clearTimeout(temporizador.current)
-    temporizador.current = setTimeout(() => gravarRef.current(), ATRASO_GRAVACAO_MS)
+    temporizador.current = setTimeout(() => gravarRef.current(), atrasoGravacaoMs)
   }
 
   const categoria = categorias.data?.find((c) => c.id === nota?.categoriaId) ?? null
