@@ -151,7 +151,7 @@ export function PrivacidadePage() {
           <li>acesso aos seus dados;</li>
           <li>correção de dados incompletos, inexatos ou desatualizados;</li>
           <li>anonimização, bloqueio ou eliminação de dados desnecessários ou tratados fora da lei;</li>
-          <li>portabilidade dos seus dados;</li>
+          <li>portabilidade dos seus dados (use Exportar meus dados, no menu);</li>
           <li>informação sobre com quem compartilhamos seus dados;</li>
           <li>revogação de consentimento, quando ele for a base do tratamento.</li>
         </ul>

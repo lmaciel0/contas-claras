@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import { useExportarDados } from '../../auth/useExportarDados'
 import { foco } from '../../layout/classesFoco'
 import { useContextoShell } from '../../layout/contextoShell'
 import {
+  ICONE_DOWNLOAD,
   ICONE_ENGRENAGEM,
   ICONE_EXCLUIR,
   ICONE_PRIVACIDADE,
@@ -35,7 +37,7 @@ function Seta() {
 
 /**
  * Página "Mais" (celular): tudo que não cabe na dock inferior. Atalhos (Tarefas, Projetos, Visão geral, Cartões,
- * Categorias, Relatórios), conta (Preferências, senha, exclusão, privacidade) e Sair, em cartões agrupados.
+ * Categorias, Relatórios), conta (Preferências, senha, exportar dados, exclusão, privacidade) e Sair, em cartões agrupados.
  * As ações vêm do AppShell pelo contexto do `<Outlet>`.
  */
 export function MaisPage() {
@@ -43,6 +45,7 @@ export function MaisPage() {
   const { busca } = useMesSelecionado()
   const nomeExibido = nomeUsuario?.trim() || 'Minha conta'
   const inicial = nomeExibido.charAt(0).toUpperCase()
+  const { exportar, exportando, erro: erroExportacao } = useExportarDados()
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-5">
@@ -83,6 +86,21 @@ export function MaisPage() {
           <span>Alterar senha</span>
           <Seta />
         </Link>
+        <button
+          type="button"
+          onClick={() => void exportar()}
+          disabled={exportando}
+          aria-busy={exportando}
+          className={`${linha} cursor-pointer text-[var(--cor-texto)] disabled:cursor-wait disabled:opacity-60`}
+        >
+          {ICONE_DOWNLOAD}
+          <span>{exportando ? 'Exportando…' : 'Exportar meus dados'}</span>
+        </button>
+        {erroExportacao !== null && (
+          <p role="alert" className="m-0 px-4 py-2 text-sm text-[var(--cor-negativo)]">
+            {erroExportacao}
+          </p>
+        )}
         <Link to="/conta/excluir" className={`${linha} text-[var(--cor-texto)]`}>
           {ICONE_EXCLUIR}
           <span>Excluir conta</span>

@@ -62,6 +62,11 @@ export function aoNaoAutenticado(tratador: () => void): () => void {
   }
 }
 
+/** Aciona o tratador registrado em `aoNaoAutenticado`, para chamadas que usam `fetch` direto (ex.: baixar arquivo) e recebem 401. */
+export function notificarNaoAutenticado(): void {
+  tratarNaoAutenticado?.()
+}
+
 // --- Cliente ----------------------------------------------------------------------------------
 async function lerCorpo(resposta: Response): Promise<unknown> {
   const texto = await resposta.text()

@@ -1,8 +1,10 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 import { DockLateral } from './DockLateral'
 import { PreferenciasProvider } from '../preferencias/PreferenciasContext'
+import { servidor } from '../teste/servidor'
 
 function renderizar(
   props: {
@@ -81,11 +83,32 @@ describe('DockLateral', () => {
     expect(aoNavegar).toHaveBeenCalledTimes(1)
   })
 
+  it('tem o botão "Exportar meus dados" abaixo de "Alterar senha", que chama a API e mostra o erro se falhar', async () => {
+    let chamadas = 0
+    servidor.use(
+      http.get('/api/auth/conta/exportacao', () => {
+        chamadas += 1
+        return HttpResponse.json({ erro: 'x' }, { status: 500 })
+      }),
+    )
+    renderizar()
+    const alterar = screen.getByRole('link', { name: 'Alterar senha' })
+    const exportar = screen.getByRole('button', { name: 'Exportar meus dados' })
+    expect(exportar).toHaveClass('min-h-11', 'text-[var(--cor-texto)]')
+    expect(alterar.compareDocumentPosition(exportar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    fireEvent.click(exportar)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível exportar. Tente de novo.')
+    expect(chamadas).toBe(1)
+  })
+
   it('rodapé expandido: todas as linhas têm ícone svg aria-hidden como primeiro filho e min-h-11', () => {
     renderizar()
     const linhas = [
       screen.getByRole('button', { name: 'Preferências' }),
       screen.getByRole('link', { name: 'Alterar senha' }),
+      screen.getByRole('button', { name: 'Exportar meus dados' }),
       screen.getByRole('link', { name: 'Excluir conta' }),
       screen.getByRole('link', { name: 'Política de Privacidade' }),
       screen.getByRole('button', { name: 'Sair' }),
@@ -104,6 +127,7 @@ describe('DockLateral', () => {
     renderizar()
     fireEvent.click(screen.getByRole('button', { name: /recolher menu/i }))
     expect(screen.queryByRole('link', { name: 'Alterar senha' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Exportar meus dados' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Excluir conta' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Política de Privacidade' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Preferências' })).toHaveClass('size-11')

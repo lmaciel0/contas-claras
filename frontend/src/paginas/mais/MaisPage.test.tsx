@@ -1,9 +1,11 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { Outlet, Route, Routes } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import type { ContextoShell } from '../../layout/contextoShell'
 import { renderComApp } from '../../teste/render'
+import { servidor } from '../../teste/servidor'
 import { MaisPage } from './MaisPage'
 
 function renderizar(rota = '/mais', contexto: Partial<ContextoShell> = {}) {
@@ -58,6 +60,32 @@ describe('MaisPage', () => {
     expect(screen.getByRole('link', { name: 'Alterar senha' })).toHaveAttribute('href', '/conta/senha')
     expect(screen.getByRole('link', { name: 'Excluir conta' })).toHaveAttribute('href', '/conta/excluir')
     expect(screen.getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute('href', '/privacidade')
+  })
+
+  it('"Exportar meus dados" é um botão com ícone, entre "Alterar senha" e "Excluir conta"', () => {
+    renderizar()
+    const exportar = screen.getByRole('button', { name: 'Exportar meus dados' })
+    expect(exportar.firstElementChild?.tagName.toLowerCase()).toBe('svg')
+    const senha = screen.getByRole('link', { name: 'Alterar senha' })
+    const excluir = screen.getByRole('link', { name: 'Excluir conta' })
+    expect(senha.compareDocumentPosition(exportar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(exportar.compareDocumentPosition(excluir) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('"Exportar meus dados" chama a API e mostra o erro se falhar', async () => {
+    let chamadas = 0
+    servidor.use(
+      http.get('/api/auth/conta/exportacao', () => {
+        chamadas += 1
+        return HttpResponse.json({ erro: 'x' }, { status: 500 })
+      }),
+    )
+    renderizar()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Exportar meus dados' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível exportar. Tente de novo.')
+    expect(chamadas).toBe(1)
   })
 
   it('"Preferências" chama aoAbrirPreferencias', async () => {
