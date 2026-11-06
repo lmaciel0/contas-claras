@@ -1,10 +1,17 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { PreferenciasProvider } from '../preferencias/PreferenciasContext'
 import { renderComApp } from '../teste/render'
 import { HeaderPrincipal } from './HeaderPrincipal'
 
 describe('HeaderPrincipal', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    localStorage.clear()
+    delete document.documentElement.dataset.tema
+  })
+
   it('renderiza o campo de busca e aciona onAbrirBusca ao clicar', async () => {
     const user = userEvent.setup()
     const onAbrirBusca = vi.fn()
@@ -79,6 +86,27 @@ describe('HeaderPrincipal', () => {
     await user.click(botaoPreferencias)
 
     expect(onAbrirPreferencias).toHaveBeenCalledTimes(1)
+  })
+
+  it('clicar no avatar abre o menu sem alterar o tema (sistema escuro, sem tema salvo)', async () => {
+    const user = userEvent.setup()
+    localStorage.clear()
+    delete document.documentElement.dataset.tema
+    vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+    renderComApp(
+      <PreferenciasProvider>
+        <HeaderPrincipal nomeUsuario="Lucas" />
+      </PreferenciasProvider>,
+    )
+    expect(document.documentElement.dataset.tema).toBe('escuro')
+
+    const botaoPerfil = screen.getByRole('button', { name: /perfil do usuário/i })
+    await user.click(botaoPerfil)
+
+    expect(botaoPerfil).toHaveAttribute('aria-expanded', 'true')
+    expect(localStorage.getItem('aprumo-tema')).toBeNull()
+    expect(document.documentElement.dataset.tema).toBe('escuro')
+    expect(screen.getByRole('switch', { name: 'Tema escuro' })).toBeChecked()
   })
 
   it('header_nao_tem_faixa_nem_borda', () => {

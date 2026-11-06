@@ -2,7 +2,7 @@ import { Link, NavLink } from 'react-router'
 import { usePreferencias } from '../preferencias/usePreferencias'
 import { GRUPOS_MENU } from './itensMenu'
 import { useMesSelecionado } from './useMesSelecionado'
-import { ICONES, iconeProps } from './icones'
+import { ICONES, ICONE_EXCLUIR, ICONE_PRIVACIDADE, ICONE_SENHA, iconeProps } from './icones'
 import { Logo } from './Logo'
 
 interface DockLateralProps {
@@ -15,7 +15,7 @@ interface DockLateralProps {
 
 const foco =
   'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
-const linhaBase = `flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm no-underline transition-colors duration-150 ease-out ${foco}`
+const linhaBase = `flex min-h-11 cursor-pointer w-full items-center gap-3 rounded-xl px-3 text-sm no-underline transition-colors duration-150 ease-out motion-reduce:transition-none ${foco}`
 
 export function DockLateral({
   nomeUsuario,
@@ -79,7 +79,7 @@ export function DockLateral({
       </div>
 
       {/* Navegação */}
-      <nav aria-label="Menu principal" className="mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden">
+      <nav aria-label="Menu principal" className={`mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden ${recolhida ? '' : 'mb-3'}`}>
         {GRUPOS_MENU.map((grupo) => (
           <div key={grupo.titulo ?? 'principal'} className="flex flex-col gap-1">
             {!recolhida && grupo.titulo && (
@@ -125,7 +125,7 @@ export function DockLateral({
       </nav>
 
       {/* Rodapé da Dock */}
-      <div className="mt-auto flex flex-col gap-1 border-t border-[var(--cor-linha)] pt-3">
+      <div className="flex flex-col gap-1 border-t border-[var(--cor-linha)] pt-3">
         {/* Botão de Preferências */}
         <button
           type="button"
@@ -207,21 +207,24 @@ export function DockLateral({
               onClick={aoNavegar}
               className={`${linhaBase} text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)]`}
             >
-              Alterar senha
+              {ICONE_SENHA}
+              <span>Alterar senha</span>
             </Link>
             <Link
               to="/conta/excluir"
               onClick={aoNavegar}
               className={`${linhaBase} text-xs text-[var(--cor-mutado)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)]`}
             >
-              Excluir conta
+              {ICONE_EXCLUIR}
+              <span>Excluir conta</span>
             </Link>
             <Link
               to="/privacidade"
               onClick={aoNavegar}
               className={`${linhaBase} text-xs text-[var(--cor-mutado)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)]`}
             >
-              Política de Privacidade
+              {ICONE_PRIVACIDADE}
+              <span>Política de Privacidade</span>
             </Link>
           </>
         )}

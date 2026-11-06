@@ -39,6 +39,16 @@ function montar() {
 }
 
 describe('ProjetosPage', () => {
+  it('nao_mostra_subtitulo_no_cabecalho', async () => {
+    servidor.use(http.get('/api/projetos', () => HttpResponse.json([mockProjeto])))
+    const { wrapper } = montar()
+
+    render(<ProjetosPage />, { wrapper })
+
+    await screen.findByRole('heading', { name: 'Projetos' })
+    expect(screen.queryByText(/Acompanhe o andamento/)).not.toBeInTheDocument()
+  })
+
   it('renderiza cabeçalho, abas e 4 colunas kanban', async () => {
     servidor.use(http.get('/api/projetos', () => HttpResponse.json([mockProjeto])))
     const { wrapper } = montar()

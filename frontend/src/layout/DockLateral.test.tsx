@@ -64,6 +64,35 @@ describe('DockLateral', () => {
     expect(aoNavegar).toHaveBeenCalledTimes(1)
   })
 
+  it('rodapé expandido: todas as linhas têm ícone svg aria-hidden como primeiro filho e min-h-11', () => {
+    renderizar()
+    const linhas = [
+      screen.getByRole('button', { name: 'Preferências' }),
+      screen.getByRole('link', { name: 'Alterar senha' }),
+      screen.getByRole('link', { name: 'Excluir conta' }),
+      screen.getByRole('link', { name: 'Política de Privacidade' }),
+      screen.getByRole('button', { name: 'Sair' }),
+    ]
+    for (const linha of linhas) {
+      expect(linha).toHaveClass('min-h-11', 'gap-3', 'px-3')
+      const icone = linha.firstElementChild
+      expect(icone?.tagName.toLowerCase()).toBe('svg')
+      expect(icone).toHaveAttribute('aria-hidden', 'true')
+      expect(icone).toHaveAttribute('width', '20')
+      expect(icone).toHaveAttribute('height', '20')
+    }
+  })
+
+  it('rodapé recolhido segue só com ícones: sem links de conta e botões size-11', () => {
+    renderizar()
+    fireEvent.click(screen.getByRole('button', { name: /recolher menu/i }))
+    expect(screen.queryByRole('link', { name: 'Alterar senha' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Excluir conta' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Política de Privacidade' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Preferências' })).toHaveClass('size-11')
+    expect(screen.getByRole('button', { name: 'Sair' })).toHaveClass('size-11')
+  })
+
   it('permite alternar entre modo expandido e modo recolhido', () => {
     renderizar()
     // Inicialmente expandida

@@ -34,7 +34,7 @@ export function InicioPage() {
     placeholderData: keepPreviousData,
   })
 
-  const titulo = <CabecalhoPagina titulo="Visão geral" subtitulo="Quanto sobra e para onde vai o seu dinheiro." />
+  const titulo = <CabecalhoPagina titulo="Visão geral" />
 
   if (consulta.isPending) {
     return (

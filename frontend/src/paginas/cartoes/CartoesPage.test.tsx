@@ -83,6 +83,14 @@ function renderizar(rota = '/cartoes?ano=2026&mes=10') {
 const preenchimento = (cartaoRegion: HTMLElement) => within(cartaoRegion).getByRole('meter').firstElementChild
 
 describe('CartoesPage', () => {
+  it('nao_mostra_subtitulo_no_cabecalho', async () => {
+    responderCartoes(resposta())
+    renderizar()
+
+    await screen.findByRole('heading', { level: 1, name: 'Cartões' })
+    expect(screen.queryByText('Quanto da fatura do mês ocupa o limite de cada cartão.')).not.toBeInTheDocument()
+  })
+
   it('cartoes_mostra_faixa_e_percentual', async () => {
     const consultas = responderCartoes(resposta())
     renderizar()

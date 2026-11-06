@@ -216,7 +216,6 @@ export function CartoesPage() {
   const titulo = (
     <CabecalhoPagina
       titulo="Cartões"
-      subtitulo="Quanto da fatura do mês ocupa o limite de cada cartão."
       aoLancar={() => setLancandoGeral(true)}
       tituloVisivelNoCelular
       acaoExtra={

@@ -94,5 +94,14 @@ export function BotaoGoogle({
   if (!clientId) {
     return null
   }
-  return <div ref={alvo} data-testid="botao-google" className="flex min-h-11 justify-center" />
+  // O app usa `color-scheme: dark` e o iframe do Google é `light`; se divergem, o navegador pinta o iframe com fundo
+  // opaco (quadrado branco no tema escuro). Forçar `light` no container mantém o iframe transparente.
+  return (
+    <div
+      ref={alvo}
+      data-testid="botao-google"
+      style={{ colorScheme: 'light' }}
+      className="flex min-h-11 justify-center overflow-hidden rounded-full"
+    />
+  )
 }
