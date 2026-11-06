@@ -224,6 +224,16 @@ describe('AppShell abaixo de 1280 px', () => {
     expect(painel).not.toHaveClass('bg-[var(--cor-card)]')
   })
 
+  it('menu_deslizante_do_tablet_mostra_o_logo_uma_so_vez', async () => {
+    definirLargura(800)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    const painel = screen.getByRole('dialog', { name: 'Menu' })
+
+    expect(within(painel).getAllByRole('link', { name: 'Aprumo' })).toHaveLength(1)
+  })
+
   it('abrir o menu mostra o painel; Esc fecha e devolve o foco ao botão', async () => {
     definirLargura(390)
     renderizar()

@@ -36,22 +36,22 @@ export function DockLateral({
         recolhida ? 'w-[72px] px-2 py-4' : 'w-60 px-3 py-4'
       }`}
     >
-      {/* Topo: Logo + Botão Colapsar/Expandir */}
-      <div className={`flex items-center pb-3 border-b border-[var(--cor-linha)] ${
-        recolhida ? 'justify-center flex-col gap-3' : 'justify-between px-1'
-      }`}>
-        {recolhida ? (
-          <div
-            title="Aprumo"
-            className="grid size-10 place-items-center rounded-2xl bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)] font-black text-lg shadow-sm"
-          >
-            A
-          </div>
-        ) : (
-          <Logo />
-        )}
+      {/* Topo: Logo + Botão Colapsar/Expandir. No menu deslizante (forcarExpandida) o cabeçalho do AppShell já tem o logo. */}
+      {!forcarExpandida && (
+        <div className={`flex items-center pb-3 border-b border-[var(--cor-linha)] ${
+          recolhida ? 'justify-center flex-col gap-3' : 'justify-between px-1'
+        }`}>
+          {recolhida ? (
+            <div
+              title="Aprumo"
+              className="grid size-10 place-items-center rounded-2xl bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)] font-black text-lg shadow-sm"
+            >
+              A
+            </div>
+          ) : (
+            <Logo />
+          )}
 
-        {!forcarExpandida && (
           <button
             type="button"
             aria-label={recolhida ? 'Expandir menu' : 'Recolher menu'}
@@ -75,11 +75,11 @@ export function DockLateral({
               <path d="m14 9-3 3 3 3" />
             </svg>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Navegação */}
-      <nav aria-label="Menu principal" className={`mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden ${recolhida ? '' : 'mb-3'}`}>
+      <nav aria-label="Menu principal" className={`flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden ${forcarExpandida ? '' : 'mt-3'} ${recolhida ? '' : 'mb-3'}`}>
         {GRUPOS_MENU.map((grupo) => (
           <div key={grupo.titulo ?? 'principal'} className="flex flex-col gap-1">
             {!recolhida && grupo.titulo && (
