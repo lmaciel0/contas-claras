@@ -37,6 +37,7 @@ const PainelPage = lazy(() => import('./paginas/painel/PainelPage').then((m) => 
 const RelatoriosPage = lazy(() =>
   import('./paginas/relatorios/RelatoriosPage').then((m) => ({ default: m.RelatoriosPage })),
 )
+const MaisPage = lazy(() => import('./paginas/mais/MaisPage').then((m) => ({ default: m.MaisPage })))
 const NotaPage = lazy(() => import('./paginas/notas/NotaPage').then((m) => ({ default: m.NotaPage })))
 const NotasPage = lazy(() => import('./paginas/notas/NotasPage').then((m) => ({ default: m.NotasPage })))
 const ProjetosPage = lazy(() => import('./paginas/projetos/ProjetosPage').then((m) => ({ default: m.ProjetosPage })))
@@ -147,6 +148,7 @@ export function App() {
           <Route path="/cartoes" element={<Pagina><CartoesPage /></Pagina>} />
           <Route path="/categorias" element={<Pagina><CategoriasPage /></Pagina>} />
           <Route path="/relatorios" element={<Pagina><RelatoriosPage /></Pagina>} />
+          <Route path="/mais" element={<Pagina><MaisPage /></Pagina>} />
           <Route path="/conta/senha" element={<Pagina><DefinirSenhaPage /></Pagina>} />
           <Route path="/conta/excluir" element={<Pagina><ExcluirContaPage /></Pagina>} />
           <Route path="*" element={<NaoEncontradaPage />} />

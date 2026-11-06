@@ -12,6 +12,7 @@ import { PreferenciasModal } from '../preferencias/PreferenciasModal'
 import { usePreferencias } from '../preferencias/usePreferencias'
 import { AcaoRapida } from './AcaoRapida'
 import { foco } from './classesFoco'
+import type { ContextoShell } from './contextoShell'
 import { FundoDoDialogo } from './FundoDoDialogo'
 import { useDialogoModal } from './useDialogoModal'
 import { useEhCelular } from './useEhCelular'
@@ -214,7 +215,15 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
             tabIndex={-1}
             className={classesMain(preferencias.layoutLargura === 'largura-total', ehDesktop, ehCelular)}
           >
-            <Outlet />
+            <Outlet
+              context={
+                {
+                  nomeUsuario,
+                  aoSair,
+                  aoAbrirPreferencias: () => setModalPreferenciasAberta(true),
+                } satisfies ContextoShell
+              }
+            />
           </main>
           {ehDesktop && (
             <PainelLateralDireito

@@ -2,7 +2,7 @@ import { Link, NavLink } from 'react-router'
 import { usePreferencias } from '../preferencias/usePreferencias'
 import { GRUPOS_MENU } from './itensMenu'
 import { useMesSelecionado } from './useMesSelecionado'
-import { ICONES, ICONE_ENGRENAGEM, ICONE_EXCLUIR, ICONE_PRIVACIDADE, ICONE_SENHA, iconeProps } from './icones'
+import { ICONES, ICONE_ENGRENAGEM, ICONE_EXCLUIR, ICONE_PRIVACIDADE, ICONE_SAIR, ICONE_SENHA } from './icones'
 import { Logo } from './Logo'
 
 interface DockLateralProps {
@@ -232,20 +232,7 @@ export function DockLateral({
               : `${linhaBase} cursor-pointer text-left text-[var(--cor-negativo)] hover:bg-[var(--cor-erro-fundo)]`
           }
         >
-          <svg
-            {...iconeProps}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
+          {ICONE_SAIR}
           {!recolhida && <span>Sair</span>}
           {recolhida && (
             <span

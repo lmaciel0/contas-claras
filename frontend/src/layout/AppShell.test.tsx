@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../api/cliente'
 import { PreferenciasProvider } from '../preferencias/PreferenciasContext'
 import { gravarPreferencias, PREFERENCIAS_PADRAO } from '../preferencias/preferenciasStorage'
+import { MaisPage } from '../paginas/mais/MaisPage'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AppShell } from './AppShell'
@@ -35,6 +36,7 @@ function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn(), Envoltorio: En
           <Route path="/cartoes" element={<p>Conteúdo dos Cartões</p>} />
           <Route path="/categorias" element={<p>Conteúdo das Categorias</p>} />
           <Route path="/relatorios" element={<p>Conteúdo dos Relatórios</p>} />
+          <Route path="/mais" element={<MaisPage />} />
         </Route>
       </Routes>
     </Envoltorio>,
@@ -563,5 +565,27 @@ describe('AppShell: ação rápida', () => {
     expect(screen.queryByRole('dialog', { name: 'Criar' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Criar' })).not.toBeInTheDocument()
     expect(document.body.style.overflow).not.toBe('hidden')
+  })
+})
+
+describe('AppShell: página Mais', () => {
+  it('em /mais, Preferências abre o modal e fechá-lo devolve o foco ao botão que o abriu', async () => {
+    definirLargura(600)
+    renderizar('/mais')
+
+    const botao = screen.getByRole('button', { name: 'Preferências' })
+    await userEvent.click(botao)
+    expect(screen.getByRole('dialog', { name: /preferências/i })).toBeInTheDocument()
+
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: /preferências/i })).not.toBeInTheDocument()
+    expect(botao).toHaveFocus()
+  })
+
+  it('em /mais, Sair chama aoSair', async () => {
+    definirLargura(600)
+    const { aoSair } = renderizar('/mais')
+    await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
+    expect(aoSair).toHaveBeenCalledTimes(1)
   })
 })
