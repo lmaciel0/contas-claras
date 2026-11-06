@@ -44,7 +44,7 @@ describe('FaixaSaldo', () => {
 
     const faixa = await screen.findByRole('region', { name: /saldo/i })
 
-    expect(within(faixa).getByText('Dinheiro no Itaú hoje')).toBeInTheDocument()
+    expect(within(faixa).getByText('Saldo em conta hoje')).toBeInTheDocument()
     expect(within(faixa).getByText('R$ 5.322,44')).toBeInTheDocument()
     expect(within(faixa).getByText('Recebido no mês')).toBeInTheDocument()
     expect(within(faixa).getByText('R$ 5.500,00')).toBeInTheDocument()
@@ -56,7 +56,7 @@ describe('FaixaSaldo', () => {
 
     const faixa = await screen.findByRole('region', { name: /saldo/i })
 
-    expect(within(faixa).getByText('Saldo no Itaú ao fim de Dezembro')).toBeInTheDocument()
+    expect(within(faixa).getByText('Saldo em conta ao fim de Dezembro')).toBeInTheDocument()
     expect(within(faixa).queryByText(/hoje/i)).toBeNull()
   })
 
@@ -72,8 +72,8 @@ describe('FaixaSaldo', () => {
   })
 
   it.each([
-    { de: 12, para: 11, rotulo: 'Dinheiro no Itaú hoje' },
-    { de: 11, para: 10, rotulo: 'Saldo no Itaú ao fim de Outubro' },
+    { de: 12, para: 11, rotulo: 'Saldo em conta hoje' },
+    { de: 11, para: 10, rotulo: 'Saldo em conta ao fim de Outubro' },
   ])('troca de mes $de para $para: nunca mostra o saldo do mes anterior sob o novo rotulo', async ({ de, para, rotulo }) => {
     servidor.use(
       http.get('/api/saldo', async ({ request }) => {

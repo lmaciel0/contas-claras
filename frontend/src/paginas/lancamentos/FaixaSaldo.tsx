@@ -38,7 +38,7 @@ function Miolo({ rotulo, saldo, recebido, 'aria-hidden': oculto }: MioloProps) {
 }
 
 /**
- * Faixa do saldo no topo do Orçamento: dinheiro no Itaú (só lançamentos pagos) à esquerda e o recebido no mês à direita;
+ * Faixa do saldo no topo do Orçamento: saldo em conta (só lançamentos pagos) à esquerda e o recebido no mês à direita;
  * empilha no celular. Fica escondida antes do mês de início do cálculo e se a consulta falhar (a página segue usável).
  */
 export function FaixaSaldo({ ano, mes }: Props) {
@@ -58,7 +58,7 @@ export function FaixaSaldo({ ano, mes }: Props) {
         aria-busy="true"
         className={`${medidas} esqueleto-shimmer mb-3 text-transparent`}
       >
-        <Miolo rotulo="Dinheiro no Itaú hoje" saldo="0" recebido="0" aria-hidden />
+        <Miolo rotulo="Saldo em conta hoje" saldo="0" recebido="0" aria-hidden />
       </div>
     )
   }
@@ -66,11 +66,11 @@ export function FaixaSaldo({ ano, mes }: Props) {
 
   const atual = mesAtual()
   const doMesCorrente = atual.ano === ano && atual.mes === mes
-  const rotulo = doMesCorrente ? 'Dinheiro no Itaú hoje' : `Saldo no Itaú ao fim de ${nomeMes(mes)}`
+  const rotulo = doMesCorrente ? 'Saldo em conta hoje' : `Saldo em conta ao fim de ${nomeMes(mes)}`
 
   return (
     <section
-      aria-label="Saldo no Itaú"
+      aria-label="Saldo em conta"
       className={`${medidas} mb-3 text-[var(--cor-sobre-principal)] shadow-[var(--sombra-flutuante)]`}
       style={{ background: 'linear-gradient(120deg, var(--cor-principal), var(--cor-principal-fim))' }}
     >

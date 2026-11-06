@@ -92,4 +92,28 @@ describe('TarefaLinha', () => {
     expect(screen.getByRole('button', { name: 'Marcar como feita: Ligar' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Marcar como feita: Pagar' })).toBeInTheDocument()
   })
+
+  it('tituloNaoEhEspremidoPelasAcoesEmTelaEstreita', () => {
+    render(
+      <TarefaLinha
+        tarefa={tarefa({ titulo: 'Renovar documento do carro', data: HOJE })}
+        hoje={HOJE}
+        aoAlternar={() => {}}
+        acoes={
+          <>
+            <button type="button">Editar</button>
+            <button type="button">Excluir</button>
+          </>
+        }
+      />,
+    )
+
+    const titulo = screen.getByText('Renovar documento do carro')
+    expect(titulo).toHaveClass('flex-1', 'min-w-[10rem]')
+    expect(titulo).not.toHaveClass('break-all')
+    expect(titulo.closest('li')).toHaveClass('flex-wrap')
+    const acoes = screen.getByRole('button', { name: 'Editar' }).parentElement
+    expect(acoes).toHaveClass('shrink-0', 'gap-3')
+    expect(acoes).toContainElement(screen.getByRole('button', { name: 'Excluir' }))
+  })
 })
