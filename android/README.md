@@ -19,7 +19,7 @@ Projeto Android do Aprumo como Trusted Web Activity: o app da Play Store abre `h
 3. Num checkout limpo só existe `twa-manifest.json`: o projeto Gradle (`app/`, `gradle/`, `gradlew` etc.) é gerado pelo Bubblewrap e está no `.gitignore`. Dentro de `android/`, gere-o a partir do manifesto:
 
    ```bash
-   bubblewrap update
+   bubblewrap update --skipVersionUpgrade
    ```
 
    Responda "sim" quando ele perguntar se deve aplicar as mudanças do manifesto.
@@ -47,9 +47,9 @@ Status da validação: o `bubblewrap build` com Bubblewrap 1.27 funcionou no spi
 
 O `assetlinks.json` liga o domínio ao app. Sem o fingerprint certo, o Android mostra a barra de endereço (modo "custom tab") em vez da tela cheia.
 
-Hoje o arquivo tem só o fingerprint SHA-256 da chave de upload. Isso basta para instalar o APK assinado com ela, mas o app instalado pela Play é reassinado pela chave do Play App Signing, que tem outro fingerprint.
+O arquivo tem dois fingerprints SHA-256: o da chave do Play App Signing (o app instalado pela Play é reassinado por ela) e o da chave de upload (para instalar o APK assinado localmente). Os dois precisam ficar.
 
-Depois do primeiro envio do `.aab` à Play:
+Se a chave de assinatura da Play mudar (ou para conferir):
 
 1. Abra o Play Console, escolha o app, vá em Testar e lançar → Configuração → Integridade do app (Assinatura do app).
 2. Copie o "Certificado da chave de assinatura do app", campo SHA-256.
