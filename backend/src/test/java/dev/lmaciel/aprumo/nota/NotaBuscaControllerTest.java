@@ -87,4 +87,11 @@ class NotaBuscaControllerTest extends NotaTestSupport {
         mvc.perform(get(URL).param("busca", "a".repeat(101)).cookie(sessao))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void buscaComExatamente100CaracteresFunciona() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+
+        mvc.perform(get(URL).param("busca", "a".repeat(100)).cookie(sessao)).andExpect(status().isOk());
+    }
 }

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -46,7 +47,7 @@ public class AuthService {
     private final LancamentoRepository lancamentos;
     private final CodigoEmailRepository codigos;
     private final Clock clock;
-    /** Transação curta só dos deletes da exclusão; a reautenticação (BCrypt, rede) fica fora dela. */
+    /** Transação curta só da gravação (exclusão, troca de senha); a reautenticação e o BCrypt (CPU, rede) ficam fora dela. */
     private final TransactionTemplate tx;
     /** Hash de uma senha descartada: gasta o mesmo tempo de BCrypt quando o e-mail não existe. */
     private final String hashFalso;
@@ -109,8 +110,7 @@ public class AuthService {
 
     /**
      * Confere o ID token no Google (chamada de rede). Este método em si não abre transação, então no login
-     * e em {@link #excluirConta} a espera não segura conexão do banco. Já {@link #definirSenha} roda
-     * inteiro em {@code @Transactional} e, para conta só Google, chama isto dentro dela.
+     * e em {@link #excluirConta} e {@link #definirSenha} a espera não segura conexão do banco.
      */
     public IdentidadeGoogle verificarGoogle(String credential) {
         IdentidadeGoogle identidade = googleVerificador.verificar(credential).orElse(null);
@@ -170,13 +170,16 @@ public class AuthService {
      * <li>com senha: {@code senhaAtual} (400 se errada, 429 se estourar o limite); {@code credencialGoogle}
      * é ignorada;</li>
      * <li>sem senha (só Google): {@code credencialGoogle} do mesmo Google da conta (401 se ausente, inválida
-     * ou de outro usuário); {@code senhaAtual} é ignorada. Sem isso uma sessão roubada criaria uma senha e
+     * ou de outro usuário; 429 se estourar o mesmo limite); {@code senhaAtual} é ignorada. Sem isso uma sessão roubada criaria uma senha e
      * a usaria para excluir a conta, contornando o Google.</li>
      * </ul>
+     * Ao gravar, relê o usuário com lock e responde 401 se a versão da sessão ou o hash mudaram desde a leitura.
      */
-    @Transactional
     public Usuario definirSenha(long id, String senhaAtual, String credencialGoogle, String senhaNova) {
         Usuario usuario = buscar(id);
+        // A conferência abaixo roda sem transação e leva tempo; guarda o que foi lido para revalidar ao gravar.
+        int versaoLida = usuario.getSessaoVersao();
+        String hashLido = usuario.getSenhaHash();
         if (usuario.temSenha()) {
             reservarTentativaDeReautenticacao(id);
             if (!senhaAtualConfere(usuario, senhaAtual)) {
@@ -184,11 +187,22 @@ public class AuthService {
             }
             limiteReautenticacao.registrarSucesso(chaveReautenticacao(id));
         } else {
+            reservarTentativaDeReautenticacao(id);
             exigirGoogleDoUsuario(usuario, credencialGoogle);
+            limiteReautenticacao.registrarSucesso(chaveReautenticacao(id));
         }
-        usuario.setSenhaHash(hashDaSenha(senhaNova));
-        usuario.invalidarSessoes();
-        return usuario;
+        // BCrypt e Google ficam fora da transação, como no redefinirSenha: só a gravação segura conexão.
+        String hashNovo = hashDaSenha(senhaNova);
+        return tx.execute(status -> {
+            Usuario atual = usuarios.findByIdParaAtualizar(id).orElseThrow(NaoAutenticadoException::new);
+            // Outra troca de senha, login Google ou exclusão de sessões no meio: a reautenticação já não vale.
+            if (atual.getSessaoVersao() != versaoLida || !Objects.equals(atual.getSenhaHash(), hashLido)) {
+                throw new NaoAutenticadoException();
+            }
+            atual.setSenhaHash(hashNovo);
+            atual.invalidarSessoes();
+            return atual;
+        });
     }
 
     /**

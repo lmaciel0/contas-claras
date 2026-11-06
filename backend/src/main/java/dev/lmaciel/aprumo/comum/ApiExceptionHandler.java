@@ -2,6 +2,7 @@ package dev.lmaciel.aprumo.comum;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -66,6 +67,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(EmailIndisponivelException.class)
     ResponseEntity<ApiErro> emailIndisponivel(EmailIndisponivelException e) {
         return resposta(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
+    }
+
+    /** Lock, deadlock ou falha de serialização que estoura fora do service (ex.: no commit): pede nova tentativa. */
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    ResponseEntity<ApiErro> bloqueio(PessimisticLockingFailureException e) {
+        log.warn("Falha de bloqueio no banco", e);
+        return resposta(HttpStatus.CONFLICT, "Outra operação está em andamento. Tente de novo.");
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
