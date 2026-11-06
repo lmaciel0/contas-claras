@@ -113,7 +113,7 @@ describe('TarefaLinha', () => {
     expect(titulo).not.toHaveClass('break-all')
     expect(titulo.closest('li')).toHaveClass('flex-wrap')
     const acoes = screen.getByRole('button', { name: 'Editar' }).parentElement
-    expect(acoes).toHaveClass('shrink-0')
+    expect(acoes).toHaveClass('shrink-0', 'gap-3')
     expect(acoes).toContainElement(screen.getByRole('button', { name: 'Excluir' }))
   })
 })

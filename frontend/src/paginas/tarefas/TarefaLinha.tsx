@@ -66,7 +66,7 @@ export function TarefaLinha({ tarefa, hoje, aoAlternar, desabilitada = false, mo
         </span>
       )}
       {tarefa.data === null && mostrarSemData && <span className="shrink-0 text-xs text-[var(--cor-mutado)]">sem data</span>}
-      {acoes && <div className="flex shrink-0 items-center">{acoes}</div>}
+      {acoes && <div className="flex shrink-0 items-center gap-3">{acoes}</div>}
     </li>
   )
 }
