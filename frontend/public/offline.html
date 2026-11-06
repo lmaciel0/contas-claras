@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light dark" />
-    <title>Sem conexão · Aprumo</title>
+        <title>Sem conexão · Aprumo</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <!-- Página independente: sem JS (a CSP bloqueia script inline) e com cores literais, espelhando src/index.css. -->
+    <!-- Página independente: sem JS (a CSP bloqueia script inline, então não dá para ler o tema salvo: só o claro, que é o padrão do app) e com cores literais, espelhando src/index.css. -->
     <style>
       :root {
         --fundo: #f7f7ff;
@@ -14,15 +13,6 @@
         --mutado: #706e8a;
         --principal: #27187e;
         --sobre-principal: #fff;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --fundo: #0b0d13;
-          --texto: #f1f3f9;
-          --mutado: #8e95b0;
-          --principal: #60a5fa;
-          --sobre-principal: #0b0d13;
-        }
       }
       * {
         box-sizing: border-box;
@@ -93,7 +83,7 @@
       <img src="/icon-192.png" alt="" width="96" height="96" />
       <h1>Sem conexão</h1>
       <p>O Aprumo precisa de internet para mostrar seus dados.</p>
-      <a href="/">Tentar de novo</a>
+      <a href="">Tentar de novo</a>
     </main>
   </body>
 </html>

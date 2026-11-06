@@ -35,9 +35,19 @@ describe('LimiteDeErro', () => {
       </LimiteDeErro>,
     )
 
-    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByRole('main')).toBeInTheDocument()
     expect(screen.getByText('Algo deu errado')).toBeInTheDocument()
-    expect(screen.getByText('Recarregue a página para continuar. Seus dados estão salvos.')).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('Recarregue a página para continuar. Seus dados estão salvos.')
+  })
+
+  it('botao_tem_foco_visivel', () => {
+    render(
+      <LimiteDeErro>
+        <Quebra />
+      </LimiteDeErro>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Recarregar' }).className).toContain('focus-visible:outline-2')
   })
 
   it('botao_recarregar_chama_window_location_reload', async () => {

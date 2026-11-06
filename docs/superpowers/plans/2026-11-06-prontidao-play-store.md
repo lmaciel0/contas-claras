@@ -45,7 +45,7 @@
 
 ### Tarefa 1.2: tela de erro no lugar da tela branca
 
-**Arquivos:** criar `frontend/src/componentes/LimiteDeErro.tsx` e `.test.tsx`; alterar `frontend/src/main.tsx` (envolve o `<App />` dentro dos providers).
+**Arquivos:** criar `frontend/src/componentes/LimiteDeErro.tsx` e `.test.tsx`; alterar `frontend/src/main.tsx` (envolve a árvore por fora dos providers).
 
 - `class LimiteDeErro extends Component<{ children: ReactNode; aoErro?: (erro: Error, pilha?: string) => void }>`. Com erro, mostra o título "Algo deu errado", o texto "Recarregue a página para continuar. Seus dados estão salvos." e um botão "Recarregar" que chama `window.location.reload()`. Usa o visual de `ErroDeCarregamento` como referência. No `componentDidCatch`, chama `aoErro`.
 - [ ] Testes que falham: um filho que lança erro mostra "Algo deu errado"; o botão chama `reload`; `aoErro` recebe o erro; sem erro, mostra os filhos.
