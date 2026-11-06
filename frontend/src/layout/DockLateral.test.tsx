@@ -103,6 +103,32 @@ describe('DockLateral', () => {
     expect(chamadas).toBe(1)
   })
 
+  it('"Exportar meus dados" usa aria-disabled durante a exportação e avisa "Dados exportados." no fim', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:x') as unknown as typeof URL.createObjectURL
+    URL.revokeObjectURL = vi.fn() as unknown as typeof URL.revokeObjectURL
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    let liberar: () => void = () => {}
+    const portao = new Promise<void>((resolver) => {
+      liberar = resolver
+    })
+    servidor.use(
+      http.get('/api/auth/conta/exportacao', async () => {
+        await portao
+        return HttpResponse.json({ ok: true })
+      }),
+    )
+    renderizar()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Exportar meus dados' }))
+
+    const ocupado = await screen.findByRole('button', { name: 'Exportando…' })
+    expect(ocupado).toHaveAttribute('aria-disabled', 'true')
+    expect(ocupado).not.toBeDisabled()
+    liberar()
+    expect(await screen.findByRole('status')).toHaveTextContent('Dados exportados.')
+    expect(screen.getByRole('button', { name: 'Exportar meus dados' })).toHaveAttribute('aria-disabled', 'false')
+  })
+
   it('rodapé expandido: todas as linhas têm ícone svg aria-hidden como primeiro filho e min-h-11', () => {
     renderizar()
     const linhas = [

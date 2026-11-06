@@ -45,7 +45,7 @@ export function MaisPage() {
   const { busca } = useMesSelecionado()
   const nomeExibido = nomeUsuario?.trim() || 'Minha conta'
   const inicial = nomeExibido.charAt(0).toUpperCase()
-  const { exportar, exportando, erro: erroExportacao } = useExportarDados()
+  const { exportar, exportando, erro: erroExportacao, exportado } = useExportarDados()
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-5">
@@ -89,9 +89,9 @@ export function MaisPage() {
         <button
           type="button"
           onClick={() => void exportar()}
-          disabled={exportando}
+          aria-disabled={exportando}
           aria-busy={exportando}
-          className={`${linha} cursor-pointer text-[var(--cor-texto)] disabled:cursor-wait disabled:opacity-60`}
+          className={`${linha} cursor-pointer text-[var(--cor-texto)] aria-disabled:cursor-wait aria-disabled:opacity-60`}
         >
           {ICONE_DOWNLOAD}
           <span>{exportando ? 'Exportando…' : 'Exportar meus dados'}</span>
@@ -99,6 +99,11 @@ export function MaisPage() {
         {erroExportacao !== null && (
           <p role="alert" className="m-0 px-4 py-2 text-sm text-[var(--cor-negativo)]">
             {erroExportacao}
+          </p>
+        )}
+        {exportado && (
+          <p role="status" className="m-0 px-4 py-2 text-sm text-[var(--cor-positivo-texto)]">
+            Dados exportados.
           </p>
         )}
         <Link to="/conta/excluir" className={`${linha} text-[var(--cor-texto)]`}>

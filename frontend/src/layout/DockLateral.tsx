@@ -27,7 +27,7 @@ export function DockLateral({
 }: DockLateralProps) {
   const { busca } = useMesSelecionado()
   const { preferencias, setDockRecolhida } = usePreferencias()
-  const { exportar, exportando, erro: erroExportacao } = useExportarDados()
+  const { exportar, exportando, erro: erroExportacao, exportado } = useExportarDados()
 
   const recolhida = forcarExpandida ? false : preferencias.dockRecolhida
   const inicial = nomeUsuario?.trim().charAt(0).toUpperCase() || '?'
@@ -203,9 +203,9 @@ export function DockLateral({
             <button
               type="button"
               onClick={() => void exportar()}
-              disabled={exportando}
+              aria-disabled={exportando}
               aria-busy={exportando}
-              className={`${linhaBase} text-left text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] disabled:cursor-wait disabled:opacity-60`}
+              className={`${linhaBase} text-left text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] aria-disabled:cursor-wait aria-disabled:opacity-60`}
             >
               {ICONE_DOWNLOAD}
               <span>{exportando ? 'Exportando…' : 'Exportar meus dados'}</span>
@@ -213,6 +213,11 @@ export function DockLateral({
             {erroExportacao !== null && (
               <p role="alert" className="m-0 px-3 text-xs text-[var(--cor-negativo)]">
                 {erroExportacao}
+              </p>
+            )}
+            {exportado && (
+              <p role="status" className="m-0 px-3 text-xs text-[var(--cor-positivo-texto)]">
+                Dados exportados.
               </p>
             )}
             <Link
