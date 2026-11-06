@@ -67,6 +67,10 @@ public class Tarefa {
         return concluidaEm;
     }
 
+    public Instant getCriadoEm() {
+        return criadoEm;
+    }
+
     public boolean isConcluida() {
         return concluidaEm != null;
     }

@@ -56,4 +56,8 @@ public interface NotaRepository extends JpaRepository<Nota, Long> {
             where n.usuario.id = :usuarioId and n.categoria is not null
             group by n.categoria.id""")
     List<TotalPorCategoria> totaisPorCategoria(@Param("usuarioId") long usuarioId);
+
+    /** Todas as notas do usuário, com a categoria junto (sem N+1), em ordem de criação (exportação). */
+    @Query("select n from Nota n left join fetch n.categoria where n.usuario.id = :usuarioId order by n.id")
+    List<Nota> findTodasDoUsuario(@Param("usuarioId") long usuarioId);
 }

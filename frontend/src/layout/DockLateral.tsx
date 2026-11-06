@@ -1,8 +1,9 @@
 import { Link, NavLink } from 'react-router'
+import { useExportarDados } from '../auth/useExportarDados'
 import { usePreferencias } from '../preferencias/usePreferencias'
 import { GRUPOS_MENU } from './itensMenu'
 import { useMesSelecionado } from './useMesSelecionado'
-import { ICONES, ICONE_ENGRENAGEM, ICONE_EXCLUIR, ICONE_PRIVACIDADE, ICONE_SAIR, ICONE_SENHA } from './icones'
+import { ICONES, ICONE_DOWNLOAD, ICONE_ENGRENAGEM, ICONE_EXCLUIR, ICONE_PRIVACIDADE, ICONE_SAIR, ICONE_SENHA } from './icones'
 import { Logo } from './Logo'
 
 interface DockLateralProps {
@@ -26,6 +27,7 @@ export function DockLateral({
 }: DockLateralProps) {
   const { busca } = useMesSelecionado()
   const { preferencias, setDockRecolhida } = usePreferencias()
+  const { exportar, exportando, erro: erroExportacao, exportado } = useExportarDados()
 
   const recolhida = forcarExpandida ? false : preferencias.dockRecolhida
   const inicial = nomeUsuario?.trim().charAt(0).toUpperCase() || '?'
@@ -198,6 +200,26 @@ export function DockLateral({
               {ICONE_SENHA}
               <span>Alterar senha</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => void exportar()}
+              aria-disabled={exportando}
+              aria-busy={exportando}
+              className={`${linhaBase} text-left text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] aria-disabled:cursor-wait aria-disabled:opacity-60`}
+            >
+              {ICONE_DOWNLOAD}
+              <span>{exportando ? 'Exportando…' : 'Exportar meus dados'}</span>
+            </button>
+            {erroExportacao !== null && (
+              <p role="alert" className="m-0 px-3 text-xs text-[var(--cor-negativo)]">
+                {erroExportacao}
+              </p>
+            )}
+            {exportado && (
+              <p role="status" className="m-0 px-3 text-xs text-[var(--cor-positivo-texto)]">
+                Dados exportados.
+              </p>
+            )}
             <Link
               to="/conta/excluir"
               onClick={aoNavegar}

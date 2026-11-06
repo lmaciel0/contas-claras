@@ -50,6 +50,44 @@ describe('api', () => {
     expect(corpo).toEqual({ nome: 'x' })
   })
 
+  it('com formato blob devolve o blob e os headers, sem tentar ler JSON', async () => {
+    let credentials: string | undefined
+    servidor.use(
+      http.get('/api/arquivo', ({ request }) => {
+        credentials = request.credentials
+        return new HttpResponse('conteudo', {
+          headers: { 'Content-Type': 'application/json', 'Content-Disposition': 'attachment; filename="a.json"' },
+        })
+      }),
+    )
+
+    const { blob, headers } = await api('/api/arquivo', { formato: 'blob' })
+
+    expect(await blob.text()).toBe('conteudo')
+    expect(headers.get('Content-Disposition')).toBe('attachment; filename="a.json"')
+    expect(credentials).toBe('same-origin')
+  })
+
+  it('com formato blob, erro HTTP vira ErroApi com a mensagem de {erro}', async () => {
+    servidor.use(http.get('/api/arquivo', () => HttpResponse.json({ erro: 'Muito rápido.' }, { status: 429 })))
+
+    const erro = await api('/api/arquivo', { formato: 'blob' }).catch((e: unknown) => e)
+
+    expect(erro).toBeInstanceOf(ErroApi)
+    expect(erro).toMatchObject({ status: 429, mensagem: 'Muito rápido.' })
+  })
+
+  it('com formato blob, 401 aciona o tratador de sessão expirada', async () => {
+    const tratador = vi.fn()
+    const desfazer = aoNaoAutenticado(tratador)
+    servidor.use(http.get('/api/arquivo', () => HttpResponse.json({ erro: 'Não autenticado.' }, { status: 401 })))
+
+    await expect(api('/api/arquivo', { formato: 'blob' })).rejects.toBeInstanceOf(ErroApi)
+
+    expect(tratador).toHaveBeenCalledTimes(1)
+    desfazer()
+  })
+
   it('resposta 204 resolve sem corpo', async () => {
     servidor.use(http.delete('/api/exemplo/1', () => new HttpResponse(null, { status: 204 })))
 

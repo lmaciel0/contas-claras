@@ -115,7 +115,16 @@ async function ehRespostaDeProxySemApi(resposta: Response): Promise<boolean> {
   return erroDoCorpo(await lerCorpo(resposta.clone())) === null
 }
 
-async function tratarResposta<T>(resposta: Response, semLogoutEm401: boolean): Promise<T> {
+/** Resposta de `api(..., { formato: 'blob' })`: o corpo bruto e os headers (ex.: `Content-Disposition`). */
+export interface RespostaBlob {
+  blob: Blob
+  headers: Headers
+}
+
+async function tratarResposta<T>(resposta: Response, semLogoutEm401: boolean, comoBlob: boolean): Promise<T> {
+  if (comoBlob && resposta.ok) {
+    return { blob: await resposta.blob(), headers: resposta.headers } as T
+  }
   const corpo = await lerCorpo(resposta)
   if (!resposta.ok) {
     if (resposta.status === 401 && !semLogoutEm401) {
@@ -133,6 +142,11 @@ export interface OpcoesApi extends RequestInit {
    * chamada só rejeita com `ErroApi`, sem acionar o tratador de `aoNaoAutenticado` (que deslogaria a pessoa).
    */
   semLogoutEm401?: boolean
+  /**
+   * `'blob'` devolve `{ blob, headers }` em vez do JSON (ex.: baixar um arquivo). Erros HTTP continuam vindo como
+   * `{erro}` e viram `ErroApi`. Retry de cold start, limite de 90 s e tratamento de 401 são os mesmos.
+   */
+  formato?: 'json' | 'blob'
 }
 
 /**
@@ -143,8 +157,10 @@ export interface OpcoesApi extends RequestInit {
  * conexão são tentadas de novo (esperas de 2 s, depois 3 s), com o aviso ligado, até o limite de 90 s, quando
  * rejeita com `ErroApi` de `status` 0. Outros erros HTTP (inclusive 500 e 503 com `{erro}`) não são repetidos.
  */
+export async function api(caminho: string, opcoes: OpcoesApi & { formato: 'blob' }): Promise<RespostaBlob>
+export async function api<T>(caminho: string, opcoes?: OpcoesApi): Promise<T>
 export async function api<T>(caminho: string, opcoes: OpcoesApi = {}): Promise<T> {
-  const { signal: sinalDoChamador, semLogoutEm401 = false, ...restoDasOpcoes } = opcoes
+  const { signal: sinalDoChamador, semLogoutEm401 = false, formato = 'json', ...restoDasOpcoes } = opcoes
   const headers = new Headers(restoDasOpcoes.headers)
   if (restoDasOpcoes.body != null && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
@@ -194,7 +210,7 @@ export async function api<T>(caminho: string, opcoes: OpcoesApi = {}): Promise<T
       }
 
       if (resposta !== null && !(await ehRespostaDeProxySemApi(resposta))) {
-        return await tratarResposta<T>(resposta, semLogoutEm401)
+        return await tratarResposta<T>(resposta, semLogoutEm401, formato === 'blob')
       }
 
       ligarAviso()

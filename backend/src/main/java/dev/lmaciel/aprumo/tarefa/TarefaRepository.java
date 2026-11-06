@@ -19,4 +19,7 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     /** Concluídas no intervalo [desde, ate), da mais recente para a mais antiga (limite de 50). */
     List<Tarefa> findTop50ByUsuarioIdAndConcluidaEmGreaterThanEqualAndConcluidaEmLessThanOrderByConcluidaEmDesc(
             long usuarioId, Instant desde, Instant ate);
+
+    /** Todas as tarefas do usuário, em ordem de criação (exportação). */
+    List<Tarefa> findByUsuarioIdOrderById(long usuarioId);
 }

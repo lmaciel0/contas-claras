@@ -99,6 +99,13 @@ describe('PrivacidadePage', () => {
     expect(screen.getByRole('link', { name: /excluir sua conta/i })).toHaveAttribute('href', '/excluir-conta')
   })
 
+  it('a_portabilidade_aponta_para_o_botao_Exportar_meus_dados', () => {
+    renderizar()
+
+    const item = screen.getByText(/portabilidade dos seus dados/i)
+    expect(item.textContent).toContain('(use Exportar meus dados, no menu)')
+  })
+
   it('nao_tem_link_com_href_vazio', () => {
     renderizar()
 
