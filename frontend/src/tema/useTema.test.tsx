@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { PreferenciasProvider } from '../preferencias/PreferenciasContext'
 import { CHAVE_TEMA } from './tema'
 import { useTema } from './useTema'
 
@@ -69,6 +70,18 @@ describe('useTema', () => {
     act(() => result.current.alternar())
     expect(result.current.tema).toBe('claro')
     expect(localStorage.getItem(CHAVE_TEMA)).toBe('claro')
+  })
+
+  it('alternar avisa as preferências: modoTema salvo em aprumo-preferencias acompanha o tema', () => {
+    instalarSistema(false)
+    const { result } = renderHook(() => useTema(), { wrapper: PreferenciasProvider })
+    const modoSalvo = () => (JSON.parse(localStorage.getItem('aprumo-preferencias') ?? '{}') as { modoTema?: string }).modoTema
+    act(() => result.current.alternar())
+    expect(result.current.tema).toBe('escuro')
+    expect(modoSalvo()).toBe('escuro')
+    act(() => result.current.alternar())
+    expect(result.current.tema).toBe('claro')
+    expect(modoSalvo()).toBe('claro')
   })
 
   it('a cor da barra do navegador acompanha o tema escolhido', () => {

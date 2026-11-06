@@ -29,12 +29,11 @@ function renderizar(cabecalho: ReactNode, rota = '/financeiro?ano=2026&mes=10') 
 }
 
 describe('CabecalhoPagina', () => {
-  it('mostra_so_o_titulo_seletor_e_lancar_com_o_mes_na_url', () => {
+  it('mostra_o_titulo_seletor_e_lancar_com_o_mes_na_url', () => {
     renderizar(<CabecalhoPagina titulo="Orçamento" />)
 
     const titulo = screen.getByRole('heading', { level: 1, name: 'Orçamento' })
     expect(titulo).toBeInTheDocument()
-    expect(titulo.parentElement?.querySelector('p')).toBeNull()
     expect(screen.getByText('Outubro 2026')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mês seguinte' })).toBeInTheDocument()

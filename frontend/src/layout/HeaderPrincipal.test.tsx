@@ -1,11 +1,17 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PreferenciasProvider } from '../preferencias/PreferenciasContext'
 import { renderComApp } from '../teste/render'
 import { HeaderPrincipal } from './HeaderPrincipal'
 
 describe('HeaderPrincipal', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    localStorage.clear()
+    delete document.documentElement.dataset.tema
+  })
+
   it('renderiza o campo de busca e aciona onAbrirBusca ao clicar', async () => {
     const user = userEvent.setup()
     const onAbrirBusca = vi.fn()
@@ -101,7 +107,6 @@ describe('HeaderPrincipal', () => {
     expect(localStorage.getItem('aprumo-tema')).toBeNull()
     expect(document.documentElement.dataset.tema).toBe('escuro')
     expect(screen.getByRole('switch', { name: 'Tema escuro' })).toBeChecked()
-    vi.unstubAllGlobals()
   })
 
   it('header_nao_tem_faixa_nem_borda', () => {
