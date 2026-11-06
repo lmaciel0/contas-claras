@@ -29,11 +29,12 @@ function renderizar(cabecalho: ReactNode, rota = '/financeiro?ano=2026&mes=10') 
 }
 
 describe('CabecalhoPagina', () => {
-  it('mostra_titulo_subtitulo_seletor_e_lancar_com_o_mes_na_url', () => {
-    renderizar(<CabecalhoPagina titulo="Orçamento" subtitulo="Tudo o que entra e sai no mês." />)
+  it('mostra_so_o_titulo_seletor_e_lancar_com_o_mes_na_url', () => {
+    renderizar(<CabecalhoPagina titulo="Orçamento" />)
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Orçamento' })).toBeInTheDocument()
-    expect(screen.getByText('Tudo o que entra e sai no mês.')).toBeInTheDocument()
+    const titulo = screen.getByRole('heading', { level: 1, name: 'Orçamento' })
+    expect(titulo).toBeInTheDocument()
+    expect(titulo.parentElement?.querySelector('p')).toBeNull()
     expect(screen.getByText('Outubro 2026')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mês seguinte' })).toBeInTheDocument()
@@ -83,15 +84,15 @@ describe('CabecalhoPagina', () => {
     expect(within(acoes).getByRole('button', { name: 'Mês seguinte' })).toBeInTheDocument()
   })
 
-  it('titulo_e_subtitulo_ficam_so_para_leitor_de_tela_abaixo_de_md', () => {
-    renderizar(<CabecalhoPagina titulo="Orçamento" subtitulo="Subtítulo." />)
+  it('titulo_fica_so_para_leitor_de_tela_abaixo_de_md', () => {
+    renderizar(<CabecalhoPagina titulo="Orçamento" />)
 
     const bloco = screen.getByRole('heading', { level: 1 }).parentElement
     expect(bloco).toHaveClass('sr-only', 'md:not-sr-only')
   })
 
-  it('tituloVisivelNoCelular_mantem_titulo_e_subtitulo_visiveis_abaixo_de_md', () => {
-    renderizar(<CabecalhoPagina titulo="Cartões" subtitulo="Subtítulo." tituloVisivelNoCelular />)
+  it('tituloVisivelNoCelular_mantem_o_titulo_visivel_abaixo_de_md', () => {
+    renderizar(<CabecalhoPagina titulo="Cartões" tituloVisivelNoCelular />)
 
     const bloco = screen.getByRole('heading', { level: 1 }).parentElement
     expect(bloco).not.toHaveClass('sr-only')

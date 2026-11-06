@@ -111,9 +111,6 @@ export function ProjetosPage() {
               {projetos.length} {projetos.length === 1 ? 'projeto' : 'projetos'}
             </span>
           </div>
-          <p className="mt-1 text-xs text-[var(--cor-mutado)]">
-            Acompanhe o andamento de suas metas e entregas no fluxo Kanban.
-          </p>
         </div>
 
         {/* Botão Novo Projeto */}

@@ -50,7 +50,7 @@ export function LancamentosPage() {
     onSuccess: () => invalidarLancamentos(queryClient),
   })
 
-  const titulo = <CabecalhoPagina titulo="Orçamento" subtitulo="Tudo o que entra e sai no mês, por categoria." />
+  const titulo = <CabecalhoPagina titulo="Orçamento" />
 
   let conteudo: ReactNode
   if (consulta.isPending) {

@@ -100,6 +100,15 @@ function renderizar(rota = '/?ano=2026&mes=10') {
 const bloco = (nome: string) => screen.findByRole('region', { name: nome })
 
 describe('InicioPage', () => {
+  it('nao_mostra_subtitulo_no_cabecalho', async () => {
+    responderResumo(resumo())
+    responderCartoes()
+    renderizar()
+
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' })
+    expect(screen.queryByText('Quanto sobra e para onde vai o seu dinheiro.')).not.toBeInTheDocument()
+  })
+
   it('titulo_da_tela_e_visao_geral_e_a_faixa_financeira_aparece', async () => {
     responderResumo(resumo())
     renderizar()

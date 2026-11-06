@@ -57,6 +57,14 @@ function renderizar(rota = '/lancamentos?ano=2026&mes=10') {
 }
 
 describe('LancamentosPage', () => {
+  it('nao_mostra_subtitulo_no_cabecalho', async () => {
+    responderLancamentos(doMes)
+    renderizar()
+
+    await screen.findByRole('heading', { level: 1, name: 'Orçamento' })
+    expect(screen.queryByText('Tudo o que entra e sai no mês, por categoria.')).not.toBeInTheDocument()
+  })
+
   it('lista_agrupa_por_categoria_com_total', async () => {
     const consultas = responderLancamentos(doMes)
     renderizar()
