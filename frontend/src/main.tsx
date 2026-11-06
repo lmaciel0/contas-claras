@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router'
 import { App } from './App'
 import { AuthProvider } from './auth/AuthProvider'
 import { LimiteDeErro } from './componentes/LimiteDeErro'
+import { instalarRelatoGlobal, relatarErro } from './diagnostico/relatarErro'
 import { instalarRecarregarNoErroDeChunk } from './recarregarNoErroDeChunk'
 import { registrarServiceWorker } from './registrarServiceWorker'
 import '@fontsource-variable/inter'
@@ -12,6 +13,7 @@ import './index.css'
 
 instalarRecarregarNoErroDeChunk()
 registrarServiceWorker()
+instalarRelatoGlobal()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +27,7 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <LimiteDeErro>
+    <LimiteDeErro aoErro={(erro, pilha) => relatarErro(erro, pilha)}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
