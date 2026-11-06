@@ -112,4 +112,11 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
     @Modifying
     @Query("delete from Lancamento l where l.item.id in (select i.id from Item i where i.categoria.usuario.id = :usuarioId)")
     int apagarDoUsuario(@Param("usuarioId") long usuarioId);
+
+    /** Todos os lançamentos do usuário, com item e categoria numa consulta só (exportação). */
+    @Query("""
+            select l from Lancamento l join fetch l.item i join fetch i.categoria c
+            where c.usuario.id = :usuarioId
+            order by l.ano, l.mes, c.ordem, i.nome, l.id""")
+    List<Lancamento> findTodosDoUsuario(@Param("usuarioId") long usuarioId);
 }

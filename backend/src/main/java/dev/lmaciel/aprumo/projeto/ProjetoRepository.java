@@ -32,4 +32,12 @@ public interface ProjetoRepository extends JpaRepository<Projeto, Long> {
     List<Projeto> buscarPorTermo(@Param("usuarioId") Long usuarioId, @Param("busca") String busca);
 
     List<Projeto> findByUsuarioIdAndPrioridadeOrderByEstagioAscOrdemAsc(Long usuarioId, PrioridadeProjeto prioridade);
+
+    /** Todos os projetos do usuário com as subtarefas numa consulta só (sem N+1), para a exportação. */
+    @Query("""
+        SELECT DISTINCT p FROM Projeto p LEFT JOIN FETCH p.subtarefas
+        WHERE p.usuario.id = :usuarioId
+        ORDER BY p.estagio ASC, p.ordem ASC, p.id ASC
+    """)
+    List<Projeto> findTodosComSubtarefas(@Param("usuarioId") Long usuarioId);
 }

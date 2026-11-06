@@ -73,6 +73,10 @@ public class Usuario {
         this.googleSub = googleSub;
     }
 
+    public Instant getCriadoEm() {
+        return criadoEm;
+    }
+
     public int getSessaoVersao() {
         return sessaoVersao;
     }
