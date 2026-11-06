@@ -39,6 +39,12 @@ export function PrivacidadePage() {
             <strong>Segurança e abuso:</strong> para limitar envios em excesso, o Aprumo guarda apenas um código
             calculado (HMAC) a partir do seu IP e do seu e-mail. O Aprumo não grava o IP em texto aberto.
           </li>
+          <li>
+            Quando o app encontra um erro inesperado, enviamos ao nosso servidor a mensagem técnica do erro, o trecho do
+            código em que ele ocorreu e a tela em que aconteceu (sem parâmetros nem números de registro). E-mails e
+            códigos são removidos antes do envio, e o seu IP é usado só para limitar envios, como código calculado
+            (HMAC). Esses registros ficam nos logs do provedor da API, pelo prazo dele.
+          </li>
         </ul>
         <p>
           Os provedores que hospedam o Aprumo (Render e Vercel, seção 4) registram o IP e dados técnicos de acesso nos
