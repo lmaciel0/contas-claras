@@ -17,6 +17,7 @@ interface Icone {
 interface Atalho {
   name: string
   url: string
+  icons?: Icone[]
 }
 
 interface Manifest {
@@ -75,5 +76,13 @@ describe('manifest.webmanifest', () => {
     const atalhos = Object.fromEntries((manifest.shortcuts ?? []).map((a) => [a.name, a.url]))
     expect(atalhos['Nova nota']).toBe('/notas')
     expect(atalhos['Nova conta']).toBe('/lancamentos/novo')
+  })
+
+  it('dá a cada atalho o ícone de 192 que existe em public/', () => {
+    expect(manifest.shortcuts).toHaveLength(2)
+    for (const atalho of manifest.shortcuts ?? []) {
+      expect(atalho.icons).toEqual([{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }])
+      for (const icone of atalho.icons ?? []) expect(existeNoPublic(icone.src)).toBe(true)
+    }
   })
 })
