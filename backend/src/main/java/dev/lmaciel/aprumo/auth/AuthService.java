@@ -46,7 +46,7 @@ public class AuthService {
     private final LancamentoRepository lancamentos;
     private final CodigoEmailRepository codigos;
     private final Clock clock;
-    /** Transação curta só dos deletes da exclusão; a reautenticação (BCrypt, rede) fica fora dela. */
+    /** Transação curta só da gravação (exclusão, troca de senha); a reautenticação e o BCrypt (CPU, rede) ficam fora dela. */
     private final TransactionTemplate tx;
     /** Hash de uma senha descartada: gasta o mesmo tempo de BCrypt quando o e-mail não existe. */
     private final String hashFalso;
@@ -109,8 +109,7 @@ public class AuthService {
 
     /**
      * Confere o ID token no Google (chamada de rede). Este método em si não abre transação, então no login
-     * e em {@link #excluirConta} a espera não segura conexão do banco. Já {@link #definirSenha} roda
-     * inteiro em {@code @Transactional} e, para conta só Google, chama isto dentro dela.
+     * e em {@link #excluirConta} e {@link #definirSenha} a espera não segura conexão do banco.
      */
     public IdentidadeGoogle verificarGoogle(String credential) {
         IdentidadeGoogle identidade = googleVerificador.verificar(credential).orElse(null);
@@ -174,7 +173,6 @@ public class AuthService {
      * a usaria para excluir a conta, contornando o Google.</li>
      * </ul>
      */
-    @Transactional
     public Usuario definirSenha(long id, String senhaAtual, String credencialGoogle, String senhaNova) {
         Usuario usuario = buscar(id);
         if (usuario.temSenha()) {
@@ -186,9 +184,14 @@ public class AuthService {
         } else {
             exigirGoogleDoUsuario(usuario, credencialGoogle);
         }
-        usuario.setSenhaHash(hashDaSenha(senhaNova));
-        usuario.invalidarSessoes();
-        return usuario;
+        // BCrypt e Google ficam fora da transação, como no redefinirSenha: só a gravação segura conexão.
+        String hashNovo = hashDaSenha(senhaNova);
+        return tx.execute(status -> {
+            Usuario atual = usuarios.findById(id).orElseThrow(NaoAutenticadoException::new);
+            atual.setSenhaHash(hashNovo);
+            atual.invalidarSessoes();
+            return atual;
+        });
     }
 
     /**

@@ -567,6 +567,49 @@ class ExclusaoContaIntegracaoTest extends IntegracaoTest {
         assertThat(emTransacao).containsExactly(false);
     }
 
+    @Test
+    void definirSenhaComGoogleVerificaOTokenForaDeTransacao() throws Exception {
+        tokenGoogle(TOKEN_A, "sub-a", EMAIL_A);
+        Cookie cookie = entrarComGoogle(TOKEN_A);
+        List<Boolean> emTransacao = new ArrayList<>();
+        when(verificador.verificar(TOKEN_A)).thenAnswer(inv -> {
+            emTransacao.add(TransactionSynchronizationManager.isActualTransactionActive());
+            return Optional.of(new IdentidadeGoogle("sub-a", EMAIL_A, true, "Pessoa Google", clock.instant()));
+        });
+
+        definirSenha(cookie, corpoDefinirSenha(null, TOKEN_A, "primeira-senha-1")).andExpect(status().isNoContent());
+
+        assertThat(emTransacao).containsExactly(false);
+    }
+
+    @Test
+    void definirSenhaFazOsDoisBcryptsForaDeTransacao() throws Exception {
+        Cookie cookie = cadastrarEEntrar(EMAIL_A);
+        long a = idDe(EMAIL_A);
+        String hashAntigo = senhaHashDe(a);
+        List<Boolean> matchesEmTransacao = new ArrayList<>();
+        List<Boolean> encodeEmTransacao = new ArrayList<>();
+        doAnswer(inv -> {
+            matchesEmTransacao.add(TransactionSynchronizationManager.isActualTransactionActive());
+            return inv.callRealMethod();
+        }).when(encoder).matches(anyString(), anyString());
+        doAnswer(inv -> {
+            encodeEmTransacao.add(TransactionSynchronizationManager.isActualTransactionActive());
+            return inv.callRealMethod();
+        }).when(encoder).encode(anyString());
+
+        definirSenha(cookie, corpoDefinirSenha(SENHA_PADRAO_TESTE, null, "senha-nova-12345"))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("cc_session=")));
+
+        assertThat(matchesEmTransacao).containsExactly(false);
+        assertThat(encodeEmTransacao).containsExactly(false);
+        assertThat(senhaHashDe(a)).isNotEqualTo(hashAntigo);
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"%s\",\"senha\":\"senha-nova-12345\"}".formatted(EMAIL_A)))
+                .andExpect(status().isOk());
+    }
+
     // ---- validação do corpo -------------------------------------------------------------
 
     @Test
