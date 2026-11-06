@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { aoNaoAutenticado, ErroApi } from '../api/cliente'
 import { endpoints } from '../api/endpoints'
 import type { UsuarioResponse } from '../api/tipos'
+import { urlDeLogin } from './destino'
 import { AuthContexto } from './useAuth'
 import type { Auth } from './useAuth'
 import { useTimeoutInatividade } from './useTimeoutInatividade'
@@ -20,6 +21,7 @@ import { useTimeoutInatividade } from './useTimeoutInatividade'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const navegar = useNavigate()
+  const { pathname, search } = useLocation()
   const [usuario, setUsuario] = useState<UsuarioResponse | null>(null)
   const [carregando, setCarregando] = useState(true)
 
@@ -28,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     aoExpirar: () => {
       void endpoints.auth.logout().catch(() => undefined)
       setUsuario(null)
-      navegar('/login?motivo=inatividade', { replace: true })
+      navegar(urlDeLogin(pathname, search, 'inatividade'), { replace: true })
     },
   })
 
@@ -65,41 +67,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [usuario, queryClient])
 
-  const auth: Auth = {
-    usuario,
-    carregando,
-    entrar: async (email, senha) => {
-      setUsuario(await endpoints.auth.login({ email, senha }))
-    },
-    entrarComGoogle: async (credential) => {
-      setUsuario(await endpoints.auth.google({ credential }))
-    },
-    cadastrar: async (nome, email) => {
-      await endpoints.auth.cadastro({ nome, email })
-    },
-    confirmarCadastro: async (req) => {
-      setUsuario(await endpoints.auth.confirmarCadastro(req))
-    },
-    redefinirSenha: async (req) => {
-      setUsuario(await endpoints.auth.redefinirSenha(req))
-    },
-    sair: async () => {
-      try {
-        await endpoints.auth.logout()
-      } catch (erro) {
-        // 401 = cookie já expirado, a pessoa já está deslogada. Qualquer outra falha (rede, 5xx, 90 s sem
-        // resposta) sobe: o cookie HttpOnly segue válido no servidor, então não finge que saiu.
-        if (!(erro instanceof ErroApi && erro.status === 401)) {
-          throw erro
+  // Memoizado: o provider re-renderiza a cada navegação (useLocation/useNavigate), mas o objeto só muda quando
+  // `usuario` ou `carregando` mudam, então os consumidores de `useAuth` não re-renderizam à toa. As funções só usam
+  // setters estáveis e `endpoints`.
+  const auth = useMemo<Auth>(
+    () => ({
+      usuario,
+      carregando,
+      entrar: async (email, senha) => {
+        setUsuario(await endpoints.auth.login({ email, senha }))
+      },
+      entrarComGoogle: async (credential) => {
+        setUsuario(await endpoints.auth.google({ credential }))
+      },
+      cadastrar: async (nome, email) => {
+        await endpoints.auth.cadastro({ nome, email })
+      },
+      confirmarCadastro: async (req) => {
+        setUsuario(await endpoints.auth.confirmarCadastro(req))
+      },
+      redefinirSenha: async (req) => {
+        setUsuario(await endpoints.auth.redefinirSenha(req))
+      },
+      sair: async () => {
+        try {
+          await endpoints.auth.logout()
+        } catch (erro) {
+          // 401 = cookie já expirado, a pessoa já está deslogada. Qualquer outra falha (rede, 5xx, 90 s sem
+          // resposta) sobe: o cookie HttpOnly segue válido no servidor, então não finge que saiu.
+          if (!(erro instanceof ErroApi && erro.status === 401)) {
+            throw erro
+          }
         }
-      }
-      setUsuario(null)
-    },
-    limparSessao: () => setUsuario(null),
-    recarregar: async () => {
-      setUsuario(await endpoints.auth.me())
-    },
-  }
+        setUsuario(null)
+      },
+      limparSessao: () => setUsuario(null),
+      recarregar: async () => {
+        setUsuario(await endpoints.auth.me())
+      },
+
+    }),
+    [usuario, carregando],
+  )
 
   return <AuthContexto value={auth}>{children}</AuthContexto>
 }

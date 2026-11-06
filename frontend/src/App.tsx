@@ -37,6 +37,7 @@ const PainelPage = lazy(() => import('./paginas/painel/PainelPage').then((m) => 
 const RelatoriosPage = lazy(() =>
   import('./paginas/relatorios/RelatoriosPage').then((m) => ({ default: m.RelatoriosPage })),
 )
+const MaisPage = lazy(() => import('./paginas/mais/MaisPage').then((m) => ({ default: m.MaisPage })))
 const NotaPage = lazy(() => import('./paginas/notas/NotaPage').then((m) => ({ default: m.NotaPage })))
 const NotasPage = lazy(() => import('./paginas/notas/NotasPage').then((m) => ({ default: m.NotasPage })))
 const ProjetosPage = lazy(() => import('./paginas/projetos/ProjetosPage').then((m) => ({ default: m.ProjetosPage })))
@@ -87,10 +88,10 @@ function MolduraDoUsuario() {
       <AppShell nomeUsuario={usuario?.nome} aoSair={aoSair} />
       {(saindo || erroAoSair !== null) && (
         // Sem `pointer-events-none` o wrapper (largura total) cobriria a dock e o erro persistente bloquearia os toques.
-        // No celular sobe acima da dock inferior e do botão "Criar" (que ocupa de 5 a 8 rem).
+        // No celular sobe acima da dock inferior e do botão "Criar" elevado (que chega a 5 rem do fundo).
         <div
           className={`pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 ${
-            ehCelular ? 'bottom-[calc(8.75rem+env(safe-area-inset-bottom))]' : 'bottom-6'
+            ehCelular ? 'bottom-[calc(6.5rem+env(safe-area-inset-bottom))]' : 'bottom-6'
           }`}
         >
           {saindo ? (
@@ -147,6 +148,7 @@ export function App() {
           <Route path="/cartoes" element={<Pagina><CartoesPage /></Pagina>} />
           <Route path="/categorias" element={<Pagina><CategoriasPage /></Pagina>} />
           <Route path="/relatorios" element={<Pagina><RelatoriosPage /></Pagina>} />
+          <Route path="/mais" element={<Pagina><MaisPage /></Pagina>} />
           <Route path="/conta/senha" element={<Pagina><DefinirSenhaPage /></Pagina>} />
           <Route path="/conta/excluir" element={<Pagina><ExcluirContaPage /></Pagina>} />
           <Route path="*" element={<NaoEncontradaPage />} />

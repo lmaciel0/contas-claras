@@ -10,6 +10,7 @@ function renderizar(
     aoSair?: () => void
     aoNavegar?: () => void
     aoAbrirPreferencias?: () => void
+    forcarExpandida?: boolean
   } = {}
 ) {
   const aoSair = props.aoSair ?? vi.fn()
@@ -23,6 +24,7 @@ function renderizar(
           aoSair={aoSair}
           aoNavegar={props.aoNavegar}
           aoAbrirPreferencias={aoAbrirPreferencias}
+          forcarExpandida={props.forcarExpandida}
         />
       </MemoryRouter>
     </PreferenciasProvider>
@@ -32,6 +34,21 @@ function renderizar(
 describe('DockLateral', () => {
   beforeEach(() => {
     localStorage.clear()
+  })
+
+  it('com forcarExpandida nao repete o logo nem o botao de recolher (o cabecalho do menu ja tem)', () => {
+    renderizar({ forcarExpandida: true })
+    expect(screen.queryByRole('link', { name: 'Aprumo' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /recolher menu|expandir menu/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
+  })
+
+  it('sem forcarExpandida mostra o logo e, recolhida, o "A"', () => {
+    renderizar()
+    expect(screen.getByRole('link', { name: 'Aprumo' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /recolher menu/i }))
+    expect(screen.queryByRole('link', { name: 'Aprumo' })).not.toBeInTheDocument()
+    expect(screen.getByTitle('Aprumo')).toHaveTextContent('A')
   })
 
   it('renderiza os links de navegação principais', () => {

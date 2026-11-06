@@ -31,6 +31,22 @@ export function PreferenciasModal({ aberta, aoFechar }: PreferenciasModalProps) 
   const modalRef = useRef<HTMLDivElement>(null)
   const botaoFecharRef = useRef<HTMLButtonElement>(null)
 
+  // Guarda quem tinha o foco ao abrir (o botão "Preferências" da dock, da página Mais ou do menu) e o devolve ao fechar.
+  // Vem antes do efeito abaixo, que move o foco para dentro do modal. Só depende de `aberta`: `aoFechar` muda a cada render.
+  const origemDoFoco = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    if (!aberta) {
+      return
+    }
+    origemDoFoco.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    return () => {
+      if (origemDoFoco.current?.isConnected) {
+        origemDoFoco.current.focus()
+      }
+      origemDoFoco.current = null
+    }
+  }, [aberta])
+
   useEffect(() => {
     if (!aberta) {
       return

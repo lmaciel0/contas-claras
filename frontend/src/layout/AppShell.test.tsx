@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../api/cliente'
 import { PreferenciasProvider } from '../preferencias/PreferenciasContext'
 import { gravarPreferencias, PREFERENCIAS_PADRAO } from '../preferencias/preferenciasStorage'
+import { MaisPage } from '../paginas/mais/MaisPage'
 import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AppShell } from './AppShell'
@@ -35,6 +36,7 @@ function renderizar(rota = '/?ano=2026&mes=10', aoSair = vi.fn(), Envoltorio: En
           <Route path="/cartoes" element={<p>Conteúdo dos Cartões</p>} />
           <Route path="/categorias" element={<p>Conteúdo das Categorias</p>} />
           <Route path="/relatorios" element={<p>Conteúdo dos Relatórios</p>} />
+          <Route path="/mais" element={<MaisPage />} />
         </Route>
       </Routes>
     </Envoltorio>,
@@ -188,7 +190,7 @@ describe('padding do main', () => {
 })
 
 describe('AppShell abaixo de 1280 px', () => {
-  it.each([390, 768, 1279])('em %i px mostra "Abrir menu" fechado e esconde a sidebar', (largura) => {
+  it.each([768, 1279])('em %i px mostra "Abrir menu" fechado e esconde a sidebar', (largura) => {
     definirLargura(largura)
     renderizar()
 
@@ -213,7 +215,7 @@ describe('AppShell abaixo de 1280 px', () => {
   })
 
   it('gaveta_do_menu_usa_superficie_flutuante', async () => {
-    definirLargura(390)
+    definirLargura(800)
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
 
@@ -224,8 +226,18 @@ describe('AppShell abaixo de 1280 px', () => {
     expect(painel).not.toHaveClass('bg-[var(--cor-card)]')
   })
 
+  it('menu_deslizante_do_tablet_mostra_o_logo_uma_so_vez', async () => {
+    definirLargura(800)
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+
+    const painel = screen.getByRole('dialog', { name: 'Menu' })
+
+    expect(within(painel).getAllByRole('link', { name: 'Aprumo' })).toHaveLength(1)
+  })
+
   it('abrir o menu mostra o painel; Esc fecha e devolve o foco ao botão', async () => {
-    definirLargura(390)
+    definirLargura(800)
     renderizar()
     const botao = screen.getByRole('button', { name: 'Abrir menu' })
 
@@ -245,7 +257,7 @@ describe('AppShell abaixo de 1280 px', () => {
   })
 
   it('clicar no fundo escurecido fecha o painel', async () => {
-    definirLargura(390)
+    definirLargura(800)
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
 
@@ -255,7 +267,7 @@ describe('AppShell abaixo de 1280 px', () => {
   })
 
   it('clicar num link do painel navega e fecha o painel', async () => {
-    definirLargura(390)
+    definirLargura(800)
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
 
@@ -266,7 +278,7 @@ describe('AppShell abaixo de 1280 px', () => {
   })
 
   it('Sair no painel chama aoSair', async () => {
-    definirLargura(390)
+    definirLargura(800)
     const { aoSair } = renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
 
@@ -276,7 +288,7 @@ describe('AppShell abaixo de 1280 px', () => {
   })
 
   it('o Tab fica preso dentro do painel', async () => {
-    definirLargura(390)
+    definirLargura(800)
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
     const painel = screen.getByRole('dialog', { name: 'Menu' })
@@ -352,7 +364,7 @@ describe('trava de rolagem', () => {
   })
 
   it('abrir o menu trava o body e fechar restaura', async () => {
-    definirLargura(390)
+    definirLargura(800)
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
     expect(document.body.style.overflow).toBe('hidden')
@@ -371,7 +383,7 @@ describe('moldura', () => {
     expect(screen.queryByRole('navigation', { name: 'Abas' })).not.toBeInTheDocument()
   })
 
-  it.each([390, 1280])('o logo diz Aprumo e leva a / em %i px', (largura) => {
+  it.each([768, 1280])('o logo diz Aprumo e leva a / em %i px', (largura) => {
     definirLargura(largura)
     renderizar('/lancamentos?ano=2026&mes=10')
 
@@ -392,13 +404,36 @@ describe('dock inferior no celular (menos de 768 px)', () => {
     document.body.style.overflow = ''
   })
 
-  it('em 600 px renderiza a dock e a barra de topo', () => {
+  it('em 600 px renderiza a dock, sem barra de topo e sem botão "Abrir menu"', () => {
     definirLargura(600)
     renderizar()
 
     expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Abrir menu' })).not.toBeInTheDocument()
+  })
+
+  it('em 800 px a barra de topo e o botão "Abrir menu" continuam e a dock some', () => {
+    definirLargura(800)
+    renderizar()
+
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Abrir menu' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
+  })
+
+  it('a dock do celular tem Início, Notas, Orçamento e Mais, com o botão Criar entre Notas e Orçamento', () => {
+    definirLargura(600)
+    renderizar()
+    const dock = screen.getByRole('navigation', { name: 'Navegação principal' })
+
+    expect(Array.from(dock.querySelectorAll('a, button')).map((e) => e.getAttribute('aria-label'))).toEqual([
+      'Início',
+      'Notas',
+      'Criar',
+      'Orçamento',
+      'Mais',
+    ])
   })
 
   it.each([900, 1300])('em %i px não renderiza a dock', (largura) => {
@@ -419,6 +454,7 @@ describe('dock inferior no celular (menos de 768 px)', () => {
     definirLargura(767)
     renderizar()
     expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Abrir menu' })).not.toBeInTheDocument()
 
     act(() => definirLargura(768))
     expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
@@ -441,8 +477,8 @@ describe('dock inferior no celular (menos de 768 px)', () => {
     expect(screen.getByRole('main').className).not.toMatch(/safe-area-inset-bottom/)
   })
 
-  it('o menu "Abrir menu" abre sobre a dock e o link "Excluir conta" está nele', async () => {
-    definirLargura(600)
+  it('no tablet (800 px) o menu "Abrir menu" abre e o link "Excluir conta" está nele', async () => {
+    definirLargura(800)
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
 
@@ -450,8 +486,8 @@ describe('dock inferior no celular (menos de 768 px)', () => {
     expect(within(painel).getByRole('link', { name: 'Excluir conta' })).toHaveAttribute('href', '/conta/excluir')
   })
 
-  it('redimensionar de 600 para 1300 px com o menu aberto fecha o menu e tira a dock', async () => {
-    definirLargura(600)
+  it('redimensionar de 800 para 1300 px com o menu aberto fecha o menu e mostra a lateral', async () => {
+    definirLargura(800)
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
     expect(screen.getByRole('dialog', { name: 'Menu' })).toBeInTheDocument()
@@ -464,21 +500,22 @@ describe('dock inferior no celular (menos de 768 px)', () => {
     expect(screen.getByRole('main')).toHaveFocus()
   })
 
-  it('cruzar 767/768 px com o menu aberto fecha o menu, sem estado preso na volta', async () => {
-    definirLargura(767)
+  it('encolher de 768 para 767 px com o menu aberto fecha o menu, sem estado preso na volta', async () => {
+    definirLargura(768)
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
-
-    act(() => definirLargura(768))
-
-    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
-    expect(document.body.style.overflow).toBe('')
 
     act(() => definirLargura(767))
 
     expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('button', { name: 'Abrir menu' })).not.toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
+    expect(document.body.style.overflow).toBe('')
+
+    act(() => definirLargura(768))
+
+    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('a dock marca o item da rota atual como ativo', async () => {
@@ -487,6 +524,13 @@ describe('dock inferior no celular (menos de 768 px)', () => {
     const dock = screen.getByRole('navigation', { name: 'Navegação principal' })
 
     expect(within(dock).getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('o main reserva a altura da dock com o botão Criar elevado (6,5 rem)', () => {
+    definirLargura(600)
+    renderizar()
+
+    expect(screen.getByRole('main').className).toMatch(/pb-\[calc\(6\.5rem\+env\(safe-area-inset-bottom\)\)\]/)
   })
 })
 
@@ -517,10 +561,12 @@ describe('aviso de servidor acordando', () => {
 })
 
 describe('AppShell: ação rápida', () => {
-  it('o botão "Criar" aparece no celular', () => {
+  it('o botão "Criar" aparece no celular, só dentro da dock', () => {
     definirLargura(390)
     renderizar()
-    expect(screen.getByRole('button', { name: 'Criar' })).toBeInTheDocument()
+    const botoes = screen.getAllByRole('button', { name: 'Criar' })
+    expect(botoes).toHaveLength(1)
+    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toContainElement(botoes[0] ?? null)
   })
 
   it.each([768, 1280])('em %i px não há botão "Criar"', (largura) => {
@@ -529,17 +575,15 @@ describe('AppShell: ação rápida', () => {
     expect(screen.queryByRole('button', { name: 'Criar' })).not.toBeInTheDocument()
   })
 
-  it('a folha do "Criar" não interfere no menu: os dois diálogos abrem e fecham separados', async () => {
+  it('a folha do "Criar" abre e fecha com Esc, e no celular não há painel de menu', async () => {
     definirLargura(390)
     renderizar()
 
     await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
     expect(screen.getByRole('dialog', { name: 'Criar' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Menu' })).not.toBeInTheDocument()
     await userEvent.keyboard('{Escape}')
     expect(screen.queryByRole('dialog', { name: 'Criar' })).not.toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
-    expect(screen.getByRole('dialog', { name: 'Menu' })).toBeInTheDocument()
   })
 
   it('crescer para 768 px com a folha aberta some com ela e solta a rolagem do corpo', async () => {
@@ -553,5 +597,27 @@ describe('AppShell: ação rápida', () => {
     expect(screen.queryByRole('dialog', { name: 'Criar' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Criar' })).not.toBeInTheDocument()
     expect(document.body.style.overflow).not.toBe('hidden')
+  })
+})
+
+describe('AppShell: página Mais', () => {
+  it('em /mais, Preferências abre o modal e fechá-lo devolve o foco ao botão que o abriu', async () => {
+    definirLargura(600)
+    renderizar('/mais')
+
+    const botao = screen.getByRole('button', { name: 'Preferências' })
+    await userEvent.click(botao)
+    expect(screen.getByRole('dialog', { name: /preferências/i })).toBeInTheDocument()
+
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: /preferências/i })).not.toBeInTheDocument()
+    expect(botao).toHaveFocus()
+  })
+
+  it('em /mais, Sair chama aoSair', async () => {
+    definirLargura(600)
+    const { aoSair } = renderizar('/mais')
+    await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
+    expect(aoSair).toHaveBeenCalledTimes(1)
   })
 })

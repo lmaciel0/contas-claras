@@ -1,92 +1,67 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router'
+import { useState } from 'react'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { afterEach, describe, expect, it } from 'vitest'
-import { AcaoRapida } from './AcaoRapida'
-
-function definirLargura(largura: number) {
-  Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: largura })
-  window.dispatchEvent(new Event('resize'))
-}
+import { FolhaAcaoRapida } from './AcaoRapida'
 
 function Local() {
   const { pathname, search, state } = useLocation()
-  const navegar = useNavigate()
   return (
     <>
       <p data-testid="local">{`${pathname}${search}`}</p>
       <p data-testid="estado">{JSON.stringify(state)}</p>
-      <button type="button" onClick={() => void navegar('/outra-tela')}>
-        Trocar de rota
-      </button>
     </>
   )
 }
 
-function renderizar(largura = 600, rota = '/?ano=2026&mes=10') {
-  definirLargura(largura)
+/** Dono do estado, como a DockInferior: o botão "Criar" abre a folha. */
+function Hospedeira() {
+  const [aberta, setAberta] = useState(false)
+  return (
+    <>
+      <button type="button" aria-label="Criar" onClick={() => setAberta(true)} />
+      <FolhaAcaoRapida
+        aberta={aberta}
+        aoFechar={() => {
+          setAberta(false)
+        }}
+      />
+      <Local />
+    </>
+  )
+}
+
+function renderizar(rota = '/?ano=2026&mes=10') {
   return render(
     <MemoryRouter initialEntries={[rota]}>
       <Routes>
-        <Route
-          path="*"
-          element={
-            <>
-              <AcaoRapida />
-              <Local />
-            </>
-          }
-        />
+        <Route path="*" element={<Hospedeira />} />
       </Routes>
     </MemoryRouter>,
   )
 }
 
 afterEach(() => {
-  definirLargura(1024)
+  document.body.style.overflow = ''
 })
 
-describe('AcaoRapida', () => {
-  it('o botão "Criar" existe com a tela em 600 px', () => {
-    renderizar(600)
-    expect(screen.getByRole('button', { name: 'Criar' })).toBeInTheDocument()
-  })
-
-  it('o botão tem o alvo de toque mínimo de 44 px e avisa que abre um diálogo', () => {
+describe('FolhaAcaoRapida', () => {
+  it('fechada não renderiza nada; aberta mostra o diálogo "Criar" com três links e leva o foco ao primeiro', async () => {
     renderizar()
-    const botao = screen.getByRole('button', { name: 'Criar' })
-    expect(botao).toHaveClass('min-h-11', 'min-w-11')
-    expect(botao).toHaveAttribute('aria-haspopup', 'dialog')
-    expect(botao).toHaveAttribute('aria-expanded', 'false')
-  })
-
-  it('fica acima da dock, sem cobrir o aviso de saída nem a área segura', () => {
-    renderizar()
-    expect(screen.getByRole('button', { name: 'Criar' })).toHaveClass(
-      'fixed',
-      'right-4',
-      'bottom-[calc(5rem+env(safe-area-inset-bottom))]',
-      'z-30',
-    )
-  })
-
-  it('clicar abre o diálogo "Criar" com três links e leva o foco ao primeiro', async () => {
-    renderizar()
-    const botao = screen.getByRole('button', { name: 'Criar' })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
-    await userEvent.click(botao)
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
 
     const dialogo = screen.getByRole('dialog', { name: 'Criar' })
     expect(dialogo).toHaveAttribute('aria-modal', 'true')
-    expect(botao).toHaveAttribute('aria-expanded', 'true')
     const links = within(dialogo).getAllByRole('link')
     expect(links.map((l) => l.textContent)).toEqual(['Nova nota', 'Nova conta', 'Nova tarefa'])
     expect(links[0]).toHaveFocus()
   })
 
   it('cada link aponta para o destino certo, com o mês só no da conta', async () => {
-    renderizar(600, '/?ano=2026&mes=3')
+    renderizar('/?ano=2026&mes=3')
     await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
 
     expect(screen.getByRole('link', { name: 'Nova nota' })).toHaveAttribute('href', '/notas')
@@ -97,16 +72,13 @@ describe('AcaoRapida', () => {
     expect(screen.getByRole('link', { name: 'Nova tarefa' })).toHaveAttribute('href', '/tarefas?nova=1')
   })
 
-  it('Esc fecha e devolve o foco ao botão', async () => {
+  it('Esc chama aoFechar e fecha', async () => {
     renderizar()
-    const botao = screen.getByRole('button', { name: 'Criar' })
-    await userEvent.click(botao)
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
 
     await userEvent.keyboard('{Escape}')
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(botao).toHaveFocus()
-    expect(botao).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('clicar no fundo fecha', async () => {
@@ -163,10 +135,9 @@ describe('AcaoRapida', () => {
     expect(screen.getByTestId('estado')).toHaveTextContent('{"nova":true}')
   })
 
-  it('tem um botão "Fechar" de 44 px, o último da folha, que fecha e devolve o foco ao "Criar"', async () => {
+  it('tem um botão "Fechar" de 44 px, o último da folha, que fecha', async () => {
     renderizar()
-    const criar = screen.getByRole('button', { name: 'Criar' })
-    await userEvent.click(criar)
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
     const dialogo = screen.getByRole('dialog', { name: 'Criar' })
     const fechar = within(dialogo).getByRole('button', { name: 'Fechar' })
     expect(fechar).toHaveClass('min-h-11')
@@ -174,19 +145,6 @@ describe('AcaoRapida', () => {
 
     await userEvent.click(fechar)
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(criar).toHaveFocus()
-    expect(document.body.style.overflow).not.toBe('hidden')
-  })
-
-  it('mudar de rota com a folha aberta (gesto de voltar) fecha a folha e solta a rolagem', async () => {
-    renderizar()
-    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
-    expect(document.body.style.overflow).toBe('hidden')
-
-    await userEvent.click(screen.getByRole('button', { name: 'Trocar de rota' }))
-
-    expect(screen.getByTestId('local')).toHaveTextContent('/outra-tela')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(document.body.style.overflow).not.toBe('hidden')
   })

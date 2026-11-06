@@ -2,7 +2,7 @@ import { Link, NavLink } from 'react-router'
 import { usePreferencias } from '../preferencias/usePreferencias'
 import { GRUPOS_MENU } from './itensMenu'
 import { useMesSelecionado } from './useMesSelecionado'
-import { ICONES, ICONE_EXCLUIR, ICONE_PRIVACIDADE, ICONE_SENHA, iconeProps } from './icones'
+import { ICONES, ICONE_ENGRENAGEM, ICONE_EXCLUIR, ICONE_PRIVACIDADE, ICONE_SAIR, ICONE_SENHA } from './icones'
 import { Logo } from './Logo'
 
 interface DockLateralProps {
@@ -36,22 +36,22 @@ export function DockLateral({
         recolhida ? 'w-[72px] px-2 py-4' : 'w-60 px-3 py-4'
       }`}
     >
-      {/* Topo: Logo + Botão Colapsar/Expandir */}
-      <div className={`flex items-center pb-3 border-b border-[var(--cor-linha)] ${
-        recolhida ? 'justify-center flex-col gap-3' : 'justify-between px-1'
-      }`}>
-        {recolhida ? (
-          <div
-            title="Aprumo"
-            className="grid size-10 place-items-center rounded-2xl bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)] font-black text-lg shadow-sm"
-          >
-            A
-          </div>
-        ) : (
-          <Logo />
-        )}
+      {/* Topo: Logo + Botão Colapsar/Expandir. No menu deslizante (forcarExpandida) o cabeçalho do AppShell já tem o logo. */}
+      {!forcarExpandida && (
+        <div className={`flex items-center pb-3 border-b border-[var(--cor-linha)] ${
+          recolhida ? 'justify-center flex-col gap-3' : 'justify-between px-1'
+        }`}>
+          {recolhida ? (
+            <div
+              title="Aprumo"
+              className="grid size-10 place-items-center rounded-2xl bg-[var(--cor-principal)] text-[var(--cor-sobre-principal)] font-black text-lg shadow-sm"
+            >
+              A
+            </div>
+          ) : (
+            <Logo />
+          )}
 
-        {!forcarExpandida && (
           <button
             type="button"
             aria-label={recolhida ? 'Expandir menu' : 'Recolher menu'}
@@ -75,11 +75,11 @@ export function DockLateral({
               <path d="m14 9-3 3 3 3" />
             </svg>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Navegação */}
-      <nav aria-label="Menu principal" className={`mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden ${recolhida ? '' : 'mb-3'}`}>
+      <nav aria-label="Menu principal" className={`flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden ${forcarExpandida ? '' : 'mt-3'} ${recolhida ? '' : 'mb-3'}`}>
         {GRUPOS_MENU.map((grupo) => (
           <div key={grupo.titulo ?? 'principal'} className="flex flex-col gap-1">
             {!recolhida && grupo.titulo && (
@@ -141,19 +141,7 @@ export function DockLateral({
               : `${linhaBase} text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)]`
           }
         >
-          <svg
-            {...iconeProps}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
+          {ICONE_ENGRENAGEM}
           {!recolhida && <span>Preferências</span>}
           {recolhida && (
             <span
@@ -244,20 +232,7 @@ export function DockLateral({
               : `${linhaBase} cursor-pointer text-left text-[var(--cor-negativo)] hover:bg-[var(--cor-erro-fundo)]`
           }
         >
-          <svg
-            {...iconeProps}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
+          {ICONE_SAIR}
           {!recolhida && <span>Sair</span>}
           {recolhida && (
             <span
