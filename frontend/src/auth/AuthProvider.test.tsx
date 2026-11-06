@@ -1,7 +1,8 @@
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { Route, Routes, useLocation } from 'react-router'
 import { App } from '../App'
 import { ErroApi } from '../api/cliente'
 import { endpoints } from '../api/endpoints'
@@ -10,6 +11,7 @@ import { renderComApp } from '../teste/render'
 import { servidor } from '../teste/servidor'
 import { AuthProvider } from './AuthProvider'
 import { useAuth } from './useAuth'
+import { CHAVE_ULTIMA_ATIVIDADE } from './useTimeoutInatividade'
 
 // Em 1280 px ou mais a sidebar fica fixa e o "Sair" está sempre à mão (abaixo disso ele fica no painel do menu).
 beforeEach(() => {
@@ -206,5 +208,52 @@ describe('AuthProvider: cadastro por e-mail e recuperação de senha', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'redefinir' }))
 
     expect(await screen.findByText('Ana')).toBeInTheDocument()
+  })
+})
+
+describe('AuthProvider: queda por inatividade', () => {
+  function LocalAtual() {
+    const { pathname, search } = useLocation()
+    return <p data-testid="local">{`${pathname}${search}`}</p>
+  }
+
+  function renderizarEm(rota: string) {
+    return renderComApp(
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LocalAtual />} />
+          <Route path="*" element={<p>Tela protegida</p>} />
+        </Routes>
+      </AuthProvider>,
+      rota,
+    )
+  }
+
+  async function expirarInatividade() {
+    // Última atividade há 31 minutos; ao voltar o foco à janela o hook confere e expira a sessão.
+    localStorage.setItem(CHAVE_ULTIMA_ATIVIDADE, String(Date.now() - 31 * 60 * 1000))
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'))
+    })
+  }
+
+  it('guarda_a_tela_atual_em_voltar', async () => {
+    comSessao()
+    renderizarEm('/notas')
+    await screen.findByText('Tela protegida')
+
+    await expirarInatividade()
+
+    expect(await screen.findByTestId('local')).toHaveTextContent('/login?motivo=inatividade&voltar=%2Fnotas')
+  })
+
+  it('em_conta_excluir_nao_guarda_voltar', async () => {
+    comSessao()
+    renderizarEm('/conta/excluir')
+    await screen.findByText('Tela protegida')
+
+    await expirarInatividade()
+
+    expect(await screen.findByTestId('local')).toHaveTextContent(/^\/login\?motivo=inatividade$/)
   })
 })

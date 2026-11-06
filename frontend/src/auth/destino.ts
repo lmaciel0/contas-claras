@@ -67,3 +67,20 @@ export function destinoAposEntrar(voltar: string | null): string {
   const comparavel = caminhoNormalizado(url.pathname)
   return comparavel === null || ROTAS_RECUSADAS.includes(comparavel) ? '/' : destino
 }
+
+/**
+ * Endereço do login para quem perdeu a sessão em `pathname + search`: leva `voltar` para a pessoa retomar a tela de
+ * antes depois de entrar, e `motivo=inatividade` quando a queda foi por tempo parado (a tela de login avisa).
+ * Rotas de `ROTAS_RECUSADAS` não viram `voltar` (nem se o caminho não puder ser normalizado): sem destino guardado.
+ */
+export function urlDeLogin(pathname: string, search: string, motivo?: 'inatividade'): string {
+  const comparavel = caminhoNormalizado(pathname)
+  const parametros: string[] = []
+  if (motivo !== undefined) {
+    parametros.push(`motivo=${motivo}`)
+  }
+  if (comparavel !== null && !ROTAS_RECUSADAS.includes(comparavel)) {
+    parametros.push(`voltar=${encodeURIComponent(pathname + search)}`)
+  }
+  return parametros.length === 0 ? '/login' : `/login?${parametros.join('&')}`
+}

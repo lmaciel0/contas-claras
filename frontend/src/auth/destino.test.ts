@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { destinoAposEntrar } from './destino'
+import { destinoAposEntrar, urlDeLogin } from './destino'
 
 describe('destinoAposEntrar', () => {
   it('sem_voltar_vai_para_o_inicio', () => {
@@ -59,5 +59,22 @@ describe('destinoAposEntrar', () => {
 
   it('pathname_com_percent_encoding_invalido_vai_para_o_inicio', () => {
     expect(destinoAposEntrar('/conta/%E0%A4%A')).toBe('/')
+  })
+})
+
+describe('urlDeLogin', () => {
+  it('guarda_a_rota_atual_em_voltar', () => {
+    expect(urlDeLogin('/lancamentos', '?ano=2026&mes=11')).toBe('/login?voltar=%2Flancamentos%3Fano%3D2026%26mes%3D11')
+  })
+
+  it('com_motivo_inatividade_poe_o_motivo_antes_de_voltar', () => {
+    expect(urlDeLogin('/lancamentos', '?ano=2026&mes=11', 'inatividade')).toBe(
+      '/login?motivo=inatividade&voltar=%2Flancamentos%3Fano%3D2026%26mes%3D11',
+    )
+  })
+
+  it('na_exclusao_de_conta_nao_guarda_voltar', () => {
+    expect(urlDeLogin('/conta/excluir', '')).toBe('/login')
+    expect(urlDeLogin('/Conta/Excluir/', '', 'inatividade')).toBe('/login?motivo=inatividade')
   })
 })

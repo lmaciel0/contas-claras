@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { aoNaoAutenticado, ErroApi } from '../api/cliente'
 import { endpoints } from '../api/endpoints'
 import type { UsuarioResponse } from '../api/tipos'
+import { urlDeLogin } from './destino'
 import { AuthContexto } from './useAuth'
 import type { Auth } from './useAuth'
 import { useTimeoutInatividade } from './useTimeoutInatividade'
@@ -20,6 +21,7 @@ import { useTimeoutInatividade } from './useTimeoutInatividade'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const navegar = useNavigate()
+  const { pathname, search } = useLocation()
   const [usuario, setUsuario] = useState<UsuarioResponse | null>(null)
   const [carregando, setCarregando] = useState(true)
 
@@ -28,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     aoExpirar: () => {
       void endpoints.auth.logout().catch(() => undefined)
       setUsuario(null)
-      navegar('/login?motivo=inatividade', { replace: true })
+      navegar(urlDeLogin(pathname, search, 'inatividade'), { replace: true })
     },
   })
 
