@@ -80,8 +80,30 @@ describe('MaisPage', () => {
     }
   })
 
-  it('aguenta nome ausente sem quebrar', () => {
+  it('com nome ausente mostra "Minha conta" e a inicial M', () => {
     renderizar('/mais', { nomeUsuario: undefined })
     expect(screen.getByRole('heading', { name: 'Mais' })).toBeInTheDocument()
+    expect(screen.getByText('Minha conta')).toBeInTheDocument()
+    expect(screen.getByText('M')).toBeInTheDocument()
+    expect(screen.queryByText('?')).not.toBeInTheDocument()
+  })
+
+  it('com nome só de espaços usa o texto de reserva', () => {
+    renderizar('/mais', { nomeUsuario: '   ' })
+    expect(screen.getByText('Minha conta')).toBeInTheDocument()
+    expect(screen.getByText('M')).toBeInTheDocument()
+  })
+
+  it('fora do AppShell lança erro claro', () => {
+    const erro = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    expect(() =>
+      renderComApp(
+        <Routes>
+          <Route path="/mais" element={<MaisPage />} />
+        </Routes>,
+        '/mais',
+      ),
+    ).toThrow('useContextoShell precisa estar dentro do AppShell.')
+    erro.mockRestore()
   })
 })

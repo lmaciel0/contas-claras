@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, matchPath, useLocation } from 'react-router'
 import { FolhaAcaoRapida, ID_FOLHA_ACAO_RAPIDA } from './AcaoRapida'
 import { foco } from './classesFoco'
@@ -42,10 +42,18 @@ export function DockInferior() {
     }
   }
 
-  const fechar = useCallback(() => {
-    setAberta(false)
-    botaoCriar.current?.focus()
-  }, [])
+  const fechar = useCallback(() => setAberta(false), [])
+
+  // Devolve o foco ao botão "Criar" ao fechar a folha, por qualquer caminho (Esc, fundo, item ou troca de rota).
+  const estavaAberta = useRef(false)
+  useEffect(() => {
+    if (aberta) {
+      estavaAberta.current = true
+    } else if (estavaAberta.current) {
+      estavaAberta.current = false
+      botaoCriar.current?.focus()
+    }
+  }, [aberta])
 
   const botao = (
     <button

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -261,5 +261,19 @@ describe('DockInferior: botão Criar', () => {
     expect(screen.getByTestId('local')).toHaveTextContent('/outra-tela')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(document.body.style.overflow).not.toBe('hidden')
+  })
+
+  it('mudar de rota com a folha aberta devolve o foco ao botão Criar', async () => {
+    renderizar()
+    const criar = screen.getByRole('button', { name: 'Criar' })
+    await userEvent.click(criar)
+    expect(screen.getByRole('dialog', { name: 'Criar' })).toBeInTheDocument()
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'Trocar de rota' }).click()
+    })
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(criar).toHaveFocus()
   })
 })

@@ -41,7 +41,8 @@ function Seta() {
 export function MaisPage() {
   const { nomeUsuario, aoSair, aoAbrirPreferencias } = useContextoShell()
   const { busca } = useMesSelecionado()
-  const inicial = nomeUsuario?.trim().charAt(0).toUpperCase() || '?'
+  const nomeExibido = nomeUsuario?.trim() || 'Minha conta'
+  const inicial = nomeExibido.charAt(0).toUpperCase()
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-5">
@@ -54,7 +55,7 @@ export function MaisPage() {
         >
           {inicial}
         </span>
-        <span className="min-w-0 flex-1 truncate text-base font-semibold text-[var(--cor-texto)]">{nomeUsuario}</span>
+        <span className="min-w-0 flex-1 truncate text-base font-semibold text-[var(--cor-texto)]">{nomeExibido}</span>
       </div>
 
       <Grupo titulo="Atalhos">

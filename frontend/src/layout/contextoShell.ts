@@ -7,7 +7,11 @@ export interface ContextoShell {
   aoAbrirPreferencias: () => void
 }
 
-/** `useOutletContext` tipado. Só funciona dentro de uma rota renderizada pelo AppShell. */
+/** `useOutletContext` tipado. Só funciona dentro de uma rota renderizada pelo AppShell; fora dele lança erro. */
 export function useContextoShell(): ContextoShell {
-  return useOutletContext<ContextoShell>()
+  const contexto = useOutletContext<ContextoShell | undefined>()
+  if (contexto === undefined || contexto === null) {
+    throw new Error('useContextoShell precisa estar dentro do AppShell.')
+  }
+  return contexto
 }

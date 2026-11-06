@@ -1,8 +1,9 @@
 import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import { useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Route, Routes, useLocation } from 'react-router'
+import { Route, Routes, useLocation, useNavigate } from 'react-router'
 import { App } from '../App'
 import { ErroApi } from '../api/cliente'
 import { endpoints } from '../api/endpoints'
@@ -255,5 +256,41 @@ describe('AuthProvider: queda por inatividade', () => {
     await expirarInatividade()
 
     expect(await screen.findByTestId('local')).toHaveTextContent(/^\/login\?motivo=inatividade$/)
+  })
+})
+
+describe('AuthProvider: re-renderização', () => {
+  it('consumidor_de_useAuth_nao_re_renderiza_ao_navegar', async () => {
+    comSessao()
+    let renders = 0
+    function Consumidor() {
+      const { carregando } = useAuth()
+      useEffect(() => {
+        renders += 1
+      })
+      return <p>{carregando ? 'carregando' : 'pronto'}</p>
+    }
+    function Navegador() {
+      const navegar = useNavigate()
+      return (
+        <button type="button" onClick={() => void navegar('/outra')}>
+          ir
+        </button>
+      )
+    }
+    renderComApp(
+      <AuthProvider>
+        <Consumidor />
+        <Routes>
+          <Route path="*" element={<Navegador />} />
+        </Routes>
+      </AuthProvider>,
+    )
+    await screen.findByText('pronto')
+    const antes = renders
+
+    await userEvent.click(screen.getByRole('button', { name: 'ir' }))
+
+    expect(renders).toBe(antes)
   })
 })

@@ -77,4 +77,10 @@ describe('urlDeLogin', () => {
     expect(urlDeLogin('/conta/excluir', '')).toBe('/login')
     expect(urlDeLogin('/Conta/Excluir/', '', 'inatividade')).toBe('/login?motivo=inatividade')
   })
+
+  it('destino_forjado_com_duas_barras_encadeado_com_urlDeLogin_termina_em_inicio', () => {
+    const url = new URL(urlDeLogin('//evil.com', ''), window.location.origin)
+    expect(url.pathname).toBe('/login')
+    expect(destinoAposEntrar(url.searchParams.get('voltar'))).toBe('/')
+  })
 })
