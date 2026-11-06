@@ -25,7 +25,7 @@ export function TarefaLinha({ tarefa, hoje, aoAlternar, desabilitada = false, mo
   const rotulo = `${tarefa.concluida ? 'Reabrir tarefa' : 'Marcar como feita'}: ${tarefa.titulo}`
 
   return (
-    <li className="item-entra flex min-h-11 items-center gap-3" data-atrasada={atrasada || undefined}>
+    <li className="item-entra flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1" data-atrasada={atrasada || undefined}>
       <button
         type="button"
         aria-label={rotulo}
@@ -49,7 +49,7 @@ export function TarefaLinha({ tarefa, hoje, aoAlternar, desabilitada = false, mo
         </span>
       </button>
       <span
-        className={`min-w-0 flex-1 break-words text-sm ${
+        className={`min-w-[10rem] flex-1 break-words text-sm ${
           tarefa.concluida ? 'text-[var(--cor-mutado)] line-through' : 'text-[var(--cor-texto)]'
         }`}
       >
@@ -66,7 +66,7 @@ export function TarefaLinha({ tarefa, hoje, aoAlternar, desabilitada = false, mo
         </span>
       )}
       {tarefa.data === null && mostrarSemData && <span className="shrink-0 text-xs text-[var(--cor-mutado)]">sem data</span>}
-      {acoes}
+      {acoes && <div className="flex shrink-0 items-center">{acoes}</div>}
     </li>
   )
 }
