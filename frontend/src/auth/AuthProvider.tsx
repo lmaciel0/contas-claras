@@ -8,7 +8,7 @@ import type { UsuarioResponse } from '../api/tipos'
 import { urlDeLogin } from './destino'
 import { AuthContexto } from './useAuth'
 import type { Auth } from './useAuth'
-import { useTimeoutInatividade } from './useTimeoutInatividade'
+import { CHAVE_ULTIMA_ATIVIDADE, useTimeoutInatividade } from './useTimeoutInatividade'
 
 /**
  * Guarda quem está logado. Na montagem confere a sessão em `GET /api/auth/me`; depois disso o cookie
@@ -43,7 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         // 401 = visitante; qualquer outra falha também cai na tela de login, onde o erro aparece ao enviar.
-        if (ativo) setUsuario(null)
+        if (!ativo) return
+        // Visitante: um timestamp de sessão anterior não pode contaminar o próximo login.
+        try {
+          localStorage.removeItem(CHAVE_ULTIMA_ATIVIDADE)
+        } catch {
+          // localStorage indisponivel
+        }
+        setUsuario(null)
       })
       .finally(() => {
         if (ativo) setCarregando(false)

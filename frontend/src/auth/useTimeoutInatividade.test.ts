@@ -27,6 +27,19 @@ describe('useTimeoutInatividade', () => {
     expect(localStorage.getItem(CHAVE_ULTIMA_ATIVIDADE)).toBeNull()
   })
 
+  it('apaga a chave quando ativo passa de true para false (logout)', () => {
+    const aoExpirar = vi.fn()
+    const { rerender } = renderHook(({ ativo }) => useTimeoutInatividade({ ativo, aoExpirar }), {
+      initialProps: { ativo: true },
+    })
+    expect(localStorage.getItem(CHAVE_ULTIMA_ATIVIDADE)).not.toBeNull()
+
+    rerender({ ativo: false })
+
+    expect(localStorage.getItem(CHAVE_ULTIMA_ATIVIDADE)).toBeNull()
+    expect(aoExpirar).not.toHaveBeenCalled()
+  })
+
   it('grava timestamp ao inicializar ativo e expira apos 30 minutos sem atividade', () => {
     const aoExpirar = vi.fn()
     const agora = 1700000000000
