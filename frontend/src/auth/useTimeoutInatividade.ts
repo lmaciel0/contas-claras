@@ -21,12 +21,23 @@ export function useTimeoutInatividade({
 
   const ultimaGravacaoRef = useRef<number>(0)
   const expirouRef = useRef(false)
+  const estavaAtivoRef = useRef(false)
 
   useEffect(() => {
     if (!ativo) {
       expirouRef.current = false
+      // Logout: descarta o timestamp para o próximo login não herdar atividade antiga.
+      if (estavaAtivoRef.current) {
+        estavaAtivoRef.current = false
+        try {
+          localStorage.removeItem(CHAVE_ULTIMA_ATIVIDADE)
+        } catch {
+          // localStorage indisponivel
+        }
+      }
       return
     }
+    estavaAtivoRef.current = true
 
     expirouRef.current = false
     const agora = Date.now()

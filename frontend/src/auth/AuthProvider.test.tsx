@@ -173,6 +173,22 @@ describe('AuthProvider: cadastro por e-mail e recuperação de senha', () => {
     )
   }
 
+  it('visitante_com_timestamp_velho_limpa_a_chave_e_o_login_seguinte_nao_cai_por_inatividade', async () => {
+    localStorage.setItem(CHAVE_ULTIMA_ATIVIDADE, String(Date.now() - 31 * 60 * 1000))
+    semSessao()
+    servidor.use(http.post('/api/auth/cadastro/confirmar', () => HttpResponse.json(usuarioFicticio, { status: 201 })))
+    renderizarSonda()
+    await vi.waitFor(() => expect(localStorage.getItem(CHAVE_ULTIMA_ATIVIDADE)).toBeNull())
+
+    await userEvent.click(await screen.findByRole('button', { name: 'confirmar' }))
+
+    await vi.waitFor(() => expect(screen.getByTestId('quem')).toHaveTextContent('Ana'))
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'))
+    })
+    expect(screen.getByTestId('quem')).toHaveTextContent('Ana')
+  })
+
   it('cadastrar_nao_define_o_usuario', async () => {
     semSessao()
     let chamadas = 0
