@@ -147,6 +147,7 @@ describe('PainelPage', () => {
     expect(within(screen.getByRole('region', { name: 'Receitas' })).getByText('R$ 5.000,00')).toBeInTheDocument()
     expect(within(screen.getByRole('region', { name: 'Despesas' })).getByText('R$ 4.200,50')).toBeInTheDocument()
     expect(within(screen.getByRole('region', { name: 'Próximas contas' })).getByText('Internet')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: /Resultado de cada mês em/ })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ver visão geral' })).toHaveAttribute('href', '/financeiro')
   })
 

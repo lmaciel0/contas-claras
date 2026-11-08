@@ -6,6 +6,7 @@ import { Esqueleto } from '../../componentes/Esqueleto'
 import { mesAnterior, mesAtual, nomeMes } from '../../formato/mes'
 import { CardSobra } from '../inicio/CardSobra'
 import { CardsTotais } from '../inicio/CardsTotais'
+import { GraficoResultado } from '../inicio/GraficoResultado'
 import { ProximasContas } from '../inicio/ProximasContas'
 
 const minusculo = (texto: string) => texto.toLocaleLowerCase('pt-BR')
@@ -47,19 +48,23 @@ export function FinancasDoMes() {
           aria-label="Carregando as finanças…"
         >
           <span className="sr-only">Carregando as finanças…</span>
-          <div aria-hidden="true" className="card flex flex-col justify-between p-4 min-h-[140px]">
+          <div aria-hidden="true" className="card flex flex-col justify-between p-4 min-h-[140px] md:col-span-11">
             <Esqueleto className="h-4 w-28" />
             <Esqueleto className="h-8 w-36" />
             <Esqueleto className="h-3 w-24" />
           </div>
-          <div aria-hidden="true" className="card flex flex-col justify-between p-4 min-h-[140px]">
+          <div aria-hidden="true" className="card flex flex-col justify-between p-4 min-h-[140px] md:col-span-10">
             <Esqueleto className="h-4 w-28" />
             <Esqueleto className="h-8 w-36" />
             <Esqueleto className="h-3 w-24" />
           </div>
-          <div aria-hidden="true" className="card flex flex-col gap-3 p-4 min-h-[140px]">
+          <div aria-hidden="true" className="card flex flex-col gap-3 p-4 min-h-[140px] md:col-span-21 md:col-start-1 md:row-start-2">
             <Esqueleto className="h-4 w-32" />
-            <Esqueleto linhas={2} />
+            <Esqueleto linhas={4} />
+          </div>
+          <div aria-hidden="true" className="card flex flex-col gap-3 p-4 min-h-[140px] md:col-span-14 md:col-start-22 md:row-span-2 md:row-start-1">
+            <Esqueleto className="h-4 w-32" />
+            <Esqueleto linhas={6} />
           </div>
         </div>
       )}
@@ -94,7 +99,16 @@ export function FinancasDoMes() {
             anterior={consulta.data.anterior}
             nomeMesAnterior={nomeAnterior}
           />
-          <ProximasContas contas={consulta.data.proximas} />
+          <GraficoResultado
+            ano={ano}
+            mes={mes}
+            serie={consulta.data.serieAno}
+            className="md:col-span-21 md:col-start-1 md:row-start-2"
+          />
+          <ProximasContas
+            contas={consulta.data.proximas}
+            className="md:col-span-14 md:col-start-22 md:row-span-2 md:row-start-1"
+          />
         </div>
       )}
     </section>
