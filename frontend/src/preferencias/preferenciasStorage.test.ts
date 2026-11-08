@@ -22,8 +22,9 @@ describe('preferenciasStorage', () => {
       layoutLargura: 'largura-total' as const,
       barraFixa: false,
       dockRecolhida: true,
+      atalhosMobile: ['cartoes', 'orcamento', 'nova-receita', 'projetos'] as const,
     }
-    gravarPreferencias(custom)
+    gravarPreferencias(custom as unknown as Parameters<typeof gravarPreferencias>[0])
     expect(lerPreferenciasSalvas()).toEqual(custom)
   })
 

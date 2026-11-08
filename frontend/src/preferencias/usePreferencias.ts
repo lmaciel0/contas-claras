@@ -9,6 +9,7 @@ const VALOR_FALLBACK: PreferenciasContextValor = {
   setLayoutLargura: () => {},
   setBarraFixa: () => {},
   setDockRecolhida: () => {},
+  setAtalhosMobile: () => {},
   restaurarPadroes: () => {},
 }
 
