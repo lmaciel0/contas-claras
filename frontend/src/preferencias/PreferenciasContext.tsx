@@ -9,6 +9,7 @@ import type {
   ModoTema,
   PresetCor,
   LayoutLargura,
+  IdAtalhoMobile,
 } from './preferenciasTipos'
 import { aplicarTema } from '../tema/tema'
 
@@ -19,6 +20,7 @@ export interface PreferenciasContextValor {
   setLayoutLargura: (largura: LayoutLargura) => void
   setBarraFixa: (fixa: boolean) => void
   setDockRecolhida: (recolhida: boolean | ((antiga: boolean) => boolean)) => void
+  setAtalhosMobile: (atalhos: IdAtalhoMobile[]) => void
   restaurarPadroes: () => void
 }
 
@@ -84,6 +86,10 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
     }))
   }, [])
 
+  const setAtalhosMobile = useCallback((atalhosMobile: IdAtalhoMobile[]) => {
+    setPreferencias((p) => ({ ...p, atalhosMobile }))
+  }, [])
+
   const restaurarPadroes = useCallback(() => {
     setPreferencias(PREFERENCIAS_PADRAO)
   }, [])
@@ -96,9 +102,10 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
       setLayoutLargura,
       setBarraFixa,
       setDockRecolhida,
+      setAtalhosMobile,
       restaurarPadroes,
     }),
-    [preferencias, setModoTema, setPresetCor, setLayoutLargura, setBarraFixa, setDockRecolhida, restaurarPadroes]
+    [preferencias, setModoTema, setPresetCor, setLayoutLargura, setBarraFixa, setDockRecolhida, setAtalhosMobile, restaurarPadroes]
   )
 
   return <PreferenciasContext.Provider value={valor}>{children}</PreferenciasContext.Provider>
