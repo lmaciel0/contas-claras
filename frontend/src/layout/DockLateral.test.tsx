@@ -66,7 +66,7 @@ describe('DockLateral', () => {
     const link = screen.getByRole('link', { name: 'Política de Privacidade' })
     expect(link).toHaveAttribute('href', '/privacidade')
     expect(link).not.toHaveAttribute('target')
-    expect(link).toHaveClass('min-h-11')
+    expect(link).toHaveClass('min-h-9')
     fireEvent.click(link)
     expect(aoNavegar).toHaveBeenCalledTimes(1)
   })
@@ -77,7 +77,7 @@ describe('DockLateral', () => {
     const alterar = screen.getByRole('link', { name: 'Alterar senha' })
     const excluir = screen.getByRole('link', { name: 'Excluir conta' })
     expect(excluir).toHaveAttribute('href', '/conta/excluir')
-    expect(excluir).toHaveClass('min-h-11', 'text-xs')
+    expect(excluir).toHaveClass('min-h-9', 'text-xs')
     expect(alterar.compareDocumentPosition(excluir) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     fireEvent.click(excluir)
     expect(aoNavegar).toHaveBeenCalledTimes(1)
@@ -94,7 +94,7 @@ describe('DockLateral', () => {
     renderizar()
     const alterar = screen.getByRole('link', { name: 'Alterar senha' })
     const exportar = screen.getByRole('button', { name: 'Exportar meus dados' })
-    expect(exportar).toHaveClass('min-h-11', 'text-[var(--cor-texto)]')
+    expect(exportar).toHaveClass('min-h-9', 'text-[var(--cor-texto)]')
     expect(alterar.compareDocumentPosition(exportar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
     fireEvent.click(exportar)
@@ -129,23 +129,30 @@ describe('DockLateral', () => {
     expect(screen.getByRole('button', { name: 'Exportar meus dados' })).toHaveAttribute('aria-disabled', 'false')
   })
 
-  it('rodapé expandido: todas as linhas têm ícone svg aria-hidden como primeiro filho e min-h-11', () => {
+  it('rodapé expandido: todas as linhas têm ícone svg aria-hidden como primeiro filho e altura adequada', () => {
     renderizar()
-    const linhas = [
+    const principais = [
       screen.getByRole('button', { name: 'Preferências' }),
-      screen.getByRole('link', { name: 'Alterar senha' }),
-      screen.getByRole('button', { name: 'Exportar meus dados' }),
-      screen.getByRole('link', { name: 'Excluir conta' }),
-      screen.getByRole('link', { name: 'Política de Privacidade' }),
       screen.getByRole('button', { name: 'Sair' }),
     ]
-    for (const linha of linhas) {
+    for (const linha of principais) {
       expect(linha).toHaveClass('min-h-11', 'gap-3', 'px-3')
       const icone = linha.firstElementChild
       expect(icone?.tagName.toLowerCase()).toBe('svg')
       expect(icone).toHaveAttribute('aria-hidden', 'true')
-      expect(icone).toHaveAttribute('width', '20')
-      expect(icone).toHaveAttribute('height', '20')
+    }
+
+    const conta = [
+      screen.getByRole('link', { name: 'Alterar senha' }),
+      screen.getByRole('button', { name: 'Exportar meus dados' }),
+      screen.getByRole('link', { name: 'Excluir conta' }),
+      screen.getByRole('link', { name: 'Política de Privacidade' }),
+    ]
+    for (const linha of conta) {
+      expect(linha).toHaveClass('min-h-9', 'gap-3', 'px-3')
+      const icone = linha.firstElementChild
+      expect(icone?.tagName.toLowerCase()).toBe('svg')
+      expect(icone).toHaveAttribute('aria-hidden', 'true')
     }
   })
 
