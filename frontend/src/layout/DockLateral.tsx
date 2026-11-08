@@ -17,6 +17,7 @@ interface DockLateralProps {
 const foco =
   'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--cor-principal)]'
 const linhaBase = `flex min-h-11 cursor-pointer w-full items-center gap-3 rounded-xl px-3 text-sm no-underline transition-colors duration-150 ease-out motion-reduce:transition-none ${foco}`
+const linhaConta = `flex min-h-9 cursor-pointer w-full items-center gap-3 rounded-xl px-3 text-xs no-underline transition-colors duration-150 ease-out motion-reduce:transition-none ${foco}`
 
 export function DockLateral({
   nomeUsuario,
@@ -81,7 +82,7 @@ export function DockLateral({
       )}
 
       {/* Navegação */}
-      <nav aria-label="Menu principal" className={`flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden ${forcarExpandida ? '' : 'mt-3'} ${recolhida ? '' : 'mb-3'}`}>
+      <nav aria-label="Menu principal" className={`flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overflow-x-hidden ${forcarExpandida ? '' : 'mt-2.5'} ${recolhida ? '' : 'mb-2'}`}>
         {GRUPOS_MENU.map((grupo) => (
           <div key={grupo.titulo ?? 'principal'} className="flex flex-col gap-1">
             {!recolhida && grupo.titulo && (
@@ -127,7 +128,41 @@ export function DockLateral({
       </nav>
 
       {/* Rodapé da Dock */}
-      <div className="flex flex-col gap-1 border-t border-[var(--cor-linha)] pt-3">
+      <div className="flex flex-col gap-0.5 border-t border-[var(--cor-linha)] pt-2">
+        {/* Perfil do usuário (no topo do rodapé, antes de Preferências) */}
+        {!recolhida ? (
+          <div className="flex items-center gap-3 px-3 py-1 mb-0.5">
+            <span
+              aria-hidden="true"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--cor-principal)] text-xs font-bold text-[var(--cor-sobre-principal)]"
+            >
+              {inicial}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--cor-texto)]" title={nomeUsuario}>
+              {nomeUsuario}
+            </span>
+          </div>
+        ) : (
+          <div
+            title={nomeUsuario}
+            aria-label={nomeUsuario}
+            className="group relative flex justify-center py-1"
+          >
+            <span
+              aria-hidden="true"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--cor-principal)] text-xs font-bold text-[var(--cor-sobre-principal)]"
+            >
+              {inicial}
+            </span>
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute left-full ml-3 z-30 hidden rounded-lg border border-[var(--cor-linha)] bg-[var(--cor-card)] px-2.5 py-1 text-xs font-semibold text-[var(--cor-texto)] shadow-lg whitespace-nowrap group-hover:block"
+            >
+              {nomeUsuario}
+            </span>
+          </div>
+        )}
+
         {/* Botão de Preferências */}
         <button
           type="button"
@@ -155,47 +190,13 @@ export function DockLateral({
           )}
         </button>
 
-        {/* Perfil do usuário */}
-        {!recolhida ? (
-          <div className="flex items-center gap-3 px-3 py-1">
-            <span
-              aria-hidden="true"
-              className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--cor-principal)] text-sm font-bold text-[var(--cor-sobre-principal)]"
-            >
-              {inicial}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--cor-texto)]" title={nomeUsuario}>
-              {nomeUsuario}
-            </span>
-          </div>
-        ) : (
-          <div
-            title={nomeUsuario}
-            aria-label={nomeUsuario}
-            className="group relative flex justify-center py-1"
-          >
-            <span
-              aria-hidden="true"
-              className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--cor-principal)] text-sm font-bold text-[var(--cor-sobre-principal)]"
-            >
-              {inicial}
-            </span>
-            <span
-              role="tooltip"
-              className="pointer-events-none absolute left-full ml-3 z-30 hidden rounded-lg border border-[var(--cor-linha)] bg-[var(--cor-card)] px-2.5 py-1 text-xs font-semibold text-[var(--cor-texto)] shadow-lg whitespace-nowrap group-hover:block"
-            >
-              {nomeUsuario}
-            </span>
-          </div>
-        )}
-
         {/* Links adicionais quando expandida */}
         {!recolhida && (
           <>
             <Link
               to="/conta/senha"
               onClick={aoNavegar}
-              className={`${linhaBase} text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)]`}
+              className={`${linhaConta} text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)]`}
             >
               {ICONE_SENHA}
               <span>Alterar senha</span>
@@ -205,7 +206,7 @@ export function DockLateral({
               onClick={() => void exportar()}
               aria-disabled={exportando}
               aria-busy={exportando}
-              className={`${linhaBase} text-left text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] aria-disabled:cursor-wait aria-disabled:opacity-60`}
+              className={`${linhaConta} text-left text-[var(--cor-texto)] hover:bg-[var(--cor-fundo)] aria-disabled:cursor-wait aria-disabled:opacity-60`}
             >
               {ICONE_DOWNLOAD}
               <span>{exportando ? 'Exportando…' : 'Exportar meus dados'}</span>
@@ -223,7 +224,7 @@ export function DockLateral({
             <Link
               to="/conta/excluir"
               onClick={aoNavegar}
-              className={`${linhaBase} text-xs text-[var(--cor-mutado)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)]`}
+              className={`${linhaConta} text-[var(--cor-mutado)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)]`}
             >
               {ICONE_EXCLUIR}
               <span>Excluir conta</span>
@@ -231,7 +232,7 @@ export function DockLateral({
             <Link
               to="/privacidade"
               onClick={aoNavegar}
-              className={`${linhaBase} text-xs text-[var(--cor-mutado)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)]`}
+              className={`${linhaConta} text-[var(--cor-mutado)] hover:bg-[var(--cor-fundo)] hover:text-[var(--cor-texto)]`}
             >
               {ICONE_PRIVACIDADE}
               <span>Política de Privacidade</span>
