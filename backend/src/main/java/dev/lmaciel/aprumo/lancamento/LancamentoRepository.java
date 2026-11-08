@@ -92,14 +92,26 @@ public interface LancamentoRepository extends JpaRepository<Lancamento, Long> {
             order by c.ordem, c.id, i.nome, i.id, l.mes""")
     List<Lancamento> findDoAno(@Param("usuarioId") long usuarioId, @Param("ano") int ano);
 
-    /** Valor do mês de cada cartão não arquivado do usuário; cartão sem lançamento no mês não tem linha. */
+    /** Fatura do mês de cada cartão não arquivado do usuário; cartão sem lançamento no mês não tem linha. */
     @Query("""
-            select new dev.lmaciel.aprumo.lancamento.FaturaItem(i.id, l.valor)
+            select new dev.lmaciel.aprumo.lancamento.FaturaItem(i.id, l.valor, l.status)
             from Lancamento l join l.item i join i.categoria c
             where c.usuario.id = :usuarioId and i.cartao = true and i.arquivado = false
               and l.ano = :ano and l.mes = :mes""")
     List<FaturaItem> faturasDosCartoesNoMes(@Param("usuarioId") long usuarioId, @Param("ano") int ano,
             @Param("mes") int mes);
+
+    /**
+     * Soma de todos os lançamentos em aberto (status PREVISTO) de cada cartão não arquivado do usuário.
+     * Considera faturas atuais, futuras e passadas não pagas, que efetivamente consomem o limite.
+     */
+    @Query("""
+            select new dev.lmaciel.aprumo.lancamento.ComprometimentoCartao(i.id, sum(l.valor))
+            from Lancamento l join l.item i join i.categoria c
+            where c.usuario.id = :usuarioId and i.cartao = true and i.arquivado = false
+              and l.status = dev.lmaciel.aprumo.lancamento.StatusLancamento.PREVISTO
+            group by i.id""")
+    List<ComprometimentoCartao> limitesComprometidosDosCartoes(@Param("usuarioId") long usuarioId);
 
     boolean existsByItemCategoriaId(long categoriaId);
 

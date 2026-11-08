@@ -151,6 +151,33 @@ describe('CartoesPage', () => {
     expect(within(estourado).getByRole('meter')).toHaveAttribute('aria-valuenow', '100')
   })
 
+  it('fatura_paga_exibe_tag_paga_e_limite_disponivel', async () => {
+    responderCartoes(
+      resposta({
+        cartoes: [
+          cartao({
+            itemId: 10,
+            nome: 'Cartão Nubank',
+            fatura: '450.00',
+            limite: '1500.00',
+            limiteDisponivel: '1050.00',
+            limiteUsado: '450.00',
+            faturaPaga: true,
+            uso: '0.3000',
+            faixa: 'VERDE',
+          }),
+        ],
+      }),
+    )
+    renderizar()
+
+    const nubank = await screen.findByRole('region', { name: 'Cartão Nubank' })
+    expect(within(nubank).getByText('Paga')).toBeInTheDocument()
+    expect(within(nubank).getByText('Disponível')).toBeInTheDocument()
+    expect(within(nubank).getByText('R$ 1.050,00')).toBeInTheDocument()
+    expect(within(nubank).getByText('de R$ 1.500,00')).toBeInTheDocument()
+  })
+
   it('cartao_sem_limite_mostra_cadastrar_limite', async () => {
     responderCartoes(
       resposta({

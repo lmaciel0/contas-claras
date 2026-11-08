@@ -100,6 +100,9 @@ export interface CartaoResponse {
   faixa: FaixaUso
   titular: string | null
   categoriaId?: number
+  limiteDisponivel?: string | null
+  limiteUsado?: string | null
+  faturaPaga?: boolean
 }
 export interface CartoesResponse {
   totalFaturas: string

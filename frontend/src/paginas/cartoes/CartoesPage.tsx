@@ -51,7 +51,7 @@ function calcularTotaisTitular(
     0
   )
   const somaFaturasComLimite = cartoesComLimite.reduce(
-    (acc, c) => acc + (Number.parseFloat(c.fatura) || 0),
+    (acc, c) => acc + (Number.parseFloat(c.limiteUsado ?? c.fatura) || 0),
     0
   )
 
