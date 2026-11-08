@@ -99,9 +99,9 @@ class CartaoControllerTest extends IntegracaoTest {
         long a = criarCartao(DONO, "Cartão A", "1000.00", null);
         long b = criarCartao(DONO, "Cartão B", "3000.00", null);
         long semLimite = criarCartao(DONO, "Cartão C", null, null);
-        criarLancamento(a, 2026, 10, "900.00", "PAGO");
-        criarLancamento(b, 2026, 10, "300.00", "PAGO");
-        criarLancamento(semLimite, 2026, 10, "5000.00", "PAGO");
+        criarLancamento(a, 2026, 10, "900.00", "PREVISTO");
+        criarLancamento(b, 2026, 10, "300.00", "PREVISTO");
+        criarLancamento(semLimite, 2026, 10, "5000.00", "PREVISTO");
 
         cartoes(sessao, "?ano=2026&mes=10")
                 .andExpect(status().isOk())
@@ -113,9 +113,9 @@ class CartaoControllerTest extends IntegracaoTest {
     @Test
     void faixas_seguem_os_limites_de_uso() throws Exception {
         Cookie sessao = cadastrarEEntrar(DONO);
-        criarLancamento(criarCartao(DONO, "Verde", "1000.00", null), 2026, 10, "500.00", "PAGO");
-        criarLancamento(criarCartao(DONO, "Amarelo", "1000.00", null), 2026, 10, "800.00", "PAGO");
-        criarLancamento(criarCartao(DONO, "Vermelho", "1000.00", null), 2026, 10, "810.00", "PAGO");
+        criarLancamento(criarCartao(DONO, "Verde", "1000.00", null), 2026, 10, "500.00", "PREVISTO");
+        criarLancamento(criarCartao(DONO, "Amarelo", "1000.00", null), 2026, 10, "800.00", "PREVISTO");
+        criarLancamento(criarCartao(DONO, "Vermelho", "1000.00", null), 2026, 10, "810.00", "PREVISTO");
 
         cartoes(sessao, "?ano=2026&mes=10")
                 .andExpect(jsonPath("$.cartoes[0].nome").value("Vermelho"))
@@ -129,8 +129,8 @@ class CartaoControllerTest extends IntegracaoTest {
     @Test
     void uso_tem_4_casas_arredondando_para_cima_na_metade() throws Exception {
         Cookie sessao = cadastrarEEntrar(DONO);
-        criarLancamento(criarCartao(DONO, "Cartão A", "20000.00", null), 2026, 10, "1.00", "PAGO");
-        criarLancamento(criarCartao(DONO, "Cartão B", "300.00", null), 2026, 10, "100.00", "PAGO");
+        criarLancamento(criarCartao(DONO, "Cartão A", "20000.00", null), 2026, 10, "1.00", "PREVISTO");
+        criarLancamento(criarCartao(DONO, "Cartão B", "300.00", null), 2026, 10, "100.00", "PREVISTO");
 
         // 100 / 300 = 0.3333...; 1 / 20000 = 0.00005 (metade) sobe para 0.0001.
         cartoes(sessao, "?ano=2026&mes=10")
@@ -138,6 +138,66 @@ class CartaoControllerTest extends IntegracaoTest {
                 .andExpect(jsonPath("$.cartoes[0].uso").value("0.3333"))
                 .andExpect(jsonPath("$.cartoes[1].nome").value("Cartão A"))
                 .andExpect(jsonPath("$.cartoes[1].uso").value("0.0001"));
+    }
+
+    @Test
+    void fatura_paga_libera_o_limite_do_cartao() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long c = criarCartao(DONO, "Cartão A", "1000.00", 10);
+        criarLancamento(c, 2026, 10, "400.00", "PAGO");
+
+        cartoes(sessao, "?ano=2026&mes=10")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalFaturas").value("400.00"))
+                .andExpect(jsonPath("$.limiteTotal").value("1000.00"))
+                .andExpect(jsonPath("$.usoGeral").value("0.0000"))
+                .andExpect(jsonPath("$.cartoes[0].fatura").value("400.00"))
+                .andExpect(jsonPath("$.cartoes[0].faturaPaga").value(true))
+                .andExpect(jsonPath("$.cartoes[0].limiteUsado").value("0.00"))
+                .andExpect(jsonPath("$.cartoes[0].limiteDisponivel").value("1000.00"))
+                .andExpect(jsonPath("$.cartoes[0].uso").value("0.0000"))
+                .andExpect(jsonPath("$.cartoes[0].faixa").value("VERDE"));
+    }
+
+    @Test
+    void lancamentos_futuros_diminuem_limite_disponivel() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long c = criarCartao(DONO, "Cartão A", "1000.00", 10);
+        criarLancamento(c, 2026, 10, "200.00", "PREVISTO");
+        criarLancamento(c, 2026, 11, "300.00", "PREVISTO");
+        criarLancamento(c, 2026, 12, "300.00", "PREVISTO");
+
+        cartoes(sessao, "?ano=2026&mes=10")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalFaturas").value("200.00"))
+                .andExpect(jsonPath("$.limiteTotal").value("1000.00"))
+                .andExpect(jsonPath("$.usoGeral").value("0.8000"))
+                .andExpect(jsonPath("$.cartoes[0].fatura").value("200.00"))
+                .andExpect(jsonPath("$.cartoes[0].faturaPaga").value(false))
+                .andExpect(jsonPath("$.cartoes[0].limiteUsado").value("800.00"))
+                .andExpect(jsonPath("$.cartoes[0].limiteDisponivel").value("200.00"))
+                .andExpect(jsonPath("$.cartoes[0].uso").value("0.8000"))
+                .andExpect(jsonPath("$.cartoes[0].faixa").value("AMARELO"));
+    }
+
+    @Test
+    void pagar_fatura_do_mes_libera_sua_parte_mantendo_parcelas_futuras() throws Exception {
+        Cookie sessao = cadastrarEEntrar(DONO);
+        long c = criarCartao(DONO, "Cartão A", "1000.00", 10);
+        criarLancamento(c, 2026, 10, "200.00", "PAGO");
+        criarLancamento(c, 2026, 11, "300.00", "PREVISTO");
+
+        cartoes(sessao, "?ano=2026&mes=10")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalFaturas").value("200.00"))
+                .andExpect(jsonPath("$.limiteTotal").value("1000.00"))
+                .andExpect(jsonPath("$.usoGeral").value("0.3000"))
+                .andExpect(jsonPath("$.cartoes[0].fatura").value("200.00"))
+                .andExpect(jsonPath("$.cartoes[0].faturaPaga").value(true))
+                .andExpect(jsonPath("$.cartoes[0].limiteUsado").value("300.00"))
+                .andExpect(jsonPath("$.cartoes[0].limiteDisponivel").value("700.00"))
+                .andExpect(jsonPath("$.cartoes[0].uso").value("0.3000"))
+                .andExpect(jsonPath("$.cartoes[0].faixa").value("VERDE"));
     }
 
     @Test
@@ -199,8 +259,8 @@ class CartaoControllerTest extends IntegracaoTest {
     void cartoes_de_outro_usuario_nao_vazam() throws Exception {
         Cookie sessao = cadastrarEEntrar(DONO);
         cadastrarEEntrar(OUTRA);
-        criarLancamento(criarCartao(DONO, "Cartão do dono", "1000.00", null), 2026, 10, "100.00", "PAGO");
-        criarLancamento(criarCartao(OUTRA, "Cartão alheio", "5000.00", null), 2026, 10, "4000.00", "PAGO");
+        criarLancamento(criarCartao(DONO, "Cartão do dono", "1000.00", null), 2026, 10, "100.00", "PREVISTO");
+        criarLancamento(criarCartao(OUTRA, "Cartão alheio", "5000.00", null), 2026, 10, "4000.00", "PREVISTO");
 
         cartoes(sessao, "?ano=2026&mes=10")
                 .andExpect(status().isOk())

@@ -199,7 +199,14 @@ export function CardCartao({ cartao, aoEditar, aoLancar }: Props) {
         {/* Rodapé com fatura, limite e botão de ação */}
         <div className="mt-2 flex items-center justify-between gap-2 border-t border-[var(--cor-linha)]/60 pt-3">
           <div className="flex flex-col">
-            <span className="text-[11px] text-[var(--cor-mutado)]">Fatura do mês</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-[var(--cor-mutado)]">Fatura do mês</span>
+              {cartao.faturaPaga && Number.parseFloat(cartao.fatura) > 0 && (
+                <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-500">
+                  Paga
+                </span>
+              )}
+            </div>
             <span className="valor text-sm font-bold text-[var(--cor-texto)]">
               {formatarMoeda(cartao.fatura)}
             </span>
@@ -208,10 +215,19 @@ export function CardCartao({ cartao, aoEditar, aoLancar }: Props) {
           <div className="flex items-center gap-2">
             {comLimite ? (
               <div className="text-right">
-                <span className="text-[11px] text-[var(--cor-mutado)]">Limite</span>
+                <span className="text-[11px] text-[var(--cor-mutado)]">
+                  {cartao.limiteDisponivel != null ? 'Disponível' : 'Limite'}
+                </span>
                 <p className="valor m-0 text-xs font-semibold text-[var(--cor-texto)]">
-                  de {formatarMoeda(limite)}
+                  {cartao.limiteDisponivel != null
+                    ? formatarMoeda(cartao.limiteDisponivel)
+                    : `de ${formatarMoeda(limite)}`}
                 </p>
+                {cartao.limiteDisponivel != null && (
+                  <span className="text-[10px] text-[var(--cor-mutado)]">
+                    de {formatarMoeda(limite)}
+                  </span>
+                )}
               </div>
             ) : (
               <button
