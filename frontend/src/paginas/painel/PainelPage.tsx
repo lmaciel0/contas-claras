@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../../auth/useAuth'
 import { CardReflexao } from './CardReflexao'
 import { FinancasDoMes } from './FinancasDoMes'
+import { WidgetMetaInicio } from '../metas/WidgetMetaInicio'
 import { dataPorExtenso, primeiroNome, saudacao } from './saudacao'
 
 /** Tela inicial (`/`): saudação com o primeiro nome, a data por extenso, a reflexão do dia e as finanças do mês atual. */
@@ -28,6 +29,9 @@ export function PainelPage() {
         <CardReflexao />
       </div>
       <div className="item-entra" style={{ '--i': 2 } as React.CSSProperties}>
+        <WidgetMetaInicio />
+      </div>
+      <div className="item-entra" style={{ '--i': 3 } as React.CSSProperties}>
         <FinancasDoMes />
       </div>
     </div>
