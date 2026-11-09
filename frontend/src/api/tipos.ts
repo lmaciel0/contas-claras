@@ -265,3 +265,59 @@ export interface NotaRequest {
 export interface NotaFixadaResponse {
   nota: NotaResponse | null
 }
+
+// Metas com Propósito ("Caixinhas do Futuro")
+export interface MetaResponse {
+  id: number
+  titulo: string
+  valorAlvo: string
+  valorGuardado: string
+  prazo: string | null
+  presetVisual: string
+  icone: string
+  corGradienteInicio: string
+  corGradienteFim: string
+  fotoUrl: string | null
+  ordem: number
+  percentualConcluido: string
+  valorRestante: string
+  valorMensalSugerido: string | null
+  mesesRestantes: number | null
+  concluida: boolean
+}
+
+export interface MetaRequest {
+  titulo: string
+  valorAlvo: string
+  valorGuardado?: string
+  prazo?: string | null
+  presetVisual?: string
+  icone?: string
+  corGradienteInicio?: string
+  corGradienteFim?: string
+  fotoUrl?: string | null
+  ordem?: number
+}
+
+export interface AporteMetaRequest {
+  valor: string
+}
+
+export interface SugestaoAporteMeta {
+  metaId: number
+  titulo: string
+  presetVisual: string
+  icone: string
+  corGradienteInicio: string
+  corGradienteFim: string
+  fotoUrl: string | null
+  valorSugerido: string
+  motivo: string
+}
+
+export interface ResumoConselheiroResponse {
+  sobraPrevistaMes: string
+  totalSugeridoAporte: string
+  sugestoes: SugestaoAporteMeta[]
+}
+

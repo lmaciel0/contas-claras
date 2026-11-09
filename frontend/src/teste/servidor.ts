@@ -28,4 +28,8 @@ export const servidor = setupServer(
   http.get('/api/cartoes', () => HttpResponse.json(cartoesVazios)),
   http.get('/api/notas/fixada', () => HttpResponse.json({ nota: null })),
   http.get('/api/categorias-nota', () => HttpResponse.json([])),
+  http.get('/api/metas', () => HttpResponse.json([])),
+  http.get('/api/metas/conselheiro', () =>
+    HttpResponse.json({ sobraPrevistaMes: '0.00', totalSugeridoAporte: '0.00', sugestoes: [] }),
+  ),
 )
