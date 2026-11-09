@@ -151,6 +151,16 @@ describe('PainelPage', () => {
     expect(screen.getByRole('link', { name: 'Ver visão geral' })).toHaveAttribute('href', '/financeiro')
   })
 
+  it('não renderiza o bloco de tarefas de hoje no painel', async () => {
+    comSessao()
+    responderResumo()
+    renderizar()
+
+    expect(await screen.findByRole('region', { name: 'Sobra do mês' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Hoje' })).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Nova tarefa para hoje…')).not.toBeInTheDocument()
+  })
+
   it('não mostra seletor de mês nem blocos de tarefas, agenda, projetos ou notas', async () => {
     comSessao()
     responderResumo()

@@ -3,10 +3,9 @@ import { useAuth } from '../../auth/useAuth'
 import { AtalhosRapidosMobile } from './AtalhosRapidosMobile'
 import { CardReflexao } from './CardReflexao'
 import { FinancasDoMes } from './FinancasDoMes'
-import { TarefasDeHoje } from './TarefasDeHoje'
 import { dataPorExtenso, primeiroNome, saudacao } from './saudacao'
 
-/** Tela inicial (`/`): saudação com o primeiro nome, a data por extenso, a reflexão do dia, atalhos rápidos, as tarefas de hoje e as finanças do mês atual. */
+/** Tela inicial (`/`): saudação com o primeiro nome, a data por extenso, a reflexão do dia, atalhos rápidos e as finanças do mês atual. */
 export function PainelPage() {
   const { usuario } = useAuth()
   // Fixa a hora da primeira renderização: a saudação não muda sozinha no meio do uso.
@@ -33,9 +32,6 @@ export function PainelPage() {
         <CardReflexao />
       </div>
       <div className="item-entra" style={{ '--i': 3 } as React.CSSProperties}>
-        <TarefasDeHoje />
-      </div>
-      <div className="item-entra" style={{ '--i': 4 } as React.CSSProperties}>
         <FinancasDoMes />
       </div>
     </div>
