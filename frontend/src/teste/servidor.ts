@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
-import type { CartoesResponse, ResumoResponse, TarefasResponse } from '../api/tipos'
+import type { CartoesResponse, ResumoResponse } from '../api/tipos'
 
 const resumoVazio: ResumoResponse = {
   receitas: '0.00',
@@ -15,19 +15,9 @@ const resumoVazio: ResumoResponse = {
 
 const cartoesVazios: CartoesResponse = { totalFaturas: '0.00', limiteTotal: '0.00', usoGeral: null, cartoes: [] }
 
-const tarefasVazias: TarefasResponse = {
-  hoje: '2026-10-31',
-  atrasadas: [],
-  deHoje: [],
-  proximas: [],
-  concluidasHoje: [],
-  concluidas: [],
-  totalConcluidas: 0,
-}
-
 /**
  * Servidor MSW compartilhado pelos testes; cada teste registra seus handlers com `servidor.use(...)`.
- * Handlers de base: `GET /api/resumo`, `GET /api/saldo` (inativo), `GET /api/tarefas`, `GET /api/cartoes` (sem cartões),
+ * Handlers de base: `GET /api/resumo`, `GET /api/saldo` (inativo), `GET /api/cartoes` (sem cartões),
  * `GET /api/notas/fixada` (sem nota) e `GET /api/categorias-nota` vazios, porque a tela inicial (`/`) os consulta
  * sempre que um teste de autenticação termina nela (e `onUnhandledFrame: 'error'` derruba o teste sem handler).
  * Teste que olha o resumo registra o próprio handler, que tem prioridade.
@@ -36,7 +26,6 @@ export const servidor = setupServer(
   http.get('/api/resumo', () => HttpResponse.json(resumoVazio)),
   http.get('/api/saldo', () => HttpResponse.json({ ativo: false, saldo: '0.00', recebidoNoMes: '0.00' })),
   http.get('/api/cartoes', () => HttpResponse.json(cartoesVazios)),
-  http.get('/api/tarefas', () => HttpResponse.json(tarefasVazias)),
   http.get('/api/notas/fixada', () => HttpResponse.json({ nota: null })),
   http.get('/api/categorias-nota', () => HttpResponse.json([])),
 )
