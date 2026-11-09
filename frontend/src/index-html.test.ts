@@ -34,7 +34,7 @@ describe('index.html: metadados', () => {
 
   it('descricao_do_assistente_pessoal', () => {
     expect(meta('name', 'description')).toBe(
-      'Aprumo: seu assistente pessoal com finanças, tarefas, notas e projetos no mesmo lugar.',
+      'Aprumo: suas finanças em ordem e suas notas à mão.',
     )
   })
 

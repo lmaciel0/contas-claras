@@ -15,7 +15,7 @@ export function TermosPage() {
       <section aria-labelledby="o-servico">
         <h2 id="o-servico">1. O serviço</h2>
         <p>
-          O Aprumo é um aplicativo pessoal para organizar finanças, tarefas, notas e projetos. O uso é gratuito. Não
+          O Aprumo é um aplicativo pessoal para organizar suas finanças e anotações. O uso é gratuito. Não
           garantimos que o serviço ficará sempre disponível: ele pode ficar fora do ar por manutenção, falhas ou
           problemas dos nossos provedores, e pode mudar ou ser encerrado.
         </p>

@@ -46,11 +46,14 @@ describe('manifest.webmanifest', () => {
     expect(manifest.theme_color).toBe('#27187E')
   })
 
-  it('descreve o app atual, sem promessa de futuro, citando os quatro módulos', () => {
+  it('descreve o app atual, sem promessa de futuro, citando finanças e notas', () => {
     const descricao = (manifest.description ?? '').toLowerCase()
     expect(descricao).not.toContain('em breve')
-    for (const termo of ['finanças', 'tarefas', 'notas', 'projetos']) {
+    for (const termo of ['finanças', 'notas']) {
       expect(descricao).toContain(termo)
+    }
+    for (const termo of ['tarefas', 'projetos']) {
+      expect(descricao).not.toContain(termo)
     }
   })
 
