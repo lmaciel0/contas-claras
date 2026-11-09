@@ -161,13 +161,15 @@ describe('PainelPage', () => {
     expect(screen.queryByPlaceholderText('Nova tarefa para hoje…')).not.toBeInTheDocument()
   })
 
-  it('não mostra seletor de mês nem blocos de tarefas, agenda, projetos ou notas', async () => {
+  it('não mostra seletor de mês nem blocos de tarefas, agenda, projetos ou notas, nem atalhos de acesso rápido', async () => {
     comSessao()
     responderResumo()
     renderizar()
 
     await screen.findByRole('region', { name: 'Sobra do mês' })
     expect(screen.queryByRole('button', { name: /mês/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Acesso rápido' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Personalizar atalhos' })).not.toBeInTheDocument()
     for (const bloco of [/tarefas/i, /agenda/i, /projetos/i, /notas/i]) {
       expect(screen.queryByRole('heading', { name: bloco })).not.toBeInTheDocument()
     }
