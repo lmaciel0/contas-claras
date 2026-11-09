@@ -51,6 +51,13 @@ export const ICONES: Record<string, ReactNode> = {
       <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
     </svg>
   ),
+  '/metas': (
+    <svg {...iconeProps}>
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
   '/cartoes': (
     <svg {...iconeProps}>
       <rect x="2" y="5" width="20" height="14" rx="3" />

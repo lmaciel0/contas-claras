@@ -43,6 +43,7 @@ describe('MaisPage', () => {
     expect(screen.queryByRole('link', { name: 'Tarefas' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Projetos' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Visão geral' })).toHaveAttribute('href', expect.stringMatching(/^\/financeiro\?ano=\d{4}&mes=\d{1,2}$/))
+    expect(screen.getByRole('link', { name: 'Metas' })).toHaveAttribute('href', '/metas')
     expect(screen.getByRole('link', { name: 'Cartões' })).toHaveAttribute('href', expect.stringMatching(/^\/cartoes\?ano=\d{4}&mes=\d{1,2}$/))
     expect(screen.getByRole('link', { name: 'Categorias' })).toHaveAttribute('href', '/categorias')
     expect(screen.getByRole('link', { name: 'Relatórios' })).toHaveAttribute('href', '/relatorios')
