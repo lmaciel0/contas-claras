@@ -11,6 +11,7 @@ import { GraficoResultado } from './GraficoResultado'
 import { OndeMaisGastou } from './OndeMaisGastou'
 import { ProximasContas } from './ProximasContas'
 import { ResumoCartoes } from './ResumoCartoes'
+import { CardConselheiroMetas } from '../metas/CardConselheiroMetas'
 
 const minusculo = (texto: string) => texto.toLocaleLowerCase('pt-BR')
 
@@ -125,6 +126,7 @@ export function InicioPage() {
         />
         <ProximasContas contas={resumo.proximas} className="md:col-span-14 md:col-start-22 md:row-span-2 md:row-start-1" />
         <ResumoCartoes cartoes={cartoes} busca={busca} className="md:col-span-15" />
+        <CardConselheiroMetas ano={ano} mes={mes} className="md:col-span-35" />
       </div>
     </>
   )
