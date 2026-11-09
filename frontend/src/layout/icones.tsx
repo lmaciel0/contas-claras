@@ -29,19 +29,6 @@ export const ICONES: Record<string, ReactNode> = {
       <path d="M5 10v10h14V10" />
     </svg>
   ),
-  '/projetos': (
-    <svg {...iconeProps}>
-      <rect x="3" y="3" width="5" height="18" rx="1" />
-      <rect x="11" y="3" width="5" height="12" rx="1" />
-      <rect x="19" y="3" width="5" height="15" rx="1" />
-    </svg>
-  ),
-  '/tarefas': (
-    <svg {...iconeProps}>
-      <path d="m9 11 3 3L22 4" />
-      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-    </svg>
-  ),
   '/notas': (
     <svg {...iconeProps}>
       <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
