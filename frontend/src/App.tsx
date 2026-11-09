@@ -1,5 +1,5 @@
 import { lazy, Suspense, useRef, useState, type ReactNode } from 'react'
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 import { LayoutAuth } from './auth/LayoutAuth'
 import { RotaProtegida } from './auth/RotaProtegida'
 import { useAuth } from './auth/useAuth'
@@ -40,8 +40,6 @@ const RelatoriosPage = lazy(() =>
 const MaisPage = lazy(() => import('./paginas/mais/MaisPage').then((m) => ({ default: m.MaisPage })))
 const NotaPage = lazy(() => import('./paginas/notas/NotaPage').then((m) => ({ default: m.NotaPage })))
 const NotasPage = lazy(() => import('./paginas/notas/NotasPage').then((m) => ({ default: m.NotasPage })))
-const ProjetosPage = lazy(() => import('./paginas/projetos/ProjetosPage').then((m) => ({ default: m.ProjetosPage })))
-const TarefasPage = lazy(() => import('./paginas/tarefas/TarefasPage').then((m) => ({ default: m.TarefasPage })))
 
 /**
  * Fronteira de carregamento de uma página lazy. Fica em cada rota (e não uma só no topo) para a moldura continuar
@@ -135,8 +133,8 @@ export function App() {
       <Route element={<RotaProtegida />}>
         <Route element={<MolduraDoUsuario />}>
           <Route path="/" element={<Pagina><PainelPage /></Pagina>} />
-          <Route path="/projetos" element={<Pagina><ProjetosPage /></Pagina>} />
-          <Route path="/tarefas" element={<Pagina><TarefasPage /></Pagina>} />
+          <Route path="/projetos" element={<Navigate to="/" replace />} />
+          <Route path="/tarefas" element={<Navigate to="/" replace />} />
           <Route path="/notas" element={<Pagina><NotasPage /></Pagina>}>
             <Route path=":id" element={<Pagina><NotaPage /></Pagina>} />
           </Route>

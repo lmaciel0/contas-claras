@@ -6,7 +6,7 @@ import { comSessao } from './teste/auth'
 import { renderComApp } from './teste/render'
 
 // Simula o chunk que sumiu depois de um deploy: o import da página rejeita.
-vi.mock('./paginas/projetos/ProjetosPage', () => {
+vi.mock('./paginas/notas/NotasPage', () => {
   throw new Error('Failed to fetch dynamically imported module')
 })
 
@@ -25,7 +25,7 @@ describe('falha ao carregar o chunk de uma rota', () => {
       <AuthProvider>
         <App />
       </AuthProvider>,
-      '/projetos',
+      '/notas',
     )
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível carregar esta tela')
