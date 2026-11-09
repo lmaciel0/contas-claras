@@ -2,7 +2,7 @@ import type { IdAtalhoMobile, PreferenciasUsuario } from './preferenciasTipos'
 
 export const CHAVE_PREFERENCIAS = 'aprumo-preferencias'
 
-export const ATALHOS_PADRAO: IdAtalhoMobile[] = ['novo-lancamento', 'cartoes', 'nova-tarefa', 'nova-nota']
+export const ATALHOS_PADRAO: IdAtalhoMobile[] = ['novo-lancamento', 'cartoes', 'nova-receita', 'nova-nota']
 
 export const PREFERENCIAS_PADRAO: PreferenciasUsuario = {
   modoTema: 'sistema',
@@ -16,27 +16,34 @@ export const PREFERENCIAS_PADRAO: PreferenciasUsuario = {
 const ATALHOS_VALIDOS: IdAtalhoMobile[] = [
   'novo-lancamento',
   'nova-receita',
-  'nova-tarefa',
   'nova-nota',
   'cartoes',
   'orcamento',
-  'projetos',
   'relatorios',
   'categorias',
   'visao-geral',
 ]
 
 function validarAtalhos(salvo: unknown): IdAtalhoMobile[] {
-  if (!Array.isArray(salvo) || salvo.length !== 4) {
+  if (!Array.isArray(salvo)) {
     return ATALHOS_PADRAO
   }
-  const todosValidos = salvo.every((id): id is IdAtalhoMobile =>
-    typeof id === 'string' && ATALHOS_VALIDOS.includes(id as IdAtalhoMobile)
+  const validos = salvo.filter(
+    (id): id is IdAtalhoMobile => typeof id === 'string' && ATALHOS_VALIDOS.includes(id as IdAtalhoMobile),
   )
-  if (!todosValidos) {
-    return ATALHOS_PADRAO
+  const unicos: IdAtalhoMobile[] = []
+  for (const id of validos) {
+    if (!unicos.includes(id)) {
+      unicos.push(id)
+    }
   }
-  return salvo as IdAtalhoMobile[]
+  for (const padrao of ATALHOS_PADRAO) {
+    if (unicos.length >= 4) break
+    if (!unicos.includes(padrao)) {
+      unicos.push(padrao)
+    }
+  }
+  return unicos.slice(0, 4)
 }
 
 export function lerPreferenciasSalvas(): PreferenciasUsuario {
