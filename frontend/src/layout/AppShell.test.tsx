@@ -82,15 +82,13 @@ describe('grid do desktop', () => {
     expect(banner.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('painel_aberto_abaixo_de_2xl_ganha_terceira_coluna', async () => {
+  it('grid desktop sempre usa duas colunas sem terceira coluna de produtividade', () => {
     definirLargura(1400)
     renderizar()
     const grid = screen.getByRole('main').closest('.grid-rows-\\[auto_1fr\\]')
+    expect(grid).toHaveClass('grid-cols-[auto_1fr]')
     expect(grid).not.toHaveClass('grid-cols-[auto_1fr_20rem]')
-
-    await userEvent.click(screen.getByRole('button', { name: 'Alternar painel de produtividade' }))
-
-    expect(grid).toHaveClass('grid-cols-[auto_1fr_20rem]')
+    expect(screen.queryByRole('button', { name: 'Alternar painel de produtividade' })).not.toBeInTheDocument()
   })
 })
 

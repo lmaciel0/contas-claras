@@ -3,7 +3,6 @@ import { Outlet } from 'react-router'
 import { AvisoServidor } from './AvisoServidor'
 import { HeaderPrincipal } from './HeaderPrincipal'
 import { Logo } from './Logo'
-import { PainelLateralDireito } from './PainelLateralDireito'
 import { PaletaContext } from './paleta'
 import { PaletaNavegacao } from './PaletaNavegacao'
 import { DockInferior } from './DockInferior'
@@ -52,7 +51,6 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
   const { preferencias } = usePreferencias()
   const [aberto, setAberto] = useState(false)
   const [paletaAberta, setPaletaAberta] = useState(false)
-  const [painelProdutividadeAberto, setPainelProdutividadeAberto] = useState(false)
   const [modalPreferenciasAberta, setModalPreferenciasAberta] = useState(false)
   const botao = useRef<HTMLButtonElement>(null)
   const principal = useRef<HTMLElement>(null)
@@ -169,18 +167,13 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
     </div>
   )
 
-  // Com o painel de produtividade aberto abaixo de 2xl o grid ganha a 3ª coluna; de 2xl em diante ela é sempre fixa.
-  const colunasDesktop = painelProdutividadeAberto
-    ? 'grid-cols-[auto_1fr_20rem]'
-    : 'grid-cols-[auto_1fr] 2xl:grid-cols-[auto_1fr_20rem]'
-
   // O `<main>` (e a página dentro dele) fica sempre na mesma posição da árvore: só a dock ou a barra do topo
   // trocam, então cruzar 1280 px não remonta a rota nem perde o que foi digitado.
   return (
     <PaletaContext value={paleta}>
       <div className="min-h-dvh" style={{ background: 'var(--fundo-degrade)' }}>
         <AvisoServidor />
-        <div className={ehDesktop ? `grid min-h-dvh grid-rows-[auto_1fr] gap-3 p-3 ${colunasDesktop}` : undefined}>
+        <div className={ehDesktop ? 'grid min-h-dvh grid-cols-[auto_1fr] grid-rows-[auto_1fr] gap-3 p-3' : undefined}>
           {ehDesktop ? dockDesktop : !ehCelular && barraSuperior}
           {ehDesktop && (
             <div
@@ -205,8 +198,6 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
                 nomeUsuario={nomeUsuario}
                 aoSair={aoSair}
                 onAbrirBusca={paleta.abrir}
-                onAlternarPainelProdutividade={() => setPainelProdutividadeAberto((v) => !v)}
-                painelProdutividadeAberto={painelProdutividadeAberto}
                 onAbrirPreferencias={() => setModalPreferenciasAberta(true)}
               />
             </div>
@@ -226,16 +217,6 @@ export function AppShell({ nomeUsuario, aoSair = () => undefined }: Props) {
               }
             />
           </main>
-          {ehDesktop && (
-            <PainelLateralDireito
-              className={
-                painelProdutividadeAberto
-                  ? 'col-start-3 row-start-2'
-                  : 'col-start-3 row-start-2 hidden 2xl:flex'
-              }
-              aoFechar={() => setPainelProdutividadeAberto(false)}
-            />
-          )}
         </div>
 
         {ehCelular && <DockInferior />}

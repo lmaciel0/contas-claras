@@ -6,8 +6,6 @@ interface HeaderPrincipalProps {
   readonly nomeUsuario?: string
   readonly aoSair?: () => void
   readonly onAbrirBusca?: () => void
-  readonly onAlternarPainelProdutividade?: () => void
-  readonly painelProdutividadeAberto?: boolean
   readonly onAbrirPreferencias?: () => void
 }
 
@@ -23,8 +21,6 @@ export function HeaderPrincipal({
   nomeUsuario,
   aoSair,
   onAbrirBusca,
-  onAlternarPainelProdutividade,
-  painelProdutividadeAberto = false,
   onAbrirPreferencias,
 }: HeaderPrincipalProps) {
   const [menuAberto, setMenuAberto] = useState(false)
@@ -97,38 +93,8 @@ export function HeaderPrincipal({
         </kbd>
       </button>
 
-      {/* Pílula à direita: Alternar Painel + Notificações + Perfil do Usuário. Sem overflow para o menu não ser cortado. */}
+      {/* Pílula à direita: Notificações + Perfil do Usuário. Sem overflow para o menu não ser cortado. */}
       <div className="superficie flex h-11 shrink-0 items-center rounded-full">
-        {/* Alternar Painel de Produtividade */}
-        {onAlternarPainelProdutividade && (
-          <button
-            type="button"
-            aria-label="Alternar painel de produtividade"
-            aria-pressed={painelProdutividadeAberto}
-            onClick={onAlternarPainelProdutividade}
-            className={`grid min-h-11 min-w-11 cursor-pointer place-items-center rounded-full text-[var(--cor-texto)] transition-colors hover:bg-[var(--cor-fundo)] 2xl:hidden ${
-              painelProdutividadeAberto ? 'bg-[var(--cor-principal-clara)] text-[var(--cor-principal)] font-bold' : ''
-            } ${foco}`}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-          </button>
-        )}
-
         {/* Notificações */}
         <button
           type="button"
