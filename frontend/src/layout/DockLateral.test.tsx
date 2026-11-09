@@ -56,8 +56,10 @@ describe('DockLateral', () => {
   it('renderiza os links de navegação principais', () => {
     renderizar()
     expect(screen.getByRole('link', { name: /início/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /tarefas/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /notas/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /visão geral/i })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /tarefas/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /projetos/i })).not.toBeInTheDocument()
   })
 
   it('tem link discreto para a politica de privacidade e fecha o menu ao navegar', () => {

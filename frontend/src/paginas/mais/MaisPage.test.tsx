@@ -40,8 +40,8 @@ describe('MaisPage', () => {
 
   it('lista os atalhos com o destino certo', () => {
     renderizar()
-    expect(screen.getByRole('link', { name: 'Tarefas' })).toHaveAttribute('href', '/tarefas')
-    expect(screen.getByRole('link', { name: 'Projetos' })).toHaveAttribute('href', '/projetos')
+    expect(screen.queryByRole('link', { name: 'Tarefas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Projetos' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Visão geral' })).toHaveAttribute('href', expect.stringMatching(/^\/financeiro\?ano=\d{4}&mes=\d{1,2}$/))
     expect(screen.getByRole('link', { name: 'Cartões' })).toHaveAttribute('href', expect.stringMatching(/^\/cartoes\?ano=\d{4}&mes=\d{1,2}$/))
     expect(screen.getByRole('link', { name: 'Categorias' })).toHaveAttribute('href', '/categorias')
@@ -52,7 +52,8 @@ describe('MaisPage', () => {
     renderizar('/mais?ano=2026&mes=10')
     expect(screen.getByRole('link', { name: 'Visão geral' })).toHaveAttribute('href', '/financeiro?ano=2026&mes=10')
     expect(screen.getByRole('link', { name: 'Cartões' })).toHaveAttribute('href', '/cartoes?ano=2026&mes=10')
-    expect(screen.getByRole('link', { name: 'Tarefas' })).toHaveAttribute('href', '/tarefas')
+    expect(screen.queryByRole('link', { name: 'Tarefas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Projetos' })).not.toBeInTheDocument()
   })
 
   it('tem os links de conta e a política de privacidade', () => {

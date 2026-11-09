@@ -14,14 +14,12 @@ export interface GrupoMenu {
   itens: ItemMenu[]
 }
 
-/** Itens do menu lateral. Projetos e calendário entram aqui quando o módulo existir. */
+/** Itens do menu lateral. */
 export const GRUPOS_MENU: GrupoMenu[] = [
   {
     titulo: null,
     itens: [
       { rotulo: 'Início', caminho: '/', exata: true },
-      { rotulo: 'Projetos', caminho: '/projetos' },
-      { rotulo: 'Tarefas', caminho: '/tarefas' },
       { rotulo: 'Notas', caminho: '/notas' },
     ],
   },
@@ -40,7 +38,7 @@ export const GRUPOS_MENU: GrupoMenu[] = [
 const TODOS_OS_ITENS = GRUPOS_MENU.flatMap((g) => g.itens)
 
 /** Atalhos que ficam fora da dock do celular e moram na página Mais, nesta ordem. */
-const ORDEM_MAIS = ['/tarefas', '/projetos', '/financeiro', '/cartoes', '/categorias', '/relatorios']
+const ORDEM_MAIS = ['/financeiro', '/cartoes', '/categorias', '/relatorios']
 
 export const ITENS_MAIS: ItemMenu[] = ORDEM_MAIS.flatMap((caminho) => TODOS_OS_ITENS.filter((i) => i.caminho === caminho))
 
