@@ -72,8 +72,6 @@ describe('PaletaNavegacao', () => {
     expect(screen.getByRole('combobox')).toHaveFocus()
     expect(opcoes()).toEqual([
       'Início',
-      'Projetos',
-      'Tarefas',
       'Notas',
       'Visão geral',
       'Orçamento',
@@ -112,21 +110,19 @@ describe('PaletaNavegacao', () => {
     expect(screen.getByTestId('local')).toHaveTextContent('/notas')
   })
 
-  it('menuLateralTemTarefasEPaletaEncontraTarefas', async () => {
+  it('menuLateralNaoTemTarefasNemProjetosEPaletaNaoEncontra', async () => {
     const user = userEvent.setup()
     renderizar('/categorias')
-    expect(within(screen.getByRole('navigation', { name: 'Menu principal' })).getByRole('link', { name: 'Tarefas' })).toHaveAttribute(
-      'href',
-      '/tarefas',
-    )
+    expect(within(screen.getByRole('navigation', { name: 'Menu principal' })).queryByRole('link', { name: 'Tarefas' })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('navigation', { name: 'Menu principal' })).queryByRole('link', { name: 'Projetos' })).not.toBeInTheDocument()
 
     await user.keyboard('{Control>}k{/Control}')
     await user.keyboard('taref')
-    expect(opcoes()).toEqual(['Tarefas'])
+    expect(opcoes()).toEqual([])
 
-    await user.keyboard('{Enter}')
-    expect(paleta()).not.toBeInTheDocument()
-    expect(screen.getByTestId('local')).toHaveTextContent('/tarefas')
+    await user.clear(screen.getByRole('combobox'))
+    await user.keyboard('proj')
+    expect(opcoes()).toEqual([])
   })
 
   it('setas movem a opção ativa e Enter navega (com o mês, quando a página usa) e fecha', async () => {
@@ -145,7 +141,7 @@ describe('PaletaNavegacao', () => {
     await user.keyboard('{ArrowUp}{ArrowUp}')
     expect(screen.getAllByRole('option').at(-1)).toHaveAttribute('aria-selected', 'true')
 
-    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{Enter}')
+    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{Enter}')
     expect(paleta()).not.toBeInTheDocument()
     expect(screen.getByTestId('local')).toHaveTextContent('/financeiro?ano=2026&mes=7')
   })

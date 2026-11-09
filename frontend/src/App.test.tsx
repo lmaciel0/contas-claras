@@ -194,15 +194,21 @@ describe('toast de saída', () => {
   })
 })
 
-describe('rota de projetos', () => {
-  it('projetos_mostra_a_tela_de_projetos_dentro_da_moldura', async () => {
+describe('redirecionamento de rotas removidas', () => {
+  it('projetos_redireciona_para_o_inicio', async () => {
     comSessao()
     responderTudo()
-    servidor.use(http.get('/api/projetos', () => HttpResponse.json([])))
     renderizar('/projetos')
 
-    expect(await screen.findByRole('heading', { name: 'Projetos' })).toBeInTheDocument()
-    expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Finanças do mês' })).toBeInTheDocument()
+  })
+
+  it('tarefas_redireciona_para_o_inicio', async () => {
+    comSessao()
+    responderTudo()
+    renderizar('/tarefas')
+
+    expect(await screen.findByRole('heading', { name: 'Finanças do mês' })).toBeInTheDocument()
   })
 })
 

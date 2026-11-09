@@ -56,20 +56,24 @@ describe('FolhaAcaoRapida', () => {
     const dialogo = screen.getByRole('dialog', { name: 'Criar' })
     expect(dialogo).toHaveAttribute('aria-modal', 'true')
     const links = within(dialogo).getAllByRole('link')
-    expect(links.map((l) => l.textContent)).toEqual(['Nova nota', 'Nova conta', 'Nova tarefa'])
+    expect(links.map((l) => l.textContent)).toEqual(['Nova nota', 'Nova despesa', 'Nova receita'])
     expect(links[0]).toHaveFocus()
   })
 
-  it('cada link aponta para o destino certo, com o mês só no da conta', async () => {
+  it('cada link aponta para o destino certo, com o mês no da despesa e da receita', async () => {
     renderizar('/?ano=2026&mes=3')
     await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
 
     expect(screen.getByRole('link', { name: 'Nova nota' })).toHaveAttribute('href', '/notas')
-    expect(screen.getByRole('link', { name: 'Nova conta' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Nova despesa' })).toHaveAttribute(
       'href',
       '/lancamentos/novo?ano=2026&mes=3',
     )
-    expect(screen.getByRole('link', { name: 'Nova tarefa' })).toHaveAttribute('href', '/tarefas?nova=1')
+    expect(screen.getByRole('link', { name: 'Nova receita' })).toHaveAttribute(
+      'href',
+      '/lancamentos/novo?ano=2026&mes=3&tipo=RECEITA',
+    )
+    expect(screen.queryByRole('link', { name: 'Nova tarefa' })).not.toBeInTheDocument()
   })
 
   it('Esc chama aoFechar e fecha', async () => {
@@ -90,13 +94,23 @@ describe('FolhaAcaoRapida', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('escolher "Nova conta" navega para /lancamentos/novo com o mês e fecha', async () => {
+  it('escolher "Nova despesa" navega para /lancamentos/novo com o mês e fecha', async () => {
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
 
-    await userEvent.click(screen.getByRole('link', { name: 'Nova conta' }))
+    await userEvent.click(screen.getByRole('link', { name: 'Nova despesa' }))
 
     expect(screen.getByTestId('local')).toHaveTextContent('/lancamentos/novo?ano=2026&mes=10')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('escolher "Nova receita" navega para /lancamentos/novo com o mês e tipo=RECEITA e fecha', async () => {
+    renderizar()
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
+
+    await userEvent.click(screen.getByRole('link', { name: 'Nova receita' }))
+
+    expect(screen.getByTestId('local')).toHaveTextContent('/lancamentos/novo?ano=2026&mes=10&tipo=RECEITA')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 

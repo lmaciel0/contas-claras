@@ -55,10 +55,8 @@ describe('ITENS_DOCK', () => {
 })
 
 describe('ITENS_MAIS e CAMINHOS_MAIS', () => {
-  it('ITENS_MAIS vem de GRUPOS_MENU, na ordem Tarefas, Projetos, Visão geral, Cartões, Categorias, Relatórios', () => {
+  it('ITENS_MAIS vem de GRUPOS_MENU, na ordem Visão geral, Cartões, Categorias, Relatórios', () => {
     expect(ITENS_MAIS.map((i) => i.rotulo)).toEqual([
-      'Tarefas',
-      'Projetos',
       'Visão geral',
       'Cartões',
       'Categorias',
@@ -72,8 +70,6 @@ describe('ITENS_MAIS e CAMINHOS_MAIS', () => {
 
   it('CAMINHOS_MAIS tem os atalhos, /mais, /conta/senha e /conta/excluir', () => {
     expect(CAMINHOS_MAIS).toEqual([
-      '/tarefas',
-      '/projetos',
       '/financeiro',
       '/cartoes',
       '/categorias',
@@ -129,7 +125,7 @@ describe('DockInferior', () => {
     expect(screen.getByRole('link', { name: 'Notas' })).toHaveAttribute('aria-current', 'page')
   })
 
-  it.each(['/tarefas', '/projetos', '/financeiro', '/cartoes', '/categorias', '/relatorios', '/mais', '/conta/senha', '/conta/excluir'])(
+  it.each(['/financeiro', '/cartoes', '/categorias', '/relatorios', '/mais', '/conta/senha', '/conta/excluir'])(
     'em %s o item Mais fica ativo, com rótulo, e os outros não',
     (rota) => {
       renderizar(rota)
@@ -153,7 +149,7 @@ describe('DockInferior', () => {
   })
 
   it('o link de Orçamento mantém ?ano=&mes= do mês em foco', () => {
-    renderizar('/tarefas?ano=2026&mes=10')
+    renderizar('/financeiro?ano=2026&mes=10')
     expect(screen.getByRole('link', { name: 'Orçamento' })).toHaveAttribute('href', '/lancamentos?ano=2026&mes=10')
   })
 
@@ -217,9 +213,10 @@ describe('DockInferior: botão Criar', () => {
     expect(criar).toHaveAttribute('aria-expanded', 'true')
     expect(criar).toHaveAttribute('aria-controls', dialogo.id)
     const links = within(dialogo).getAllByRole('link')
-    expect(links.map((l) => l.textContent)).toEqual(['Nova nota', 'Nova conta', 'Nova tarefa'])
+    expect(links.map((l) => l.textContent)).toEqual(['Nova nota', 'Nova despesa', 'Nova receita'])
     expect(links[0]).toHaveFocus()
     expect(links[1]).toHaveAttribute('href', '/lancamentos/novo?ano=2026&mes=3')
+    expect(links[2]).toHaveAttribute('href', '/lancamentos/novo?ano=2026&mes=3&tipo=RECEITA')
   })
 
   it('o diálogo não é descendente do nav (o backdrop-blur do nav quebraria o fixed inset-0)', async () => {
@@ -245,9 +242,9 @@ describe('DockInferior: botão Criar', () => {
     renderizar()
     await userEvent.click(screen.getByRole('button', { name: 'Criar' }))
 
-    await userEvent.click(screen.getByRole('link', { name: 'Nova tarefa' }))
+    await userEvent.click(screen.getByRole('link', { name: 'Nova receita' }))
 
-    expect(screen.getByTestId('local')).toHaveTextContent('/tarefas?nova=1')
+    expect(screen.getByTestId('local').textContent).toMatch(/\/lancamentos\/novo\?.*tipo=RECEITA/)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 

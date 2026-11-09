@@ -22,7 +22,7 @@ describe('preferenciasStorage', () => {
       layoutLargura: 'largura-total' as const,
       barraFixa: false,
       dockRecolhida: true,
-      atalhosMobile: ['cartoes', 'orcamento', 'nova-receita', 'projetos'] as const,
+      atalhosMobile: ['cartoes', 'orcamento', 'nova-receita', 'nova-nota'] as const,
     }
     gravarPreferencias(custom as unknown as Parameters<typeof gravarPreferencias>[0])
     expect(lerPreferenciasSalvas()).toEqual(custom)
@@ -38,5 +38,17 @@ describe('preferenciasStorage', () => {
     const lido = lerPreferenciasSalvas()
     expect(lido.modoTema).toBe('escuro')
     expect(lido.presetCor).toBe('azul')
+  })
+
+  it('migra atalhos de tarefas e projetos removidos preservando os válidos e preenchendo com padrões até 4', () => {
+    localStorage.setItem(
+      CHAVE_PREFERENCIAS,
+      JSON.stringify({
+        ...PREFERENCIAS_PADRAO,
+        atalhosMobile: ['novo-lancamento', 'nova-tarefa', 'cartoes', 'projetos'],
+      }),
+    )
+    const lido = lerPreferenciasSalvas()
+    expect(lido.atalhosMobile).toEqual(['novo-lancamento', 'cartoes', 'nova-receita', 'nova-nota'])
   })
 })

@@ -39,7 +39,10 @@ describe('AtalhosRapidosMobile', () => {
       'href',
       '/cartoes?ano=2026&mes=10',
     )
-    expect(screen.getByRole('link', { name: '+ Tarefa' })).toHaveAttribute('href', '/tarefas?nova=1')
+    expect(screen.getByRole('link', { name: '+ Receita' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/lancamentos/novo?tipo=RECEITA'),
+    )
     expect(screen.getByRole('link', { name: '+ Nota' })).toHaveAttribute('href', '/notas')
   })
 

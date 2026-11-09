@@ -1,5 +1,4 @@
 import { api } from './cliente'
-import { projetosApi } from '../paginas/projetos/projetosApi'
 
 import type {
   CadastroRequest,
@@ -28,9 +27,6 @@ import type {
   SaldoResponse,
   SalvarLancamentoRequest,
   StatusLancamento,
-  TarefaRequest,
-  TarefaResponse,
-  TarefasResponse,
   UsuarioResponse,
 } from './tipos'
 
@@ -120,19 +116,9 @@ export const endpoints = {
     salvarConteudo: (id: number, conteudo: ConteudoNota) =>
       api<NotaResponse>(`/api/notas/${id}/conteudo`, { method: 'PATCH', ...json({ conteudo }) }),
   },
-  tarefas: {
-    listar: () => api<TarefasResponse>('/api/tarefas'),
-    criar: (req: TarefaRequest) => api<TarefaResponse>('/api/tarefas', { method: 'POST', ...json(req) }),
-    editar: (id: number, req: TarefaRequest) =>
-      api<TarefaResponse>(`/api/tarefas/${id}`, { method: 'PUT', ...json(req) }),
-    concluir: (id: number, concluida: boolean) =>
-      api<TarefaResponse>(`/api/tarefas/${id}/concluida`, { method: 'PATCH', ...json({ concluida }) }),
-    excluir: (id: number) => api<void>(`/api/tarefas/${id}`, { method: 'DELETE' }),
-  },
   relatorios: {
     ano: (ano: number) => api<RelatorioAnualResponse>(`/api/relatorios/ano/${ano}`),
   },
-  projetos: projetosApi,
   resumo: (ano: number, mes: number) => api<ResumoResponse>(`/api/resumo?${consulta(ano, mes)}`),
   saldo: (ano: number, mes: number) => api<SaldoResponse>(`/api/saldo?${consulta(ano, mes)}`),
   saude: () => api<{ status: string }>('/api/health'),

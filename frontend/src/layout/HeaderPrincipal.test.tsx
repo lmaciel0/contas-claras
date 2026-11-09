@@ -119,12 +119,9 @@ describe('HeaderPrincipal', () => {
     expect(screen.getByRole('button', { name: 'Perfil do usuário' }).parentElement?.parentElement).toHaveClass('superficie')
   })
 
-  it('botao_de_painel_fica_no_mesmo_grupo_do_sino', () => {
-    renderComApp(<HeaderPrincipal nomeUsuario="Lucas" onAlternarPainelProdutividade={vi.fn()} />)
+  it('não renderiza botão de alternar painel de produtividade', () => {
+    renderComApp(<HeaderPrincipal nomeUsuario="Lucas" />)
 
-    const painel = screen.getByRole('button', { name: 'Alternar painel de produtividade' })
-    const sino = screen.getByRole('button', { name: 'Notificações' })
-    expect(painel.parentElement).toBe(sino.parentElement)
-    expect(sino.parentElement).toHaveClass('superficie')
+    expect(screen.queryByRole('button', { name: 'Alternar painel de produtividade' })).not.toBeInTheDocument()
   })
 })

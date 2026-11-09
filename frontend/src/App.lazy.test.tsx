@@ -6,9 +6,9 @@ import { comSessao } from './teste/auth'
 import { renderComApp } from './teste/render'
 
 // A página demora a carregar (como um chunk lento): se a rota fosse estática, o módulo já estaria pronto no render.
-vi.mock('./paginas/projetos/ProjetosPage', async () => {
+vi.mock('./paginas/notas/NotasPage', async () => {
   await new Promise((resolver) => setTimeout(resolver, 300))
-  return { ProjetosPage: () => <h1>Projetos carregada</h1> }
+  return { NotasPage: () => <h1>Notas carregada</h1> }
 })
 
 describe('rotas em lazy loading', () => {
@@ -22,14 +22,14 @@ describe('rotas em lazy loading', () => {
       <AuthProvider>
         <App />
       </AuthProvider>,
-      '/projetos',
+      '/notas',
     )
 
     expect(await screen.findByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
     expect(screen.getByText('Carregando…').closest('[role="status"]')).not.toBeNull()
-    expect(screen.queryByRole('heading', { name: 'Projetos carregada' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Notas carregada' })).not.toBeInTheDocument()
 
-    expect(await screen.findByRole('heading', { name: 'Projetos carregada' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Notas carregada' })).toBeInTheDocument()
     expect(screen.queryByText('Carregando…')).not.toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument()
   })

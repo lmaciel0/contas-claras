@@ -11,24 +11,24 @@ Arquivos desta pasta: `icone-512.png` (ícone do app, 512x512) e `imagem-de-dest
 | Nome do app (até 30 caracteres) | `Aprumo` |
 | Tipo | Aplicativo |
 | Grátis ou pago | Grátis |
-| Categoria | Finanças (alternativa: Produtividade) |
+| Categoria | Finanças |
 | Contato (e-mail público) | `aprumo.assistente@gmail.com` |
 | Site | `https://app.useaprumo.com.br` |
 | Política de privacidade | `https://app.useaprumo.com.br/privacidade` |
 | Package name | `br.com.useaprumo.app` (não muda depois de publicado) |
 
-Sobre a categoria: o app registra valores digitados à mão, então "Finanças" é a descrição honesta. Ela dispara a "Declaração de recursos financeiros" (seção 6). Se preferir evitar essa declaração, "Produtividade" também descreve o app, que reúne finanças, tarefas, notas e projetos.
+Sobre a categoria: o app registra valores digitados à mão, então "Finanças" é a descrição honesta. Ela dispara a "Declaração de recursos financeiros" (seção 6).
 
 ## 2. Descrição curta (até 80 caracteres)
 
 ```
-Finanças, tarefas, notas e projetos em um só lugar, sem planilha.
+Suas finanças em ordem e suas notas à mão, sem planilha.
 ```
 
 ## 3. Descrição completa (até 4000 caracteres)
 
 ```
-O Aprumo é o seu assistente pessoal para manter a vida em ordem: finanças, tarefas, notas e projetos no mesmo lugar, sem planilha.
+O Aprumo organiza suas finanças pessoais com clareza e mantém suas anotações à mão, sem planilha.
 
 QUANTO SOBRA NO MÊS?
 Ao abrir, o Aprumo responde duas perguntas: quanto sobra no mês e onde você está gastando mais. Veja receitas e despesas, o gráfico do ano (a parte prevista aparece listrada) e as próximas contas, com as atrasadas em destaque.
@@ -40,17 +40,11 @@ FINANÇAS
 • Categorias: crie, renomeie, reordene e arquive itens.
 • Relatórios: o ano inteiro em itens por mês, com totais e diferença de caixa.
 
-TAREFAS
-Liste o que precisa fazer, marque o que foi concluído e acompanhe o dia.
-
 NOTAS
 Escreva e organize anotações com formatação, e fixe a mais importante no topo.
 
-PROJETOS
-Organize o que está em andamento num quadro kanban, com subtarefas.
-
 FEITO PARA O CELULAR
-Navegação por uma barra inferior, botão de criação rápida para nota, conta e tarefa, tema claro e escuro.
+Navegação por uma barra inferior, botão de criação rápida para nota, receita e despesa, tema claro e escuro.
 
 SUA CONTA, SEUS DADOS
 • Entre com e-mail e senha ou com a sua conta Google.
@@ -66,7 +60,7 @@ Dúvidas ou sugestões: aprumo.assistente@gmail.com
 ## 4. Notas da versão (até 500 caracteres)
 
 ```
-Primeira versão do Aprumo: finanças (lançamentos, cartões, categorias e relatórios), tarefas, notas e projetos, com navegação pensada para o celular, tema claro e escuro e exclusão de conta dentro do app.
+Primeira versão do Aprumo: finanças (lançamentos, cartões, categorias e relatórios) e anotações, com navegação pensada para o celular, tema claro e escuro e exclusão de conta dentro do app.
 ```
 
 ## 5. Imagens
@@ -77,7 +71,7 @@ Primeira versão do Aprumo: finanças (lançamentos, cartões, categorias e rela
 | Imagem de destaque | `imagem-de-destaque-1024x500.png` | PNG ou JPEG 1024x500, até 15 MB |
 | Prints de celular | a gerar | mínimo 2, máximo 8; proporção 16:9 a 9:16, lado menor de 320 a 3840 px |
 
-Prints sugeridos (conta de revisor, dados de exemplo, nunca dados reais): Início com a sobra do mês; Lançamentos; Cartões; Tarefas; Notas.
+Prints sugeridos (conta de revisor, dados de exemplo, nunca dados reais): Início com a sobra do mês; Lançamentos; Cartões; Relatórios; Notas.
 
 ## 6. Declarações do app
 
@@ -85,7 +79,7 @@ Prints sugeridos (conta de revisor, dados de exemplo, nunca dados reais): Iníci
 O app exige login. Marque "Restrito" e preencha as instruções com o texto abaixo; o e-mail e a senha da conta de revisor vão só no campo de credenciais da Play Console.
 
 ```
-Para entrar, use o e-mail e a senha informados no campo de credenciais. Depois do login, o app abre no Início. Toque em "Finanças" para ver lançamentos, cartões e relatórios, e use o botão "+" para criar nota, conta ou tarefa. A exclusão de conta fica no menu lateral (ícone de menu no topo), em "Excluir conta".
+Para entrar, use o e-mail e a senha informados no campo de credenciais. Depois do login, o app abre no Início. Toque em "Finanças" para ver lançamentos, cartões e relatórios, e use o botão "+" para criar nota, receita ou despesa. A exclusão de conta fica no menu lateral (ícone de menu no topo), em "Excluir conta".
 ```
 
 ### Anúncios
@@ -112,7 +106,7 @@ Coerente com `https://app.useaprumo.com.br/privacidade` (seções 2, 4 e 7).
 | Informações pessoais: endereço de e-mail | Sim | Não | Funcionamento do app, gerenciamento da conta | Não |
 | Informações pessoais: IDs de usuário (identificador do Google, quando entra com Google) | Sim | Não | Gerenciamento da conta | Sim |
 | Informações financeiras: outras informações financeiras (lançamentos, cartões, valores que a pessoa digita) | Sim | Não | Funcionamento do app | Não |
-| Atividade no app: outro conteúdo gerado pelo usuário (tarefas, notas, projetos) | Sim | Não | Funcionamento do app | Não |
+| Atividade no app: outro conteúdo gerado pelo usuário (notas) | Sim | Não | Funcionamento do app | Não |
 | Registros de falhas (mensagem técnica do erro, trecho do código e tela em que ocorreu, sem parâmetros nem números de registro; e-mails e códigos removidos antes do envio; ficam nos logs do provedor da API, pelo prazo dele) | Sim | Não | Funcionalidade do app, análise | Não |
 
 Não coletados: localização, contatos, mensagens, fotos e vídeos, áudio, arquivos, calendário, saúde, histórico de navegação, identificadores de dispositivo e de publicidade.

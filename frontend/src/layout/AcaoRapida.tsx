@@ -21,23 +21,35 @@ interface ItemFolha {
 export const ID_FOLHA_ACAO_RAPIDA = 'folha-acao-rapida'
 
 /**
- * Folha de ações rápidas do celular (menos de 768 px): Nova nota, Nova conta e Nova tarefa. Quem a abre é o botão
+ * Folha de ações rápidas do celular (menos de 768 px): Nova nota, Nova despesa e Nova receita. Quem a abre é o botão
  * "Criar" da `DockInferior`, que também guarda o estado e a renderiza como irmã do `<nav>` (nunca dentro dele: o
  * `backdrop-blur` do nav cria um bloco de contenção e quebraria o `fixed inset-0`). A folha (z-[35]) cobre a dock e fica
  * abaixo do menu (z-40) e dos modais (z-50). Mesmo comportamento do menu deslizante (foco, Esc, fundo, rolagem travada,
  * Tab preso), via `useDialogoModal`; `aoFechar` decide o que acontece depois (a dock devolve o foco ao botão).
  *
- * Nota e tarefa não têm rota de criação: a nota nasce de um POST seguido de navegação, e a tarefa é o campo da própria
- * página. "Nova nota" leva `{ nova: true }` no estado de navegação (um link externo não consegue defini-lo, então abrir
- * uma URL não cria nota) e "Nova tarefa" leva `?nova=1`, que só foca o campo.
+ * Nota não tem rota de criação: a nota nasce de um POST seguido de navegação. "Nova nota" leva `{ nova: true }` no
+ * estado de navegação (um link externo não consegue defini-lo, então abrir uma URL não cria nota). Despesa e receita
+ * abrem o formulário `/lancamentos/novo` com o mês em foco.
  */
+function destinoComMes(caminho: string, busca: string, paramsExtras?: Record<string, string>): To {
+  const params = new URLSearchParams(busca ? busca.replace(/^\?/, '') : '')
+  if (paramsExtras) {
+    Object.entries(paramsExtras).forEach(([k, v]) => params.set(k, v))
+  }
+  const queryString = params.toString()
+  return {
+    pathname: caminho,
+    search: queryString ? `?${queryString}` : '',
+  }
+}
+
 export function FolhaAcaoRapida({ aberta, aoFechar }: { aberta: boolean; aoFechar: () => void }) {
   const { busca } = useMesSelecionado()
   const { painel, prenderFoco } = useDialogoModal(aberta, aoFechar)
   const itens: ItemFolha[] = [
     { rotulo: 'Nova nota', icone: '/notas', para: '/notas', state: { nova: true } },
-    { rotulo: 'Nova conta', icone: '/lancamentos', para: { pathname: '/lancamentos/novo', search: busca } },
-    { rotulo: 'Nova tarefa', icone: '/tarefas', para: { pathname: '/tarefas', search: '?nova=1' } },
+    { rotulo: 'Nova despesa', icone: '/lancamentos', para: destinoComMes('/lancamentos/novo', busca) },
+    { rotulo: 'Nova receita', icone: '/financeiro', para: destinoComMes('/lancamentos/novo', busca, { tipo: 'RECEITA' }) },
   ]
 
   if (!aberta) {
