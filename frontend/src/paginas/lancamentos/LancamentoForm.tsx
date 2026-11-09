@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { ReactNode, SubmitEvent } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import type {
   CategoriaResponse,
@@ -63,13 +63,26 @@ function Formulario({ categorias, existente, mesInicial, aoFechar, aoSalvar, ite
   const editando = existente !== undefined
   const inicio: MesAno = existente === undefined ? mesInicial : { ano: existente.ano, mes: existente.mes }
 
+  const [searchParams] = useSearchParams()
+  const tipoParam = searchParams.get('tipo')?.toUpperCase()
+  const tipoInicial: TipoCategoria =
+    existente !== undefined
+      ? existente.tipo
+      : tipoParam === 'RECEITA' || tipoParam === 'DESPESA'
+        ? tipoParam
+        : 'DESPESA'
+
   const categoriaPadrao =
     itemPreSelecionado?.categoriaId ??
-    categorias.find((c) => (itemPreSelecionado ? c.itens.some((i) => i.id === itemPreSelecionado.itemId) : c.tipo === 'DESPESA'))?.id ??
-    categorias.find((c) => c.tipo === 'DESPESA')?.id ??
+    categorias.find((c) =>
+      itemPreSelecionado
+        ? c.itens.some((i) => i.id === itemPreSelecionado.itemId)
+        : c.tipo === tipoInicial
+    )?.id ??
+    categorias.find((c) => c.tipo === tipoInicial)?.id ??
     null
 
-  const [tipo, setTipo] = useState<TipoCategoria>(existente?.tipo ?? 'DESPESA')
+  const [tipo, setTipo] = useState<TipoCategoria>(tipoInicial)
   const [categoriaId, setCategoriaId] = useState<number | null>(
     existente?.categoriaId ?? categoriaPadrao,
   )

@@ -131,6 +131,22 @@ describe('LancamentoForm (novo)', () => {
     expect(screen.getByLabelText('Vencimento')).toHaveValue('2028-02-29')
   })
 
+  it('abre_como_receita_quando_url_tem_tipo_RECEITA', async () => {
+    renderizar('/lancamentos/novo?ano=2026&mes=10&tipo=RECEITA')
+
+    expect(await screen.findByRole('radio', { name: 'Receita' })).toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Despesa' })).not.toBeChecked()
+
+    expect(screen.getByLabelText('Fonte da receita')).toBeInTheDocument()
+  })
+
+  it('edicao_preserva_tipo_do_lancamento_mesmo_com_tipo_na_url', async () => {
+    renderizar('/lancamentos/1?ano=2026&mes=10&tipo=RECEITA', [luzDeOutubro])
+
+    expect(await screen.findByRole('radio', { name: 'Despesa' })).toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Receita' })).not.toBeChecked()
+  })
+
   it('vencimento_editado_na_mao_nao_e_trocado_ao_mudar_o_mes', async () => {
     renderizar('/lancamentos/novo?ano=2026&mes=2')
     await userEvent.selectOptions(await campo('Item'), 'Luz')
