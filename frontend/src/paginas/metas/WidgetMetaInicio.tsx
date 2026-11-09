@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, Target } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router'
 import { endpoints } from '../../api/endpoints'
 import { formatarMoeda } from '../../formato/moeda'
@@ -34,7 +34,7 @@ export function WidgetMetaInicio() {
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {/* Ícone com gradiente do preset */}
         <div
-          className="flex size-9 shrink-0 items-center justify-center rounded-xl text-white shadow-xs"
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl text-[var(--cor-sobre-principal)] shadow-xs"
           style={{
             background: `linear-gradient(135deg, ${metaAtiva.corGradienteInicio || preset.corGradienteInicio}, ${metaAtiva.corGradienteFim || preset.corGradienteFim})`,
           }}

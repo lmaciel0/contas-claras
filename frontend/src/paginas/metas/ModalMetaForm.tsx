@@ -189,7 +189,7 @@ export function ModalMetaForm({
                     }`}
                   >
                     <span
-                      className="flex size-7 shrink-0 items-center justify-center rounded-lg text-white"
+                      className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[var(--cor-sobre-principal)]"
                       style={{
                         background: `linear-gradient(135deg, ${p.corGradienteInicio}, ${p.corGradienteFim})`,
                       }}
@@ -331,7 +331,7 @@ export function ModalMetaForm({
                     type="button"
                     onClick={tratarExcluir}
                     disabled={salvando}
-                    className="cursor-pointer rounded-xl bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700"
+                    className="cursor-pointer rounded-xl bg-red-600 px-3 py-1.5 text-xs font-bold text-[var(--cor-sobre-negativo)] hover:bg-red-700"
                   >
                     Confirmar exclusão
                   </button>
@@ -369,7 +369,7 @@ export function ModalMetaForm({
               <button
                 type="submit"
                 disabled={salvando}
-                className="cursor-pointer rounded-xl bg-[var(--cor-principal)] px-5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50"
+                className="cursor-pointer rounded-xl bg-[var(--cor-principal)] px-5 py-2 text-xs font-bold text-[var(--cor-sobre-principal)] shadow-sm transition-all hover:opacity-90 disabled:opacity-50"
               >
                 {salvando ? 'Salvando...' : 'Salvar meta'}
               </button>

@@ -85,7 +85,7 @@ export function CardConselheiroMetas({ ano, mes, className = '' }: Props) {
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
                         <span
-                          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-white"
+                          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[var(--cor-sobre-principal)]"
                           style={{
                             background: `linear-gradient(135deg, ${sugestao.corGradienteInicio || preset.corGradienteInicio}, ${sugestao.corGradienteFim || preset.corGradienteFim})`,
                           }}
@@ -118,7 +118,7 @@ export function CardConselheiroMetas({ ano, mes, className = '' }: Props) {
               </p>
               <Link
                 to="/metas"
-                className="mt-1 inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[var(--cor-principal)] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:opacity-90"
+                className="mt-1 inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[var(--cor-principal)] px-3.5 py-1.5 text-xs font-bold text-[var(--cor-sobre-principal)] shadow-xs hover:opacity-90"
               >
                 <Target className="size-3.5" />
                 <span>Criar uma meta</span>

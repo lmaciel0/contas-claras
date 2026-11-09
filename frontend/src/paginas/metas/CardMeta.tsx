@@ -52,14 +52,14 @@ export function CardMeta({ meta, aoGuardar, aoResgatar, aoEditar }: Props) {
 
         {/* Cabeçalho superior do banner: preset tag e botão de editar */}
         <div className="relative z-10 flex items-center justify-between p-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold text-white backdrop-blur-md">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cor-sobre-principal)]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--cor-sobre-principal)] backdrop-blur-md">
             {getIconePreset(meta.icone || preset.icone)}
             <span>{preset.nome}</span>
           </span>
 
           <div className="flex items-center gap-1.5">
             {meta.concluida && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm backdrop-blur-sm">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-bold text-[var(--cor-sobre-principal)] shadow-sm backdrop-blur-sm">
                 <CheckCircle2 className="size-3" />
                 Concluída
               </span>
@@ -70,7 +70,7 @@ export function CardMeta({ meta, aoGuardar, aoResgatar, aoEditar }: Props) {
                 onClick={() => aoEditar(meta)}
                 aria-label={`Editar ${meta.titulo}`}
                 title={`Editar ${meta.titulo}`}
-                className="inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/30 text-white/80 transition-colors hover:bg-black/50 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+                className="inline-flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/30 text-[var(--cor-sobre-principal)]/80 transition-colors hover:bg-black/50 hover:text-[var(--cor-sobre-principal)] focus-visible:outline-2 focus-visible:outline-[var(--cor-sobre-principal)]"
               >
                 <Pencil className="size-3.5" />
               </button>
@@ -82,7 +82,7 @@ export function CardMeta({ meta, aoGuardar, aoResgatar, aoEditar }: Props) {
         <div className="absolute right-3 bottom-3 left-3 z-10">
           <h3
             id={idTitulo}
-            className="m-0 truncate text-base font-bold text-white drop-shadow-sm"
+            className="m-0 truncate text-base font-bold text-[var(--cor-sobre-principal)] drop-shadow-sm"
           >
             {meta.titulo}
           </h3>
@@ -174,7 +174,7 @@ export function CardMeta({ meta, aoGuardar, aoResgatar, aoEditar }: Props) {
           <button
             type="button"
             onClick={() => aoGuardar?.(meta)}
-            className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-700 active:scale-98 focus-visible:outline-2 focus-visible:outline-emerald-600"
+            className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-[var(--cor-sobre-principal)] shadow-sm transition-colors hover:bg-emerald-700 active:scale-98 focus-visible:outline-2 focus-visible:outline-emerald-600"
           >
             <Plus className="size-3.5" />
             <span>Guardar</span>

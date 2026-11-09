@@ -8,7 +8,15 @@ export interface PresetVisualMeta {
   fotoPadrao: string
 }
 
-export const PRESETS_VISUAIS: Record<string, PresetVisualMeta> = {
+export type IdPresetVisual =
+  | 'reserva'
+  | 'viagem'
+  | 'carro'
+  | 'casa'
+  | 'estudos'
+  | 'personalizado'
+
+export const PRESETS_VISUAIS: Record<IdPresetVisual, PresetVisualMeta> = {
   reserva: {
     id: 'reserva',
     nome: 'Reserva de Emergência',
@@ -76,5 +84,6 @@ export const LISTA_PRESETS: PresetVisualMeta[] = [
 
 export function obterPresetVisual(presetId?: string | null): PresetVisualMeta {
   if (!presetId) return PRESETS_VISUAIS.personalizado
-  return PRESETS_VISUAIS[presetId] ?? PRESETS_VISUAIS.personalizado
+  const mapa = PRESETS_VISUAIS as Record<string, PresetVisualMeta | undefined>
+  return mapa[presetId] ?? PRESETS_VISUAIS.personalizado
 }

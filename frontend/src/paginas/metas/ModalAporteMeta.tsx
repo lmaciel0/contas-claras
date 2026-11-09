@@ -230,7 +230,7 @@ export function ModalAporteMeta({
             <button
               type="submit"
               disabled={enviando || !valorTexto.trim()}
-              className={`cursor-pointer rounded-xl px-5 py-2 text-xs font-bold text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`cursor-pointer rounded-xl px-5 py-2 text-xs font-bold text-[var(--cor-sobre-principal)] shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                 ehGuardar
                   ? 'bg-emerald-600 hover:bg-emerald-700'
                   : 'bg-[var(--cor-principal)] hover:opacity-90'

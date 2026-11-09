@@ -109,7 +109,7 @@ export function MetasPage() {
         <button
           type="button"
           onClick={abrirCriar}
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[var(--cor-principal)] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-98 focus-visible:outline-2 focus-visible:outline-[var(--cor-principal)]"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[var(--cor-principal)] px-4 py-2.5 text-xs font-bold text-[var(--cor-sobre-principal)] shadow-sm transition-all hover:opacity-90 active:scale-98 focus-visible:outline-2 focus-visible:outline-[var(--cor-principal)]"
         >
           <Plus className="size-4" />
           <span>Nova meta</span>
@@ -154,7 +154,7 @@ export function MetasPage() {
           <button
             type="button"
             onClick={abrirCriar}
-            className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[var(--cor-principal)] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-98"
+            className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[var(--cor-principal)] px-5 py-2.5 text-xs font-bold text-[var(--cor-sobre-principal)] shadow-sm transition-all hover:opacity-90 active:scale-98"
           >
             <Plus className="size-4" />
             <span>Criar primeira meta</span>
