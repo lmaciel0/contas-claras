@@ -1,5 +1,6 @@
 package dev.lmaciel.aprumo.metas;
 
+import dev.lmaciel.aprumo.comum.RequisicaoInvalidaException;
 import dev.lmaciel.aprumo.usuario.Usuario;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -168,7 +169,7 @@ public class Meta {
 
     public void guardar(BigDecimal valor) {
         if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Valor a guardar deve ser positivo.");
+            throw new RequisicaoInvalidaException("Valor a guardar deve ser positivo.");
         }
         this.valorGuardado = this.valorGuardado.add(valor);
         this.atualizadoEm = Instant.now();
@@ -176,10 +177,10 @@ public class Meta {
 
     public void resgatar(BigDecimal valor) {
         if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Valor a resgatar deve ser positivo.");
+            throw new RequisicaoInvalidaException("Valor a resgatar deve ser positivo.");
         }
         if (valor.compareTo(this.valorGuardado) > 0) {
-            throw new IllegalArgumentException("Valor a resgatar excede o saldo guardado.");
+            throw new RequisicaoInvalidaException("Valor a resgatar excede o saldo guardado.");
         }
         this.valorGuardado = this.valorGuardado.subtract(valor);
         this.atualizadoEm = Instant.now();

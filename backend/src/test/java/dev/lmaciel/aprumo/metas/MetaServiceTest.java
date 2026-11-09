@@ -108,7 +108,7 @@ class MetaServiceTest {
         assertThat(res.valorGuardado()).isEqualTo("600.00");
 
         assertThatThrownBy(() -> metaService.resgatar(10L, new AporteMetaRequest(new BigDecimal("700.00")), usuarioLogado))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(dev.lmaciel.aprumo.comum.RequisicaoInvalidaException.class)
                 .hasMessageContaining("excede o saldo guardado");
     }
 
