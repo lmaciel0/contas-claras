@@ -12,13 +12,13 @@ import { getIconePreset } from './iconesMeta'
 import { obterPresetVisual } from './presetsVisuais'
 
 interface Props {
-  meta: MetaResponse
-  aoGuardar?: (meta: MetaResponse) => void
-  aoResgatar?: (meta: MetaResponse) => void
-  aoEditar?: (meta: MetaResponse) => void
+  readonly meta: MetaResponse
+  readonly aoGuardar?: (meta: MetaResponse) => void
+  readonly aoResgatar?: (meta: MetaResponse) => void
+  readonly aoEditar?: (meta: MetaResponse) => void
 }
 
-export function CardMeta({ meta, aoGuardar, aoResgatar, aoEditar }: Props) {
+export function CardMeta({ meta, aoGuardar, aoResgatar, aoEditar }: Readonly<Props>) {
   const idTitulo = useId()
   const preset = obterPresetVisual(meta.presetVisual)
   const percentualNum = Number.parseFloat(meta.percentualConcluido || '0') * 100
@@ -126,7 +126,7 @@ export function CardMeta({ meta, aoGuardar, aoResgatar, aoEditar }: Props) {
             </div>
 
             <div
-              role="meter"
+              role="progressbar"
               aria-label={`Progresso da meta ${meta.titulo}`}
               aria-valuemin={0}
               aria-valuemax={100}

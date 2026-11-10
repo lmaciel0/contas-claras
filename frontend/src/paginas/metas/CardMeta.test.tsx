@@ -44,7 +44,7 @@ describe('CardMeta', () => {
     expect(screen.getByText(/de R\$\s*10\.000,00/)).toBeInTheDocument()
     expect(screen.getByText('40%')).toBeInTheDocument()
 
-    const barra = screen.getByRole('meter', { name: /progresso da meta reserva de emergência/i })
+    const barra = screen.getByRole('progressbar', { name: /progresso da meta reserva de emergência/i })
     expect(barra).toHaveAttribute('aria-valuenow', '40')
   })
 

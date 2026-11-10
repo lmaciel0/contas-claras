@@ -4,11 +4,11 @@ import { travarRolagem } from './travaRolagem'
 /** Elementos que recebem foco por teclado dentro de um diálogo. */
 export const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-interface DialogoModal {
-  /** Vai no elemento `role="dialog"`. */
-  painel: RefObject<HTMLDivElement | null>
+interface DialogoModal<T extends HTMLElement = HTMLDivElement> {
+  /** Vai no elemento `role="dialog"` ou `<dialog>`. */
+  painel: RefObject<T | null>
   /** Vai no `onKeyDown` do diálogo: mantém o Tab (e o Shift+Tab) dentro dele. */
-  prenderFoco: (evento: KeyboardEvent<HTMLDivElement>) => void
+  prenderFoco: (evento: KeyboardEvent<T>) => void
 }
 
 /**
@@ -16,8 +16,8 @@ interface DialogoModal {
  * ao primeiro item, trava a rolagem do `<body>` e chama `aoFechar` no Esc. Quem usa decide o que `aoFechar` faz
  * (normalmente fechar e devolver o foco ao botão de origem).
  */
-export function useDialogoModal(aberto: boolean, aoFechar: () => void): DialogoModal {
-  const painel = useRef<HTMLDivElement>(null)
+export function useDialogoModal<T extends HTMLElement = HTMLDivElement>(aberto: boolean, aoFechar: () => void): DialogoModal<T> {
+  const painel = useRef<T>(null)
 
   useEffect(() => {
     if (!aberto) {
@@ -37,7 +37,7 @@ export function useDialogoModal(aberto: boolean, aoFechar: () => void): DialogoM
     }
   }, [aberto, aoFechar])
 
-  const prenderFoco = (evento: KeyboardEvent<HTMLDivElement>) => {
+  const prenderFoco = (evento: KeyboardEvent<T>) => {
     if (evento.key !== 'Tab' || !painel.current) {
       return
     }

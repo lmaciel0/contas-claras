@@ -33,7 +33,7 @@ export function MetasPage() {
   }
 
   useEffect(() => {
-    carregarMetas()
+    void carregarMetas()
   }, [])
 
   // Ações de modais
@@ -88,6 +88,104 @@ export function MetasPage() {
   const concluidasCount = metas.filter((m) => m.concluida).length
   const ativasCount = metas.length - concluidasCount
 
+  const renderConteudo = () => {
+    if (carregando) {
+      return (
+        <div className="flex h-64 items-center justify-center">
+          <Carregando />
+        </div>
+      )
+    }
+
+    if (metas.length === 0) {
+      return (
+        /* Estado Vazio Amigável */
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--cor-linha)] bg-[var(--cor-card)]/50 p-8 text-center sm:p-12">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <Sparkles className="size-7" />
+          </div>
+          <h2 className="m-0 mt-4 text-lg font-bold text-[var(--cor-texto)]">
+            Nenhuma meta cadastrada
+          </h2>
+          <p className="m-0 mt-1.5 max-w-sm text-xs text-[var(--cor-mutado)] sm:text-sm">
+            Crie sua primeira caixinha para organizar seus objetivos futuros.
+            Pode ser IPVA, reserva de emergência, férias ou reformas!
+          </p>
+          <button
+            type="button"
+            onClick={abrirCriar}
+            className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[var(--cor-principal)] px-5 py-2.5 text-xs font-bold text-[var(--cor-sobre-principal)] shadow-sm transition-all hover:opacity-90 active:scale-98"
+          >
+            <Plus className="size-4" />
+            <span>Criar primeira meta</span>
+          </button>
+        </div>
+      )
+    }
+
+    return (
+      <>
+        {/* Barra de Resumo Estatístico */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="flex items-center justify-between rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-4 shadow-xs">
+            <div>
+              <span className="text-xs font-medium text-[var(--cor-mutado)]">
+                Total guardado em metas
+              </span>
+              <p className="m-0 mt-0.5 text-lg font-bold text-[var(--cor-texto)]">
+                {formatarMoeda(totalGuardado)}
+              </p>
+            </div>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <Target className="size-5" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-4 shadow-xs">
+            <div>
+              <span className="text-xs font-medium text-[var(--cor-mutado)]">
+                Metas ativas
+              </span>
+              <p className="m-0 mt-0.5 text-lg font-bold text-[var(--cor-texto)]">
+                {ativasCount}
+              </p>
+            </div>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <Sparkles className="size-5" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-4 shadow-xs">
+            <div>
+              <span className="text-xs font-medium text-[var(--cor-mutado)]">
+                Objetivos alcançados
+              </span>
+              <p className="m-0 mt-0.5 text-lg font-bold text-[var(--cor-texto)]">
+                {concluidasCount}
+              </p>
+            </div>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <Trophy className="size-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Grid de Cards de Metas */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {metas.map((meta) => (
+            <CardMeta
+              key={meta.id}
+              meta={meta}
+              aoGuardar={abrirGuardar}
+              aoResgatar={abrirResgatar}
+              aoEditar={abrirEditar}
+            />
+          ))}
+        </div>
+      </>
+    )
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-6">
       {/* Cabeçalho da Página */}
@@ -125,7 +223,9 @@ export function MetasPage() {
           <span>{erro}</span>
           <button
             type="button"
-            onClick={carregarMetas}
+            onClick={() => {
+              void carregarMetas()
+            }}
             className="cursor-pointer font-bold underline"
           >
             Tentar novamente
@@ -134,93 +234,7 @@ export function MetasPage() {
       )}
 
       {/* Conteúdo Principal */}
-      {carregando ? (
-        <div className="flex h-64 items-center justify-center">
-          <Carregando />
-        </div>
-      ) : metas.length === 0 ? (
-        /* Estado Vazio Amigável */
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--cor-linha)] bg-[var(--cor-card)]/50 p-8 text-center sm:p-12">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <Sparkles className="size-7" />
-          </div>
-          <h2 className="m-0 mt-4 text-lg font-bold text-[var(--cor-texto)]">
-            Nenhuma meta cadastrada
-          </h2>
-          <p className="m-0 mt-1.5 max-w-sm text-xs text-[var(--cor-mutado)] sm:text-sm">
-            Crie sua primeira caixinha para organizar seus objetivos futuros.
-            Pode ser IPVA, reserva de emergência, férias ou reformas!
-          </p>
-          <button
-            type="button"
-            onClick={abrirCriar}
-            className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[var(--cor-principal)] px-5 py-2.5 text-xs font-bold text-[var(--cor-sobre-principal)] shadow-sm transition-all hover:opacity-90 active:scale-98"
-          >
-            <Plus className="size-4" />
-            <span>Criar primeira meta</span>
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Barra de Resumo Estatístico */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="flex items-center justify-between rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-4 shadow-xs">
-              <div>
-                <span className="text-xs font-medium text-[var(--cor-mutado)]">
-                  Total guardado em metas
-                </span>
-                <p className="m-0 mt-0.5 text-lg font-bold text-[var(--cor-texto)]">
-                  {formatarMoeda(totalGuardado)}
-                </p>
-              </div>
-              <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                <Target className="size-5" />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-4 shadow-xs">
-              <div>
-                <span className="text-xs font-medium text-[var(--cor-mutado)]">
-                  Metas ativas
-                </span>
-                <p className="m-0 mt-0.5 text-lg font-bold text-[var(--cor-texto)]">
-                  {ativasCount}
-                </p>
-              </div>
-              <div className="flex size-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                <Sparkles className="size-5" />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-4 shadow-xs">
-              <div>
-                <span className="text-xs font-medium text-[var(--cor-mutado)]">
-                  Objetivos alcançados
-                </span>
-                <p className="m-0 mt-0.5 text-lg font-bold text-[var(--cor-texto)]">
-                  {concluidasCount}
-                </p>
-              </div>
-              <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <Trophy className="size-5" />
-              </div>
-            </div>
-          </div>
-
-          {/* Grid de Cards de Metas */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {metas.map((meta) => (
-              <CardMeta
-                key={meta.id}
-                meta={meta}
-                aoGuardar={abrirGuardar}
-                aoResgatar={abrirResgatar}
-                aoEditar={abrirEditar}
-              />
-            ))}
-          </div>
-        </>
-      )}
+      {renderConteudo()}
 
       {/* Modais */}
       <ModalAporteMeta

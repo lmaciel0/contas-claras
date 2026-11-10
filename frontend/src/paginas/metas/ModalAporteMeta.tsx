@@ -6,11 +6,11 @@ import { FundoDoDialogo } from '../../layout/FundoDoDialogo'
 import { useDialogoModal } from '../../layout/useDialogoModal'
 
 interface Props {
-  aberto: boolean
-  meta: MetaResponse | null
-  tipo: 'GUARDAR' | 'RESGATAR'
-  aoConfirmar: (valor: string) => Promise<void> | void
-  aoFechar: () => void
+  readonly aberto: boolean
+  readonly meta: MetaResponse | null
+  readonly tipo: 'GUARDAR' | 'RESGATAR'
+  readonly aoConfirmar: (valor: string) => Promise<void> | void
+  readonly aoFechar: () => void
 }
 
 export function ModalAporteMeta({
@@ -19,8 +19,8 @@ export function ModalAporteMeta({
   tipo,
   aoConfirmar,
   aoFechar,
-}: Props) {
-  const { painel, prenderFoco } = useDialogoModal(aberto, aoFechar)
+}: Readonly<Props>) {
+  const { painel, prenderFoco } = useDialogoModal<HTMLDialogElement>(aberto, aoFechar)
   const [valorTexto, setValorTexto] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
@@ -74,16 +74,21 @@ export function ModalAporteMeta({
     }
   }
 
+  let textoBotao = ehGuardar ? 'Confirmar aporte' : 'Confirmar resgate'
+  if (enviando) {
+    textoBotao = 'Processando...'
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <FundoDoDialogo testId="fundo-modal-aporte" aoClicar={aoFechar} />
-      <div
+      <dialog
+        open
         ref={painel}
-        role="dialog"
         aria-modal="true"
         aria-labelledby="titulo-modal-aporte"
         onKeyDown={prenderFoco}
-        className="superficie relative z-10 flex max-h-[90vh] w-full max-w-md flex-col rounded-t-3xl border border-[var(--cor-linha)] bg-[var(--cor-card)] shadow-2xl sm:rounded-3xl"
+        className="superficie relative z-10 m-0 flex max-h-[90vh] w-full max-w-md flex-col rounded-t-3xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-0 text-[var(--cor-texto)] shadow-2xl backdrop:bg-transparent sm:rounded-3xl"
       >
         {/* Cabeçalho */}
         <div className="flex items-center justify-between border-b border-[var(--cor-linha)] px-5 py-4">
@@ -236,15 +241,11 @@ export function ModalAporteMeta({
                   : 'bg-[var(--cor-principal)] hover:opacity-90'
               }`}
             >
-              {enviando
-                ? 'Processando...'
-                : ehGuardar
-                  ? 'Confirmar aporte'
-                  : 'Confirmar resgate'}
+              {textoBotao}
             </button>
           </div>
         </form>
-      </div>
+      </dialog>
     </div>
   )
 }

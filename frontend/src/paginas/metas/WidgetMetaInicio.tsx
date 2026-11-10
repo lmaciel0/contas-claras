@@ -58,7 +58,7 @@ export function WidgetMetaInicio() {
 
           {/* Barra de progresso compacta */}
           <div
-            role="meter"
+            role="progressbar"
             aria-label={`Progresso de ${metaAtiva.titulo}`}
             aria-valuemin={0}
             aria-valuemax={100}

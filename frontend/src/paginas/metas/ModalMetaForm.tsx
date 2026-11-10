@@ -8,11 +8,11 @@ import { getIconePreset } from './iconesMeta'
 import { LISTA_PRESETS, obterPresetVisual } from './presetsVisuais'
 
 interface Props {
-  aberto: boolean
-  meta: MetaResponse | null
-  aoSalvar: (dados: MetaRequest) => Promise<void> | void
-  aoExcluir?: (id: number) => Promise<void> | void
-  aoFechar: () => void
+  readonly aberto: boolean
+  readonly meta: MetaResponse | null
+  readonly aoSalvar: (dados: MetaRequest) => Promise<void> | void
+  readonly aoExcluir?: (id: number) => Promise<void> | void
+  readonly aoFechar: () => void
 }
 
 export function ModalMetaForm({
@@ -21,8 +21,8 @@ export function ModalMetaForm({
   aoSalvar,
   aoExcluir,
   aoFechar,
-}: Props) {
-  const { painel, prenderFoco } = useDialogoModal(aberto, aoFechar)
+}: Readonly<Props>) {
+  const { painel, prenderFoco } = useDialogoModal<HTMLDialogElement>(aberto, aoFechar)
   const ehEdicao = Boolean(meta)
 
   const [titulo, setTitulo] = useState(meta?.titulo || '')
@@ -82,12 +82,12 @@ export function ModalMetaForm({
       titulo: titulo.trim(),
       valorAlvo: alvoNormalizado,
       valorGuardado: guardadoNormalizado,
-      prazo: prazo ? prazo : null,
+      prazo: prazo || null,
       presetVisual: presetAtual.id,
       icone: presetAtual.icone,
       corGradienteInicio: presetAtual.corGradienteInicio,
       corGradienteFim: presetAtual.corGradienteFim,
-      fotoUrl: fotoUrl.trim() ? fotoUrl.trim() : null,
+      fotoUrl: fotoUrl.trim() || null,
     }
 
     try {
@@ -122,16 +122,53 @@ export function ModalMetaForm({
     }
   }
 
+  const renderBotaoExclusao = () => {
+    if (!ehEdicao || !aoExcluir) {
+      return <span />
+    }
+    if (confirmandoExclusao) {
+      return (
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={tratarExcluir}
+            disabled={salvando}
+            className="cursor-pointer rounded-xl bg-red-600 px-3 py-1.5 text-xs font-bold text-[var(--cor-sobre-negativo)] hover:bg-red-700"
+          >
+            Confirmar exclusão
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmandoExclusao(false)}
+            className="cursor-pointer rounded-xl border border-[var(--cor-linha)] px-2.5 py-1.5 text-xs font-medium text-[var(--cor-mutado)]"
+          >
+            Cancelar
+          </button>
+        </div>
+      )
+    }
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirmandoExclusao(true)}
+        className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-red-600 transition-colors hover:text-red-700 dark:text-red-400"
+      >
+        <Trash2 className="size-3.5" />
+        <span>Excluir meta</span>
+      </button>
+    )
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <FundoDoDialogo testId="fundo-modal-meta-form" aoClicar={aoFechar} />
-      <div
+      <dialog
+        open
         ref={painel}
-        role="dialog"
         aria-modal="true"
         aria-labelledby="titulo-modal-meta-form"
         onKeyDown={prenderFoco}
-        className="superficie relative z-10 flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-3xl border border-[var(--cor-linha)] bg-[var(--cor-card)] shadow-2xl sm:rounded-3xl"
+        className="superficie relative z-10 m-0 flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-3xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-0 text-[var(--cor-texto)] shadow-2xl backdrop:bg-transparent sm:rounded-3xl"
       >
         {/* Cabeçalho */}
         <div className="flex items-center justify-between border-b border-[var(--cor-linha)] px-5 py-4">
@@ -171,9 +208,9 @@ export function ModalMetaForm({
         >
           {/* Seletor de Presets Visuais */}
           <div>
-            <label className="block text-xs font-semibold text-[var(--cor-texto)]">
+            <span className="block text-xs font-semibold text-[var(--cor-texto)]">
               Estilo e Categoria Visual
-            </label>
+            </span>
             <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {LISTA_PRESETS.map((p) => {
                 const selecionado = presetVisual === p.id
@@ -324,38 +361,7 @@ export function ModalMetaForm({
 
           {/* Rodapé de Ações */}
           <div className="mt-2 flex items-center justify-between border-t border-[var(--cor-linha)] pt-4">
-            {ehEdicao && aoExcluir ? (
-              confirmandoExclusao ? (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={tratarExcluir}
-                    disabled={salvando}
-                    className="cursor-pointer rounded-xl bg-red-600 px-3 py-1.5 text-xs font-bold text-[var(--cor-sobre-negativo)] hover:bg-red-700"
-                  >
-                    Confirmar exclusão
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmandoExclusao(false)}
-                    className="cursor-pointer rounded-xl border border-[var(--cor-linha)] px-2.5 py-1.5 text-xs font-medium text-[var(--cor-mutado)]"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setConfirmandoExclusao(true)}
-                  className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-red-600 transition-colors hover:text-red-700 dark:text-red-400"
-                >
-                  <Trash2 className="size-3.5" />
-                  <span>Excluir meta</span>
-                </button>
-              )
-            ) : (
-              <span />
-            )}
+            {renderBotaoExclusao()}
 
             <div className="flex items-center gap-2">
               <button
@@ -376,7 +382,7 @@ export function ModalMetaForm({
             </div>
           </div>
         </form>
-      </div>
+      </dialog>
     </div>
   )
 }
