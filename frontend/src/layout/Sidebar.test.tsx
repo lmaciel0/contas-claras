@@ -14,7 +14,7 @@ function renderizar(rota = '/?ano=2026&mes=10', nome = 'Ana', aoSair = vi.fn()) 
 }
 
 describe('Sidebar', () => {
-  it('lista os itens na ordem Início, Notas, Visão geral, Orçamento, Cartões, Categorias, Relatórios', () => {
+  it('lista os itens na ordem Início, Notas, Visão geral, Orçamento, Metas, Cartões, Categorias, Relatórios', () => {
     renderizar()
 
     const nav = screen.getByRole('navigation', { name: 'Menu principal' })
@@ -24,6 +24,7 @@ describe('Sidebar', () => {
       'Notas',
       'Visão geral',
       'Orçamento',
+      'Metas',
       'Cartões',
       'Categorias',
       'Relatórios',

@@ -75,6 +75,7 @@ describe('PaletaNavegacao', () => {
       'Notas',
       'Visão geral',
       'Orçamento',
+      'Metas',
       'Cartões',
       'Categorias',
       'Relatórios',

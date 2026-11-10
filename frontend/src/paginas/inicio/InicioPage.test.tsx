@@ -270,6 +270,7 @@ describe('InicioPage', () => {
       'Onde você mais gastou em outubro',
       'Próximas contas',
       'Cartões',
+      'Conselheiro de Metas',
     ])
   })
 

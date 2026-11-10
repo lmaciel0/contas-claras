@@ -55,9 +55,10 @@ describe('ITENS_DOCK', () => {
 })
 
 describe('ITENS_MAIS e CAMINHOS_MAIS', () => {
-  it('ITENS_MAIS vem de GRUPOS_MENU, na ordem Visão geral, Cartões, Categorias, Relatórios', () => {
+  it('ITENS_MAIS vem de GRUPOS_MENU, na ordem Visão geral, Metas, Cartões, Categorias, Relatórios', () => {
     expect(ITENS_MAIS.map((i) => i.rotulo)).toEqual([
       'Visão geral',
+      'Metas',
       'Cartões',
       'Categorias',
       'Relatórios',
@@ -71,6 +72,7 @@ describe('ITENS_MAIS e CAMINHOS_MAIS', () => {
   it('CAMINHOS_MAIS tem os atalhos, /mais, /conta/senha e /conta/excluir', () => {
     expect(CAMINHOS_MAIS).toEqual([
       '/financeiro',
+      '/metas',
       '/cartoes',
       '/categorias',
       '/relatorios',

@@ -28,6 +28,7 @@ export const GRUPOS_MENU: GrupoMenu[] = [
     itens: [
       { rotulo: 'Visão geral', caminho: '/financeiro', comMes: true },
       { rotulo: 'Orçamento', caminho: '/lancamentos', comMes: true },
+      { rotulo: 'Metas', caminho: '/metas' },
       { rotulo: 'Cartões', caminho: '/cartoes', comMes: true },
       { rotulo: 'Categorias', caminho: '/categorias' },
       { rotulo: 'Relatórios', caminho: '/relatorios' },
@@ -38,7 +39,7 @@ export const GRUPOS_MENU: GrupoMenu[] = [
 const TODOS_OS_ITENS = GRUPOS_MENU.flatMap((g) => g.itens)
 
 /** Atalhos que ficam fora da dock do celular e moram na página Mais, nesta ordem. */
-const ORDEM_MAIS = ['/financeiro', '/cartoes', '/categorias', '/relatorios']
+const ORDEM_MAIS = ['/financeiro', '/metas', '/cartoes', '/categorias', '/relatorios']
 
 export const ITENS_MAIS: ItemMenu[] = ORDEM_MAIS.flatMap((caminho) => TODOS_OS_ITENS.filter((i) => i.caminho === caminho))
 

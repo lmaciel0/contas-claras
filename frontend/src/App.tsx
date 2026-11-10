@@ -26,6 +26,7 @@ const CartoesPage = lazy(() => import('./paginas/cartoes/CartoesPage').then((m) 
 const CategoriasPage = lazy(() =>
   import('./paginas/categorias/CategoriasPage').then((m) => ({ default: m.CategoriasPage })),
 )
+const MetasPage = lazy(() => import('./paginas/metas/MetasPage').then((m) => ({ default: m.MetasPage })))
 const InicioPage = lazy(() => import('./paginas/inicio/InicioPage').then((m) => ({ default: m.InicioPage })))
 const LancamentoForm = lazy(() =>
   import('./paginas/lancamentos/LancamentoForm').then((m) => ({ default: m.LancamentoForm })),
@@ -144,6 +145,7 @@ export function App() {
             <Route path=":id" element={<Pagina><LancamentoForm /></Pagina>} />
           </Route>
           <Route path="/cartoes" element={<Pagina><CartoesPage /></Pagina>} />
+          <Route path="/metas" element={<Pagina><MetasPage /></Pagina>} />
           <Route path="/categorias" element={<Pagina><CategoriasPage /></Pagina>} />
           <Route path="/relatorios" element={<Pagina><RelatoriosPage /></Pagina>} />
           <Route path="/mais" element={<Pagina><MaisPage /></Pagina>} />

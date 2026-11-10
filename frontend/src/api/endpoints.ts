@@ -1,6 +1,7 @@
 import { api } from './cliente'
 
 import type {
+  AporteMetaRequest,
   CadastroRequest,
   CartoesResponse,
   CategoriaNotaRequest,
@@ -17,12 +18,15 @@ import type {
   ItemResponse,
   LancamentoResponse,
   LoginRequest,
+  MetaRequest,
+  MetaResponse,
   NotaFixadaResponse,
   NotaRequest,
   NotaResponse,
   NotaResumoResponse,
   RedefinirSenhaRequest,
   RelatorioAnualResponse,
+  ResumoConselheiroResponse,
   ResumoResponse,
   SaldoResponse,
   SalvarLancamentoRequest,
@@ -118,6 +122,19 @@ export const endpoints = {
   },
   relatorios: {
     ano: (ano: number) => api<RelatorioAnualResponse>(`/api/relatorios/ano/${ano}`),
+  },
+  metas: {
+    listar: () => api<MetaResponse[]>('/api/metas'),
+    criar: (req: MetaRequest) => api<MetaResponse>('/api/metas', { method: 'POST', ...json(req) }),
+    atualizar: (id: number, req: MetaRequest) =>
+      api<MetaResponse>(`/api/metas/${id}`, { method: 'PUT', ...json(req) }),
+    guardar: (id: number, req: AporteMetaRequest) =>
+      api<MetaResponse>(`/api/metas/${id}/guardar`, { method: 'PATCH', ...json(req) }),
+    resgatar: (id: number, req: AporteMetaRequest) =>
+      api<MetaResponse>(`/api/metas/${id}/resgatar`, { method: 'PATCH', ...json(req) }),
+    excluir: (id: number) => api<void>(`/api/metas/${id}`, { method: 'DELETE' }),
+    conselheiro: (ano: number, mes: number) =>
+      api<ResumoConselheiroResponse>(`/api/metas/conselheiro?${consulta(ano, mes)}`),
   },
   resumo: (ano: number, mes: number) => api<ResumoResponse>(`/api/resumo?${consulta(ano, mes)}`),
   saldo: (ano: number, mes: number) => api<SaldoResponse>(`/api/saldo?${consulta(ano, mes)}`),
