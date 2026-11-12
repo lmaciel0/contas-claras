@@ -115,6 +115,40 @@ describe('PrivacidadePage', () => {
     )
   })
 
+  function textoDaSecao(titulo: RegExp) {
+    return (screen.getByRole('heading', { name: titulo }).closest('section')?.textContent ?? '').replace(/\s+/g, ' ')
+  }
+
+  it('avisa_que_o_google_pode_gravar_cookies_proprios_no_login', () => {
+    renderizar()
+    const secao = textoDaSecao(/Cookies e armazenamento local/)
+
+    expect(secao).toContain('accounts.google.com')
+    expect(secao).toContain('cookies próprios')
+  })
+
+  it('lista_sessionStorage_e_cache_offline_na_secao_de_cookies', () => {
+    renderizar()
+    const secao = textoDaSecao(/Cookies e armazenamento local/)
+
+    expect(secao).toContain('aprumo:recarga-por-chunk')
+    expect(secao).toContain('página de aviso offline')
+  })
+
+  it('avisa_que_o_site_da_foto_da_meta_recebe_o_ip', () => {
+    renderizar()
+    const secao = textoDaSecao(/Com quem compartilhamos/)
+
+    expect(secao).toContain('endereço de uma foto')
+    expect(secao).toContain('recebe o seu IP')
+  })
+
+  it('nao_cita_o_unsplash_porque_as_fotos_dos_presets_sao_nossas', () => {
+    const { container } = renderizar()
+
+    expect(container.textContent ?? '').not.toContain('Unsplash')
+  })
+
   it('nao_tem_link_com_href_vazio', () => {
     renderizar()
 

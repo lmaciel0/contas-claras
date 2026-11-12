@@ -96,6 +96,10 @@ export function PrivacidadePage() {
           transferência internacional é feita com base no art. 33 da LGPD, e só para prestar o serviço que você usa.
           Não vendemos nem cedemos seus dados a terceiros para outros fins.
         </p>
+        <p>
+          Se você informar o endereço de uma foto ao criar uma meta, o site que hospeda essa foto recebe o seu IP quando
+          ela é carregada. Esse site não é um prestador do Aprumo.
+        </p>
       </section>
 
       <section aria-labelledby="cookies">
@@ -110,6 +114,19 @@ export function PrivacidadePage() {
             <strong>Armazenamento local do navegador (localStorage):</strong> guardamos o horário da sua última
             atividade, suas preferências visuais, o tema escolhido e as reflexões que você marcou como favoritas. Esses
             dados ficam no seu aparelho.
+          </li>
+          <li>
+            <strong>Login com Google:</strong> na tela de entrada, o Aprumo carrega um script do Google
+            (accounts.google.com). O Google pode gravar cookies próprios no seu navegador, sob a política dele, e o
+            Aprumo não controla esses cookies.
+          </li>
+          <li>
+            <strong>Armazenamento da sessão (sessionStorage):</strong> uma marca temporária (aprumo:recarga-por-chunk)
+            que evita recarregar a página em loop depois de uma atualização do app. Some quando você fecha a aba.
+          </li>
+          <li>
+            <strong>Cache do modo offline:</strong> o navegador guarda a página de aviso offline e o ícone do app. Não
+            contém dado pessoal.
           </li>
         </ul>
         <p>Não usamos cookies de rastreamento, de análise de uso nem de publicidade.</p>
