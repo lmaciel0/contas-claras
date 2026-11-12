@@ -61,7 +61,7 @@ export function CardReflexao() {
               Reflexão do dia
             </h2>
           </span>
-          <span className="text-xs text-[var(--cor-sobre-principal-suave)]">Sabedoria diária</span>
+          <span className="hidden text-xs text-[var(--cor-sobre-principal-suave)] sm:inline">Sabedoria diária</span>
         </div>
 
         <div className="flex items-center gap-1">

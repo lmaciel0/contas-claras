@@ -27,7 +27,7 @@ export function FinancasDoMes() {
   const nomeAnterior = minusculo(nomeMes(mesAnterior({ ano, mes }).mes))
 
   return (
-    <section aria-labelledby="titulo-financas" className="card item-entra">
+    <section aria-labelledby="titulo-financas">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 id="titulo-financas" className="m-0 text-[15px] font-bold">
           Finanças do mês
@@ -70,7 +70,7 @@ export function FinancasDoMes() {
       )}
 
       {consulta.isError && (
-        <div role="alert" className="flex flex-wrap items-center gap-3 text-sm">
+        <div role="alert" className="card flex flex-wrap items-center gap-3 text-sm">
           <p className="m-0">
             {consulta.error instanceof ErroApi ? consulta.error.mensagem : 'Algo deu errado. Tente de novo.'}
           </p>

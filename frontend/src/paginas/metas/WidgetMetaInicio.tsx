@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router'
@@ -6,7 +7,12 @@ import { formatarMoeda } from '../../formato/moeda'
 import { getIconePreset } from './iconesMeta'
 import { obterPresetVisual } from './presetsVisuais'
 
-export function WidgetMetaInicio() {
+interface WidgetMetaInicioProps {
+  className?: string
+  style?: CSSProperties
+}
+
+export function WidgetMetaInicio({ className, style }: WidgetMetaInicioProps = {}) {
   const { data: metas } = useQuery({
     queryKey: ['metas'],
     queryFn: () => endpoints.metas.listar(),
@@ -29,7 +35,8 @@ export function WidgetMetaInicio() {
   return (
     <section
       aria-labelledby="titulo-widget-meta"
-      className="group flex items-center justify-between gap-3.5 rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-3.5 shadow-xs transition-all hover:border-[var(--cor-principal)]/30 hover:shadow-sm"
+      style={style}
+      className={`group flex items-center justify-between gap-3.5 rounded-2xl border border-[var(--cor-linha)] bg-[var(--cor-card)] p-3.5 shadow-xs transition-all hover:border-[var(--cor-principal)]/30 hover:shadow-sm${className ? ` ${className}` : ''}`}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {/* Ícone com gradiente do preset */}

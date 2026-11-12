@@ -25,6 +25,13 @@ describe('CardReflexao', () => {
     expect(screen.getByText(/Marco Aurélio|Sêneca|Epicteto/)).toBeInTheDocument()
   })
 
+  it('esconde o subtítulo em tela estreita para o cabeçalho caber em uma linha', () => {
+    relogioEm('2026-10-31T15:00:00Z')
+    renderComApp(<CardReflexao />)
+
+    expect(screen.getByText('Sabedoria diária')).toHaveClass('hidden', 'sm:inline')
+  })
+
   it('permite alternar para outra reflexão ao clicar no botão', async () => {
     relogioEm('2026-10-31T15:00:00Z')
     renderComApp(<CardReflexao />)
