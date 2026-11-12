@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { Route, Routes } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { PontoSerie, ResumoResponse } from '../../api/tipos'
+import type { MetaResponse, PontoSerie, ResumoResponse } from '../../api/tipos'
 import { AuthProvider } from '../../auth/AuthProvider'
 import { RotaProtegida } from '../../auth/RotaProtegida'
 import { comSessao, usuarioFicticio } from '../../teste/auth'
@@ -39,6 +39,26 @@ const resumo: ResumoResponse = {
     },
   ],
   serieAno: zeroSerie(),
+}
+
+// Valores fictícios.
+const metaFicticia: MetaResponse = {
+  id: 1,
+  titulo: 'Viagem de fim de ano',
+  valorAlvo: '3000.00',
+  valorGuardado: '750.00',
+  prazo: null,
+  presetVisual: 'viagem',
+  icone: '',
+  corGradienteInicio: '',
+  corGradienteFim: '',
+  fotoUrl: null,
+  ordem: 0,
+  percentualConcluido: '0.25',
+  valorRestante: '2250.00',
+  valorMensalSugerido: null,
+  mesesRestantes: null,
+  concluida: false,
 }
 
 function responderResumo() {
@@ -173,6 +193,24 @@ describe('PainelPage', () => {
     for (const bloco of [/tarefas/i, /agenda/i, /projetos/i, /notas/i]) {
       expect(screen.queryByRole('heading', { name: bloco })).not.toBeInTheDocument()
     }
+  })
+
+  it('sem metas, não deixa bloco vazio entre a reflexão e as finanças', async () => {
+    responderResumo()
+    comSessao()
+    renderizar()
+    await screen.findByRole('region', { name: 'Sobra do mês' })
+    expect(document.querySelectorAll('.item-entra:empty')).toHaveLength(0)
+  })
+
+  it('com meta, o widget entra escalonado entre a reflexão e as finanças', async () => {
+    responderResumo()
+    servidor.use(http.get('/api/metas', () => HttpResponse.json([metaFicticia])))
+    comSessao()
+    renderizar()
+    const widget = await screen.findByRole('region', { name: metaFicticia.titulo })
+    expect(widget).toHaveClass('item-entra')
+    expect(widget.style.getPropertyValue('--i')).toBe('2')
   })
 
   it('abre sem erro com ?ano=2026&mes=10 na URL e consulta o mês atual', async () => {

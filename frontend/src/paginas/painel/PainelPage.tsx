@@ -28,9 +28,7 @@ export function PainelPage() {
       <div className="item-entra" style={{ '--i': 1 } as React.CSSProperties}>
         <CardReflexao />
       </div>
-      <div className="item-entra" style={{ '--i': 2 } as React.CSSProperties}>
-        <WidgetMetaInicio />
-      </div>
+      <WidgetMetaInicio className="item-entra" style={{ '--i': 2 } as React.CSSProperties} />
       <div className="item-entra" style={{ '--i': 3 } as React.CSSProperties}>
         <FinancasDoMes />
       </div>
