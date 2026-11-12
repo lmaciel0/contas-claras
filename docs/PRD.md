@@ -21,8 +21,9 @@ Quem acompanha as contas numa planilha anual perde tempo lançando valores no ce
 
 | Módulo | O que faz |
 |---|---|
-| Início (painel) | Sobra do mês e do ano, comparação com o mês anterior, gráfico do ano com parte prevista listrada, categorias onde mais gastou, próximas contas e atrasadas |
-| Lançamentos | Planilha do mês: categoria, item e valor, status previsto ou pago, vencimento e "repetir até" para valores fixos |
+| Início (`/`) | Tela de entrada (painel): saudação, atalhos rápidos configuráveis, finanças do mês, nota fixada e reflexão do dia |
+| Visão geral (`/financeiro`) | Sobra do mês e do ano, comparação com o mês anterior, gráfico do ano com parte prevista listrada, categorias onde mais gastou, próximas contas e atrasadas |
+| Orçamento (`/lancamentos`) | Planilha do mês: categoria, item e valor, status previsto ou pago, vencimento e "repetir até" para valores fixos |
 | Cartões | Fatura do mês contra o limite de cada cartão, com faixas verde, amarelo e vermelho; pagar a fatura libera o limite |
 | Categorias | Criar, renomear, reordenar, arquivar itens, marcar item como cartão e definir limite |
 | Relatórios | Ano inteiro em itens por meses, totais e diferença de caixa |
@@ -37,7 +38,7 @@ Tarefas e projetos existem no backend, mas saíram da interface.
 
 - Integração com bancos, Open Finance, leitura de extrato, OFX ou fatura (fonte: `docs/superpowers/specs/2026-10-29-contas-claras-design.md`).
 - App nativo: o app Android é uma TWA, sem código nativo (`android/README.md`).
-- Modo offline e notificações push (fonte: `docs/superpowers/specs/2026-11-05-app-play-store-design.md`). Se consulta offline entrar no roteiro: a validar pelo Lucas.
+- Modo offline e notificações push (fonte: `docs/superpowers/specs/2026-11-05-app-play-store-design.md`). Hoje já existem service worker e página offline (`frontend/public/sw.js`, `offline.html`); se consulta offline dos números entrar no roteiro: a validar pelo Lucas.
 
 ## Métricas de sucesso
 

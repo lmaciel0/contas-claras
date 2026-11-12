@@ -4,15 +4,16 @@ O repositório é público. Nada aqui contém segredo, e nada de segredo pode en
 
 ## Autenticação e sessão
 
-- Sessão: JWT HS256 assinado pela API, em cookie `HttpOnly`, `Secure`, `SameSite=Strict`. Nada fica em `localStorage`.
+- Sessão: JWT HS256 assinado pela API, em cookie `HttpOnly`, `Secure`, `SameSite=Strict`. O token de sessão nunca fica em `localStorage` (ali ficam só tema, preferências e a hora da última atividade).
 - Cada token carrega a versão de sessão do usuário: trocar a senha ou vincular o Google invalida os tokens antigos.
 - Inatividade: o front encerra a sessão após 30 minutos sem atividade (`frontend/src/auth/useTimeoutInatividade.ts`).
 - Cadastro só nasce depois de confirmação por código de 6 dígitos ou link enviado por e-mail; a senha é definida nessa confirmação. E-mail novo e já cadastrado recebem a mesma resposta.
-- Limites no banco: envio de e-mail (1 a cada 60 s e 3 por hora por e-mail, 10 por hora por IP, 300 em 24 h) e login (5 tentativas por e-mail a cada 15 minutos).
+- Limite de envio de e-mail, guardado no banco: 1 a cada 60 s e 3 por hora por e-mail, 10 por hora por IP, 300 em 24 h.
+- Limite de login, guardado em memória da API (zera se a instância reiniciar): 5 tentativas por e-mail a cada 15 minutos.
 - Google: o ID token é validado no backend (emissor, expiração, audience e `email_verified`).
 - Isolamento: toda consulta filtra pelo usuário autenticado; recurso de outro usuário responde 404, nunca 403.
 - Origem: a Vercel manda um cabeçalho secreto ao repassar `/api/*`, e o IP do cliente é lido do fim da cadeia `X-Forwarded-For`, não do começo.
-- Front: CSP restrita (só Google Identity Services como origem externa), `X-Frame-Options: DENY`, `nosniff`, redirecionamento pós-login validado contra open redirect. Nunca `dangerouslySetInnerHTML`.
+- Front: CSP restritiva (scripts e conexões só de `self` e Google Identity Services; exceções: imagens `https:` e estilos inline), `X-Frame-Options: DENY`, `nosniff`, redirecionamento pós-login validado contra open redirect. Nunca `dangerouslySetInnerHTML`.
 
 ## Entrada externa
 
@@ -24,7 +25,7 @@ O repositório é público. Nada aqui contém segredo, e nada de segredo pode en
 
 - `.local/` (ignorado pelo git): senhas, JWT e credenciais locais. Nunca comitar, nunca ler, nunca imprimir `.local/segredos.env`.
 - Produção: variáveis nos painéis do Render e da Vercel. O modelo de nomes está em `.env.example`.
-- Também fora do git: `.env`, `.env.*`, `.mcp.json` (referencia chave de serviço), `*.xlsx` com dados pessoais, keystore Android (`*.jks`).
+- Também fora do git: `.env`, `.env.*`, `.mcp.json`, `*.xlsx` com dados pessoais, keystore Android (`*.jks`).
 - Prints e conta de revisor usam dados fictícios. Nunca use dados reais.
 
 ## Bloqueio de leitura no Claude Code

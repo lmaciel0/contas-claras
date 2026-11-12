@@ -25,7 +25,7 @@ O navegador só fala com `app.useaprumo.com.br`. A Vercel repassa `/api/*` ao Re
 |---|---|
 | API | Java 21, Spring Boot 4 (Web MVC, Security, OAuth2 Resource Server, Data JPA, Validation), Flyway, Apache POI |
 | Banco | PostgreSQL 17 |
-| Front | React 19, TypeScript, Vite 8, Tailwind CSS 4, React Router 8, TanStack Query 5, Recharts |
+| Front | React 19, TypeScript, Vite 8, Tailwind CSS 4, React Router 8, TanStack Query 5, Recharts, Tiptap 3 (editor de notas) |
 | Testes | JUnit 5, Mockito, Testcontainers; Vitest 5, Testing Library, MSW |
 | Android | Trusted Web Activity gerada com Bubblewrap, sem código nativo (`android/`) |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) |
@@ -39,9 +39,10 @@ backend/    API. Pacote raiz dev.lmaciel.aprumo, um subpacote por domínio:
             auth, usuario, categoria, item, lancamento, cartao, saldo, metas,
             nota, projeto, tarefa, resumo, relatorio, importacao, exportacao,
             diagnostico, saude, demo, comum
-frontend/   SPA. src/paginas (inicio, painel, lancamentos, cartoes, categorias,
+frontend/   SPA. src/paginas (painel = Início `/`, inicio = Visão geral `/financeiro`, lancamentos, cartoes, categorias,
             relatorios, metas, notas, mais), src/componentes, src/layout,
-            src/auth, src/api, src/formato, src/tema, src/preferencias
+            src/auth, src/api, src/formato, src/tema, src/preferencias,
+            src/diagnostico, src/legal, src/teste
 android/    twa-manifest.json e README com o passo a passo do .aab
 docs/       design system, arquitetura, testes, segurança, PRD, prints,
             play-store e superpowers (specs e plans)

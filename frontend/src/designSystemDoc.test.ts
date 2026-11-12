@@ -4,28 +4,60 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 // O Vitest roda com `css: false`, que esvazia `import '...css?raw'`; por isso os arquivos são lidos direto.
-// Os dois caminhos partem de `frontend/` (cwd dos testes).
-const css = readFileSync(resolve(process.cwd(), 'src/index.css'), 'utf8')
+// No ambiente jsdom `import.meta.url` não é `file:`, então os caminhos partem de `frontend/` (cwd dos testes), como em estilos.test.ts.
+const css = readFileSync(resolve(process.cwd(), 'src/index.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 const documento = readFileSync(resolve(process.cwd(), '../docs/DESIGN_SYSTEM.md'), 'utf8')
 const linhas = documento.split('\n')
 
-/** Bloco `:root { ... }` base (o `:root[data-tema='escuro']` não casa, pois o `[` vem antes da chave). */
-const blocoRoot = /:root\s*\{([^}]*)\}/.exec(css)?.[1] ?? ''
-
-/** Tokens `--cor-*` do `:root` base com valor hexadecimal, na ordem em que aparecem (`nome` sem os dois traços). */
-const tokensComHex: Array<{ nome: string; hex: string }> = [...blocoRoot.matchAll(/--(cor-[a-z0-9-]+):\s*(#[0-9a-fA-F]{3,8})\s*;/g)].map(
-  (achado) => ({ nome: achado[1] as string, hex: (achado[2] as string).toLowerCase() }),
-)
-
-/** Linhas do documento que citam `--nome` exato (`--cor-principal` não conta como citação de `--cor-principal-clara`). */
-function linhasQueCitam(nome: string): string[] {
-  const citacao = new RegExp(`--${nome}(?![a-z0-9-])`)
-  return linhas.filter((linha) => citacao.test(linha))
+/** Conteúdo do bloco `seletor { ... }` (seletor exato no começo da linha), com chaves aninhadas contadas. */
+function blocoCss(seletor: string): string {
+  const escapado = seletor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const abertura = new RegExp(`(?:^|\\n)\\s*${escapado}\\s*\\{`).exec(css)
+  if (!abertura) return ''
+  const inicio = abertura.index + abertura[0].length
+  let profundidade = 1
+  for (let i = inicio; i < css.length; i++) {
+    if (css[i] === '{') profundidade++
+    else if (css[i] === '}' && --profundidade === 0) return css.slice(inicio, i)
+  }
+  return ''
 }
 
-/** Todos os hexadecimais de uma linha, em minúsculas. */
-function hexDaLinha(linha: string): string[] {
-  return (linha.match(/#[0-9a-fA-F]{3,8}(?![0-9a-zA-Z])/g) ?? []).map((hex) => hex.toLowerCase())
+/** Declarações `--cor-*: valor;` de um bloco, com valor aparado e em minúsculas. */
+function tokensCor(bloco: string): Map<string, string> {
+  const achados = [...bloco.matchAll(/--(cor-[a-z0-9-]+):\s*([^;]+);/g)]
+  // Se a regex perder um token (valor estranho, `;` faltando), a contagem difere da de nomes seguidos de `:`.
+  const esperado = (bloco.match(/--cor-[a-z0-9-]+:/g) ?? []).length
+  if (achados.length !== esperado) throw new Error(`parser de tokens achou ${achados.length} de ${esperado} declarações --cor-*`)
+  return new Map(achados.map((a) => [a[1] as string, (a[2] as string).trim().toLowerCase()]))
+}
+
+const claro = tokensCor(blocoCss(':root'))
+const escuro = tokensCor(blocoCss(":root[data-tema='escuro']"))
+
+const PRESETS = ['lima', 'esmeralda', 'indigo']
+const TOKENS_DO_PRESET = ['cor-principal', 'cor-principal-clara', 'cor-principal-fim']
+
+/** Linhas de tabela entre `## de` e `## ate`, como células aparadas e sem crases. */
+function linhasDaTabela(de: string, ate: string): string[][] {
+  const inicio = linhas.findIndex((l) => l.trim() === `## ${de}`)
+  const fim = linhas.findIndex((l) => l.trim() === `## ${ate}`)
+  if (inicio < 0 || fim < inicio) return []
+  return linhas
+    .slice(inicio + 1, fim)
+    .filter((l) => l.trimStart().startsWith('|'))
+    .map((l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim().replace(/`/g, '').toLowerCase()))
+}
+
+const tabelaCores = linhasDaTabela('Cores', 'Presets')
+const tabelaPresets = linhasDaTabela('Presets', 'Tipografia')
+
+/** Valor de um token no preset: o bloco do preset no tema, senão o do tema (a especificidade de `:root[data-tema]` vence `html[data-preset]`). */
+function valorNoPreset(tema: 'claro' | 'escuro', preset: string, token: string): string | undefined {
+  const seletor = tema === 'claro' ? `html[data-preset='${preset}']` : `html[data-tema='escuro'][data-preset='${preset}']`
+  const doBloco = tokensCor(blocoCss(seletor)).get(token)
+  if (doBloco) return doBloco
+  return tema === 'claro' ? claro.get(token) : (escuro.get(token) ?? claro.get(token))
 }
 
 const TITULOS_OBRIGATORIOS = [
@@ -43,27 +75,48 @@ const TITULOS_OBRIGATORIOS = [
 ]
 
 describe('DESIGN_SYSTEM.md contra o index.css', () => {
-  it('o index.css tem tokens de cor hexadecimais para conferir', () => {
-    expect(tokensComHex.length, 'nenhum --cor-* hexadecimal achado em :root (regex quebrada?)').toBeGreaterThan(20)
+  it('o index.css tem tokens de cor nos temas claro e escuro, e o documento tem as tabelas', () => {
+    expect(claro.size, 'nenhum --cor-* em :root (extração de bloco quebrada?)').toBeGreaterThan(20)
+    expect(escuro.size, "nenhum --cor-* em :root[data-tema='escuro']").toBeGreaterThan(20)
+    expect(tabelaCores.length, 'tabela de Cores vazia (títulos "## Cores"/"## Presets" mudaram?)').toBeGreaterThan(20)
+    expect(tabelaPresets.length, 'tabela de Presets vazia').toBeGreaterThan(PRESETS.length)
   })
 
-  it('documenta todo token --cor-* de :root', () => {
-    const ausentes = tokensComHex.filter(({ nome }) => linhasQueCitam(nome).length === 0).map(({ nome }) => `--${nome}`)
-    expect(ausentes, `tokens de :root ausentes em docs/DESIGN_SYSTEM.md: ${ausentes.join(', ')}`).toEqual([])
-  })
-
-  it('usa o mesmo valor do index.css', () => {
-    const divergentes = tokensComHex.flatMap(({ nome, hex }) => {
-      // A linha que vale é a da tabela de cores (começa com `|`); sem ela, qualquer linha que cite o token.
-      const citacoes = linhasQueCitam(nome)
-      const daTabela = citacoes.filter((linha) => linha.trimStart().startsWith('|'))
-      const candidatas = daTabela.length > 0 ? daTabela : citacoes
-      if (candidatas.length === 0) return []
-      if (candidatas.some((linha) => hexDaLinha(linha).includes(hex))) return []
-      const noDoc = candidatas.flatMap(hexDaLinha)
-      return [`--${nome}: index.css=${hex}, documento=${noDoc.length > 0 ? noDoc.join(' ') : '(sem hex na linha)'}`]
+  it('tem exatamente uma linha de tabela por token --cor-* de :root, na seção Cores', () => {
+    const problemas = [...claro.keys()].flatMap((nome) => {
+      const n = tabelaCores.filter((celulas) => celulas[0] === `--${nome}`).length
+      return n === 1 ? [] : [`--${nome}: ${n} linhas na tabela de Cores (esperado 1)`]
     })
-    expect(divergentes, `valores divergentes entre o index.css e docs/DESIGN_SYSTEM.md:\n${divergentes.join('\n')}`).toEqual([])
+    expect(problemas, problemas.join('\n')).toEqual([])
+  })
+
+  it('coluna Claro = valor de :root; coluna Escuro = valor do tema escuro (ou o do claro sem override)', () => {
+    const divergentes = [...claro.entries()].flatMap(([nome, valorClaro]) => {
+      const linha = tabelaCores.find((celulas) => celulas[0] === `--${nome}`)
+      if (!linha) return [] // a ausência é reportada no teste anterior
+      const valorEscuro = escuro.get(nome) ?? valorClaro
+      const erros: string[] = []
+      if (linha.length !== 4) erros.push(`${linha.length} células (esperado 4: Token, Claro, Escuro, Uso)`)
+      if (linha[1] !== valorClaro) erros.push(`Claro: css=${valorClaro}, doc=${linha[1]}`)
+      if (linha[2] !== valorEscuro) erros.push(`Escuro: css=${valorEscuro}, doc=${linha[2]}`)
+      return erros.map((e) => `--${nome} ${e}`)
+    })
+    expect(divergentes, `valores divergentes entre o index.css e a tabela de Cores:\n${divergentes.join('\n')}`).toEqual([])
+  })
+
+  it('a tabela de Presets bate com os blocos de preset do index.css, nos dois temas', () => {
+    const divergentes = PRESETS.flatMap((preset) => {
+      const linha = tabelaPresets.find((celulas) => celulas[0] === preset)
+      if (!linha) return [`${preset}: linha ausente na tabela de Presets`]
+      if (linha.length !== 7) return [`${preset}: ${linha.length} células (esperado 7)`]
+      const esperado = [
+        ...TOKENS_DO_PRESET.map((t) => valorNoPreset('claro', preset, t)),
+        ...TOKENS_DO_PRESET.map((t) => valorNoPreset('escuro', preset, t)),
+      ]
+      const rotulos = ['Principal (claro)', 'Clara (claro)', 'Fim (claro)', 'Principal (escuro)', 'Clara (escuro)', 'Fim (escuro)']
+      return esperado.flatMap((valor, i) => (linha[i + 1] === valor ? [] : [`${preset} ${rotulos[i]}: css=${valor}, doc=${linha[i + 1]}`]))
+    })
+    expect(divergentes, `presets divergentes:\n${divergentes.join('\n')}`).toEqual([])
   })
 
   it('tem as seções obrigatórias, nesta ordem', () => {

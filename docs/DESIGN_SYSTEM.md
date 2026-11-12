@@ -1,6 +1,6 @@
 # Design system do Aprumo
 
-Fonte da verdade: `frontend/src/index.css` (tokens) e os componentes de `frontend/src`. Este documento descreve o que existe; quando os dois divergirem, o código vence e o documento é corrigido. O teste `frontend/src/designSystemDoc.test.ts` confere que todo token `--cor-*` hexadecimal de `:root` está na tabela de Cores com o mesmo valor.
+Fonte da verdade: `frontend/src/index.css` (tokens) e os componentes de `frontend/src`. Este documento descreve o que existe; quando os dois divergirem, o código vence e o documento é corrigido. O teste `frontend/src/designSystemDoc.test.ts` confere que todo token `--cor-*` de `:root` tem exatamente uma linha na tabela de Cores, com o valor de `:root` na coluna Claro e o de `:root[data-tema='escuro']` na coluna Escuro (o do claro quando o escuro não redefine), e que a tabela de Presets bate com os blocos de preset do `index.css`. Texto fora dessas tabelas, como a coluna Uso e a prosa, não é conferido.
 
 ## Identidade
 
@@ -54,7 +54,7 @@ Todos os tokens `--cor-*` de `:root`. A coluna "Claro" é o valor de `:root`; "E
 Regras de uso:
 
 - Texto pequeno de valor positivo ou negativo usa `--cor-positivo-texto` e `--cor-negativo-texto`; `--cor-positivo` e `--cor-negativo` ficam para barras e fundos.
-- O par de contraste mínimo é 4,5:1 para texto e 3:1 para contornos de campo e componentes. `frontend/src/estilos.test.ts` confere os pares do tema escuro e da superfície translúcida.
+- O par de contraste mínimo é 4,5:1 para texto e 3:1 para contornos de campo e componentes. `frontend/src/estilos.test.ts` confere contraste AA do texto nos temas claro e escuro, 3:1 em bordas de campo e no botão de tema, proíbe cor fixa em TSX e exige `prefers-reduced-motion`.
 - Fundos de chip e aviso usam os tokens `*-fundo`, nunca cor fixa.
 
 ## Presets
