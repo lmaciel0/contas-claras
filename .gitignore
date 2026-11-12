@@ -27,6 +27,7 @@ dist/
 AGENTS.md
 GEMINI.md
 HANDOFF.md
+.mcp.json
 .vercelignore
 
 
