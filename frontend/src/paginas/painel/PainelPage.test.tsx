@@ -137,6 +137,7 @@ describe('PainelPage', () => {
     renderizar()
 
     const alerta = await screen.findByRole('alert')
+    expect(alerta).toHaveClass('card')
     expect(within(alerta).getByText('Falha no servidor.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: /^(Bom dia|Boa tarde|Boa noite), Ana$/ })).toBeInTheDocument()
 
@@ -209,8 +210,21 @@ describe('PainelPage', () => {
     comSessao()
     renderizar()
     const widget = await screen.findByRole('region', { name: metaFicticia.titulo })
+    // Espera o resumo terminar: uma consulta pendente cairia no handler do teste seguinte.
+    await screen.findByRole('region', { name: 'Sobra do mês' })
     expect(widget).toHaveClass('item-entra')
     expect(widget.style.getPropertyValue('--i')).toBe('2')
+  })
+
+  it('o bloco de finanças não é um card em volta dos cards', async () => {
+    responderResumo()
+    comSessao()
+    renderizar()
+    const bloco = await screen.findByRole('region', { name: 'Finanças do mês' })
+    // Espera o resumo terminar: uma consulta pendente cairia no handler do teste seguinte.
+    await screen.findByRole('region', { name: 'Sobra do mês' })
+    expect(bloco).not.toHaveClass('card')
+    expect(bloco).not.toHaveClass('item-entra')
   })
 
   it('abre sem erro com ?ano=2026&mes=10 na URL e consulta o mês atual', async () => {
